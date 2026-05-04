@@ -43,15 +43,9 @@ const CHANGELOG: Record<string, string[]> = {
     '🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura',
   ],
 
-  '2.1.11': [
-    '🌸 leafnote',
-    '🐛 jardim: rega do parceiro não é mais apagada ao regar',
-  ],
+  '2.1.11': ['🌸 leafnote', '🐛 jardim: rega do parceiro não é mais apagada ao regar'],
 
-  '2.1.10': [
-    '🌸 leafnote',
-    '🐛 jardim: rega não some mais ao reabrir o app',
-  ],
+  '2.1.10': ['🌸 leafnote', '🐛 jardim: rega não some mais ao reabrir o app'],
 
   '2.1.9': [
     '🌸 leafnote',
@@ -66,15 +60,9 @@ const CHANGELOG: Record<string, string[]> = {
     '🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura',
   ],
 
-  '2.1.7': [
-    '🌸 leafnote',
-    '🐛 corrige Firebase no build do workflow',
-  ],
+  '2.1.7': ['🌸 leafnote', '🐛 corrige Firebase no build do workflow'],
 
-  '2.1.6': [
-    '🌸 leafnote',
-    '🐛 ajustes internos',
-  ],
+  '2.1.6': ['🌸 leafnote', '🐛 ajustes internos'],
 
   '2.1.5': [
     '🌸 leafnote',
@@ -87,22 +75,11 @@ const CHANGELOG: Record<string, string[]> = {
     '🐛 banner de atualização agora aparece corretamente',
   ],
 
-  '2.1.3': [
-    '🌸 leafnote',
-    '✨ teste updater',
-  ],
+  '2.1.3': ['🌸 leafnote', '✨ teste updater'],
 
-  '2.1.2': [
-    '🌸 leafnote',
-    '✨ sistema de atualização automática',
-    '✨ changelog com novidades',
-  ],
+  '2.1.2': ['🌸 leafnote', '✨ sistema de atualização automática', '✨ changelog com novidades'],
 
-  '2.1.1': [
-    '🌸 leafnote',
-    '✨ sistema de atualização automática',
-    '✨ changelog de novidades',
-  ],
+  '2.1.1': ['🌸 leafnote', '✨ sistema de atualização automática', '✨ changelog de novidades'],
 
   '2.1.0': [
     '🌸 leafnote v2.1.0',
@@ -175,7 +152,7 @@ export default function ChangelogModal() {
         </button>
 
         <div style={{ fontSize: 22, fontWeight: 800, color: '#2d4a2d', marginBottom: 16 }}>
-          novidades 🌸
+          o que há de novo
         </div>
 
         <ul
