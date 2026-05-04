@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.18': [
+    '🌸 leafnote',
+    '✨ módulo de ciclo menstrual: pin no mural com estados tpm/menstruada/chegando',
+    '✨ calendário colore e marca os dias do ciclo com ícones',
+    '✨ modal de gestão do ciclo (só nana): previsão, confirmação, duração e encerramento',
+    '✨ previsão automática do próximo ciclo baseada no histórico',
+    '✨ botão ciclo no calendário e no modal de dia para fixar pin no mural',
+  ],
+
   '2.1.17': [
     '🌸 leafnote',
     '🐛 jardim: status de rega agora mostra os dois como regados após completar o dia',
