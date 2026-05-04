@@ -106,7 +106,7 @@ export async function confirmCycleStarted(
     ...current,
     confirmedDate,
     duration,
-    endDate: addDays(confirmedDate, duration),
+    endDate: addDays(confirmedDate, duration - 1),
     status: 'active',
   }
   await set(ref(db, `cycle/${key}`), updated)

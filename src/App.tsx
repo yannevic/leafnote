@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import TitleBar from './components/TitleBar'
 import UpdateNotifier, { UpdateStatus } from './components/UpdateNotifier'
 import { useBoards } from './hooks/useBoards'
+import ChangelogModal from './components/ChangelogModal'
 
 function AppInner({ user }: { user: User }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
@@ -17,6 +18,7 @@ function AppInner({ user }: { user: User }) {
 
   return (
     <div className="fixed inset-0 flex flex-col">
+      <ChangelogModal />
       <UpdateNotifier
         onStatus={setUpdateStatus}
         onProgress={setUpdateProgress}

@@ -26,15 +26,18 @@ export default function CycleModal({ myUid, onClose }: Props) {
   const [nextPrediction, setNextPrediction] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const [initialized, setInitialized] = useState(false)
+
   useEffect(() => {
-    if (currentCycle) {
+    if (currentCycle && !initialized) {
       setPredictedDate(currentCycle.data.predictedDate)
       setTpmDays(currentCycle.data.tpmDays)
       setDuration(currentCycle.data.duration)
       setConfirmedDate(currentCycle.data.confirmedDate ?? '')
       setActualEndDate(currentCycle.data.actualEndDate ?? '')
+      setInitialized(true)
     }
-  }, [currentCycle])
+  }, [currentCycle, initialized])
 
   useEffect(() => {
     predictNextCycle(myUid).then(setNextPrediction)
@@ -50,8 +53,8 @@ export default function CycleModal({ myUid, onClose }: Props) {
     const data: CycleData = {
       predictedDate,
       duration,
-      endDate: addDays(predictedDate, duration),
-      tpmStart: addDays(predictedDate, -tpmDays),
+      endDate: addDays(predictedDate, duration - 1),
+      tpmStart: addDays(predictedDate, -(tpmDays - 1)),
       tpmDays,
       status: 'predicted',
     }
