@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.19': [
+    '🌸 leafnote',
+    '🐛 corrige módulo de ciclo menstrual',
+  ],
+
   '2.1.18': [
     '🌸 leafnote',
     '✨ módulo de ciclo menstrual: pin no mural com estados tpm/menstruada/chegando',
