@@ -12,4 +12,15 @@
 🌿 arrancar planta com confirmação |
 ⏱️ tempo de crescimento por tier (comum/incomum/rara) |
 🐛 fix assets: renomeia jasmim para jasmin |
-💄 ícone de moedas (porquinho) | 
+💄 ícone de moedas (porquinho) |
+👤 sistema de personagem com preview em tempo real (CharacterModal) |
+🎨 seletor de variante de cor por categoria (sufixos b–h) |
+🧱 sistema de camadas (LAYER_ORDER) com 21 níveis de profundidade |
+👗 exclusão mútua vestido ↔ top/bottom |
+🚫 body obrigatório com erro visual animado |
+📑 abas: Corpo → Rosto → Cabelo → Roupas → Extras |
+👕 sub-abas de roupas: Padrão | Masculino | Casal | Praia |
+🎒 sub-abas de extras: Padrão | Casal | Praia |
+❌ botão "nenhum" por seção (exceto corpo) |
+📦 catálogo completo de assets em index.ts por pack e gender |
+🩱 suporte a saia casal (3 camadas: costas / normal / topo) |

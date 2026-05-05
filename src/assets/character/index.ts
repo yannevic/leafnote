@@ -2,34 +2,31 @@
 // TIPOS
 // ─────────────────────────────────────────────
 
-// Categorias com slot ÚNICO — clicar em outro troca o atual
 export type CharacterCategorySingle =
   | 'body'
   | 'hair'
   | 'bangs'
   | 'eyebrows'
+  | 'pupils'
   | 'eyelashes'
   | 'mouth'
-  | 'pupils'
   | 'top'
   | 'bottom'
   | 'dress'
   | 'shoes'
+  | 'saia_costas'
+  | 'saia_top'
 
-// Categorias com slot MÚLTIPLO — empilháveis, toggle on/off
 export type CharacterCategoryMulti =
-  | 'hair_back' // múltiplos estilos de cabelo atrás
-  | 'hair_bonus' // enfeites de cabelo
-  | 'gloves' // luvas
-  | 'beard' // barba / face decor
-  | 'accessory' // brinco, anel, colar, óculos, jaqueta...
-  | 'tattoo' // tatuagens
-// ── futuro (assets ainda não existem) ──
-// | 'socks'     -- meias empilháveis
-// | 'belt'      -- cintos empilháveis
-// | 'necklace'  -- colares empilháveis (hoje em accessory)
-// | 'face_decor'-- sardas, blush, sombra, barba decorativa
-// | 'decor'     -- decorações gerais
+  | 'hair_back'
+  | 'hair_bonus'
+  | 'gloves'
+  | 'beard'
+  | 'accessory'
+  | 'accessory_cima'
+  | 'accessory_topo'
+  | 'jaqueta'
+  | 'tattoo'
 
 export type CharacterCategory = CharacterCategorySingle | CharacterCategoryMulti
 
@@ -42,13 +39,15 @@ export type CharacterPack =
 
 export type CharacterGender = 'fem' | 'masc' | 'neutral'
 
-/** Quais categorias são de slot múltiplo */
 export const MULTI_SLOT_CATEGORIES: CharacterCategoryMulti[] = [
   'hair_back',
   'hair_bonus',
   'gloves',
   'beard',
   'accessory',
+  'accessory_cima',
+  'accessory_topo',
+  'jaqueta', // ← adiciona
   'tattoo',
 ]
 
@@ -61,22 +60,15 @@ export interface CharacterPiece {
   category: CharacterCategory
   pack: CharacterPack
   gender: CharacterGender
-  /** Caminho relativo a src/assets/character/ */
   src: string
-  /** Versão colorida disponível */
   hasColor: boolean
-  /** Caminho da versão colorida (se hasColor = true) */
   srcColor?: string
-  /** Item gratuito na criação do personagem */
   free: boolean
-  /** Custo em moedas (se free = false) */
   cost?: number
-  /** Label exibido na UI */
   label: string
 }
 
 export interface CharacterConfig {
-  // Slots únicos — string | null
   body: string | null
   hair: string | null
   bangs: string | null
@@ -88,19 +80,21 @@ export interface CharacterConfig {
   bottom: string | null
   dress: string | null
   shoes: string | null
-  // Slots múltiplos — Set de IDs (string[] no Firebase)
+  jaqueta: string[]
+  saia_costas: string | null
+  saia_top: string | null
   hair_back: string[]
   hair_bonus: string[]
   gloves: string[]
   beard: string[]
   accessory: string[]
+  accessory_cima: string[]
+  accessory_topo: string[]
   tattoo: string[]
-  /** IDs das peças que estão na versão colorida */
-  colorVariants: Record<string, boolean>
+  colorVariants: Record<string, string>
 }
 
 export const DEFAULT_CHARACTER_CONFIG: CharacterConfig = {
-  // únicos
   body: null,
   hair: null,
   bangs: null,
@@ -112,19 +106,19 @@ export const DEFAULT_CHARACTER_CONFIG: CharacterConfig = {
   bottom: null,
   dress: null,
   shoes: null,
-  // múltiplos
+  jaqueta: [],
+  saia_costas: null,
+  saia_top: null,
   hair_back: [],
   hair_bonus: [],
   gloves: [],
   beard: [],
   accessory: [],
+  accessory_cima: [],
+  accessory_topo: [],
   tattoo: [],
   colorVariants: {},
 }
-
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
 
 function piece(
   id: string,
@@ -151,41 +145,41 @@ function piece(
   }
 }
 
-// Caminho base por pack
-const B = 'chibi-basics' // chibi-character-basics-reworked/
-const M = 'masc-misc' // 9-masc_misc/
-const P1 = 'power-couples-1' // 14_power couples/1/
-const P2 = 'power-couples-2' // 14_power couples/2/
-const S = 'summer' // summer/color assets/
+const B = 'chibi-basics'
+const M = 'masc-misc'
+const P1 = 'power-couples-1'
+const P2 = 'power-couples-2'
+const S = 'summer'
+
+export const COLOR_VARIANT_LABELS: Record<string, string> = {
+  '': 'Padrão',
+  b: 'Ruivo',
+  c: 'Vermelho',
+  d: 'Louro escuro',
+  e: 'Loiro',
+  f: 'Preto',
+  g: 'Branco',
+  h: 'Cinza',
+}
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — BODY
+// BODY
 // ─────────────────────────────────────────────
-// Corpos 1–29 (tons de pele) + peças de corpo soltas
-// Sem versão color separada — cada número já é uma cor de pele
 
 export const BODIES: CharacterPiece[] = [
-  // Tons de pele claros (rosa/bege)
-  piece('body-b-1', 'body', B, 'neutral', 'chibi-basics/body/1.png', 'Pele 1', undefined, true),
-  piece('body-b-2', 'body', B, 'neutral', 'chibi-basics/body/2.png', 'Pele 2', undefined, true),
-  piece('body-b-3', 'body', B, 'neutral', 'chibi-basics/body/3.png', 'Pele 3', undefined, true),
-  piece('body-b-4', 'body', B, 'neutral', 'chibi-basics/body/4.png', 'Pele 4', undefined, true),
-  piece('body-b-5', 'body', B, 'neutral', 'chibi-basics/body/5.png', 'Pele 5', undefined, true),
-  // Tons médios (oliva/marrom claro)
-  piece('body-b-6', 'body', B, 'neutral', 'chibi-basics/body/6.png', 'Pele 6', undefined, true),
-  piece('body-b-7', 'body', B, 'neutral', 'chibi-basics/body/7.png', 'Pele 7', undefined, true),
-  piece('body-b-8', 'body', B, 'neutral', 'chibi-basics/body/8.png', 'Pele 8', undefined, true),
-  piece('body-b-9', 'body', B, 'neutral', 'chibi-basics/body/9.png', 'Pele 9', undefined, true),
-  piece('body-b-10', 'body', B, 'neutral', 'chibi-basics/body/10.png', 'Pele 10', undefined, true),
-  piece('body-b-11', 'body', B, 'neutral', 'chibi-basics/body/11.png', 'Pele 11', undefined, true),
-  piece('body-b-12', 'body', B, 'neutral', 'chibi-basics/body/12.png', 'Pele 12', undefined, true),
-  // Tons escuros
-  piece('body-b-13', 'body', B, 'neutral', 'chibi-basics/body/13.png', 'Pele 13', undefined, true),
-  piece('body-b-14', 'body', B, 'neutral', 'chibi-basics/body/14.png', 'Pele 14', undefined, true),
-  piece('body-b-15', 'body', B, 'neutral', 'chibi-basics/body/15.png', 'Pele 15', undefined, true),
-  piece('body-b-16', 'body', B, 'neutral', 'chibi-basics/body/16.png', 'Pele 16', undefined, true),
-  piece('body-b-17', 'body', B, 'neutral', 'chibi-basics/body/17.png', 'Pele 17', undefined, true),
-  // Tons especiais (branco, cinza, preto, vibrantes)
+  ...Array.from({ length: 17 }, (_, i) =>
+    piece(
+      `body-b-${i + 1}`,
+      'body',
+      B,
+      'neutral',
+      `chibi-basics/body/${i + 1}.png`,
+      `Pele ${i + 1}`,
+      undefined,
+      false,
+      0
+    )
+  ),
   piece(
     'body-b-18',
     'body',
@@ -318,45 +312,68 @@ export const BODIES: CharacterPiece[] = [
     false,
     30
   ),
-  // Corpos masc (masc-misc)
-  piece('body-m-1', 'body', M, 'masc', 'masc-misc/9-body1.png', 'Corpo masc 1', undefined, true),
-  piece('body-m-2', 'body', M, 'masc', 'masc-misc/9-body2.png', 'Corpo masc 2', undefined, true),
-  piece('body-m-3', 'body', M, 'masc', 'masc-misc/9-body3.png', 'Corpo masc 3', undefined, true),
+  piece(
+    'body-m-1',
+    'body',
+    M,
+    'masc',
+    'masc-misc/9-body1.png',
+    'Corpo masc 1',
+    undefined,
+    false,
+    0
+  ),
+  piece(
+    'body-m-2',
+    'body',
+    M,
+    'masc',
+    'masc-misc/9-body2.png',
+    'Corpo masc 2',
+    undefined,
+    false,
+    0
+  ),
+  piece(
+    'body-m-3',
+    'body',
+    M,
+    'masc',
+    'masc-misc/9-body3.png',
+    'Corpo masc 3',
+    undefined,
+    false,
+    0
+  ),
 ]
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — HAIR (franja frontal)
+// HAIR (frente)
 // ─────────────────────────────────────────────
-// 12 estilos bw, cada um com 8 cores (b/c/d/e/f/g/h)
 
-export const HAIR: CharacterPiece[] = Array.from({ length: 12 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `hair-b-${n}`,
-    'hair',
-    B,
-    'neutral',
-    `chibi-basics/hair/${n}.png`,
-    `Cabelo ${n}`,
-    `chibi-basics/hair/COLOR/${n}.png`,
-    n <= 3, // primeiros 3 gratuitos
-    n > 3 ? 40 : undefined
-  )
-})
-
-// Versões coloridas extras (b/c/d/e/f/g/h) — tratadas como variantes de cor no CharacterConfig
-// Não entram como peças separadas, são acessadas via srcColor com sufixo
-
-// Cabelos masc (masc-misc) — 9 estilos
-export const HAIR_MASC: CharacterPiece[] = [
+export const HAIR: CharacterPiece[] = [
+  ...Array.from({ length: 12 }, (_, i) => {
+    const n = i + 1
+    return piece(
+      `hair-b-${n}`,
+      'hair',
+      B,
+      'neutral',
+      `chibi-basics/hair/COLOR/${n}.png`,
+      `Cabelo ${n}`,
+      `chibi-basics/hair/COLOR/${n}.png`,
+      false,
+      40
+    )
+  }),
   piece(
     'hair-m-lisses',
     'hair',
     M,
     'masc',
-    'masc-misc/9-hair-lisses(bw).png',
-    'Liso',
     'masc-misc/9-hair-lisses(color).png',
+    'Liso',
+    undefined,
     false,
     50
   ),
@@ -365,9 +382,9 @@ export const HAIR_MASC: CharacterPiece[] = [
     'hair',
     M,
     'masc',
-    'masc-misc/9-hair-piques(bw).png',
-    'Espetado',
     'masc-misc/9-hair-piques(color).png',
+    'Espetado',
+    undefined,
     false,
     50
   ),
@@ -376,40 +393,41 @@ export const HAIR_MASC: CharacterPiece[] = [
     'hair',
     M,
     'masc',
-    'masc-misc/9-hair-short1(bw).png',
-    'Curto 1',
     'masc-misc/9-hair-short1(color).png',
-    true
+    'Curto 1',
+    undefined,
+    false,
+    50
   ),
   piece(
     'hair-m-shortwavy',
     'hair',
     M,
     'masc',
-    'masc-misc/9-hair-short-wavy(bw).png',
-    'Ondulado curto',
     'masc-misc/9-hair-short-wavy(color).png',
-    false,
-    50
-  ),
-  piece(
-    'hair-m-marcel1',
-    'hair',
-    M,
-    'masc',
-    'masc-misc/9-marcel1.png',
-    'Marcel 1',
+    'Ondulado curto',
     undefined,
     false,
     50
   ),
   piece(
-    'hair-m-marcel2',
+    'hair-m-attaches',
     'hair',
     M,
     'masc',
-    'masc-misc/9-marcel2.png',
-    'Marcel 2',
+    'masc-misc/9-hair-attachés(color).png',
+    'Preso',
+    undefined,
+    false,
+    50
+  ),
+  piece(
+    'hair-m-attaches-tail',
+    'hair',
+    M,
+    'masc',
+    'masc-misc/9-hair-attachés-tail(color).png',
+    'Preso com rabo',
     undefined,
     false,
     50
@@ -417,26 +435,50 @@ export const HAIR_MASC: CharacterPiece[] = [
 ]
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — HAIR BACK (parte de trás)
+// HAIR BACK
 // ─────────────────────────────────────────────
 
-export const HAIR_BACK: CharacterPiece[] = Array.from({ length: 12 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `hair-back-b-${n}`,
+export const HAIR_BACK: CharacterPiece[] = [
+  ...Array.from({ length: 12 }, (_, i) => {
+    const n = i + 1
+    return piece(
+      `hair-back-b-${n}`,
+      'hair_back',
+      B,
+      'neutral',
+      `chibi-basics/hair_back/COLOR/${n}.png`,
+      `Trás ${n}`,
+      `chibi-basics/hair_back/COLOR/${n}.png`,
+      false,
+      40
+    )
+  }),
+  piece(
+    'hair-back-m-braid',
     'hair_back',
-    B,
-    'neutral',
-    `chibi-basics/hair_back/${n}.png`,
-    `Cabelo trás ${n}`,
-    `chibi-basics/hair_back/COLOR/${n}.png`,
-    n <= 3,
-    n > 3 ? 40 : undefined
-  )
-})
+    M,
+    'masc',
+    'masc-misc/9-hair-back-braid(color).png',
+    'Trança',
+    undefined,
+    false,
+    50
+  ),
+  piece(
+    'hair-back-m-long',
+    'hair_back',
+    M,
+    'masc',
+    'masc-misc/9-hair-back-long(color).png',
+    'Longo',
+    undefined,
+    false,
+    50
+  ),
+]
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — HAIR BONUS (acessórios de cabelo)
+// HAIR BONUS
 // ─────────────────────────────────────────────
 
 export const HAIR_BONUS: CharacterPiece[] = Array.from({ length: 5 }, (_, i) => {
@@ -446,8 +488,8 @@ export const HAIR_BONUS: CharacterPiece[] = Array.from({ length: 5 }, (_, i) => 
     'hair_bonus',
     B,
     'neutral',
-    `chibi-basics/hair_bonus/${n}.png`,
-    `Enfeite cabelo ${n}`,
+    `chibi-basics/hair_bonus/COLOR/${n}.png`,
+    `Enfeite ${n}`,
     `chibi-basics/hair_bonus/COLOR/${n}.png`,
     false,
     30
@@ -455,9 +497,8 @@ export const HAIR_BONUS: CharacterPiece[] = Array.from({ length: 5 }, (_, i) => 
 })
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — BANGS (franja)
+// BANGS (franja)
 // ─────────────────────────────────────────────
-// masc-misc também tem bangs
 
 export const BANGS: CharacterPiece[] = [
   ...Array.from({ length: 13 }, (_, i) => {
@@ -467,22 +508,21 @@ export const BANGS: CharacterPiece[] = [
       'bangs',
       B,
       'neutral',
-      `chibi-basics/bangs/${n}.png`,
+      `chibi-basics/bangs/COLOR/${n}.png`,
       `Franja ${n}`,
       `chibi-basics/bangs/COLOR/${n}.png`,
-      n <= 2,
-      n > 2 ? 30 : undefined
+      false,
+      30
     )
   }),
-  // masc bangs
   piece(
     'bangs-m-bananas',
     'bangs',
     M,
     'masc',
-    'masc-misc/9-bangs-bananas(bw).png',
-    'Bananas',
     'masc-misc/9-bangs-bananas(color).png',
+    'Bananas',
+    undefined,
     false,
     40
   ),
@@ -491,9 +531,9 @@ export const BANGS: CharacterPiece[] = [
     'bangs',
     M,
     'masc',
-    'masc-misc/9-bangs-longs(bw).png',
-    'Longa',
     'masc-misc/9-bangs-longs(color).png',
+    'Longa',
+    undefined,
     false,
     40
   ),
@@ -502,9 +542,9 @@ export const BANGS: CharacterPiece[] = [
     'bangs',
     M,
     'masc',
-    'masc-misc/9-bangs-longswavy(bw).png',
-    'Longa ondulada',
     'masc-misc/9-bangs-longswavy(color).png',
+    'Longa ondulada',
+    undefined,
     false,
     40
   ),
@@ -513,9 +553,9 @@ export const BANGS: CharacterPiece[] = [
     'bangs',
     M,
     'masc',
-    'masc-misc/9-bangs-pics(bw).png',
-    'Pontuda',
     'masc-misc/9-bangs-pics(color).png',
+    'Pontuda',
+    undefined,
     false,
     40
   ),
@@ -524,106 +564,98 @@ export const BANGS: CharacterPiece[] = [
     'bangs',
     M,
     'masc',
-    'masc-misc/9-bangs-wolf(bw).png',
-    'Wolf',
     'masc-misc/9-bangs-wolf(color).png',
+    'Wolf',
+    undefined,
     false,
     40
   ),
 ]
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — FACE (boca, sobrancelhas, cílios, pupilas)
-// Sem versão color — são elementos de linha
+// FACE
 // ─────────────────────────────────────────────
 
-// MOUTH — precisamos ver quantos tem; vamos deixar placeholder range
-// (ajustar o número depois de contar os arquivos)
-export const MOUTH: CharacterPiece[] = Array.from({ length: 10 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `mouth-b-${n}`,
+export const MOUTH: CharacterPiece[] = Array.from({ length: 20 }, (_, i) =>
+  piece(
+    `mouth-b-${i + 1}`,
     'mouth',
     B,
     'neutral',
-    `chibi-basics/MOUTH/${n}.png`,
-    `Boca ${n}`,
+    `chibi-basics/mouth/${i + 1}.png`,
+    `Boca ${i + 1}`,
     undefined,
-    n <= 3,
-    n > 3 ? 20 : undefined
+    false,
+    20
   )
-})
+)
 
-export const EYEBROWS: CharacterPiece[] = Array.from({ length: 8 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `eyebrow-b-${n}`,
+export const EYEBROWS: CharacterPiece[] = Array.from({ length: 5 }, (_, i) =>
+  piece(
+    `eyebrow-b-${i + 1}`,
     'eyebrows',
     B,
     'neutral',
-    `chibi-basics/EYEBROWS/${n}.png`,
-    `Sobrancelha ${n}`,
+    `chibi-basics/eyebrows/${i + 1}.png`,
+    `Sobrancelha ${i + 1}`,
     undefined,
-    n <= 2,
-    n > 2 ? 20 : undefined
+    false,
+    20
   )
-})
+)
 
-export const EYELASHES: CharacterPiece[] = Array.from({ length: 6 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `eyelash-b-${n}`,
+export const EYELASHES: CharacterPiece[] = Array.from({ length: 5 }, (_, i) =>
+  piece(
+    `eyelash-b-${i + 1}`,
     'eyelashes',
     B,
     'neutral',
-    `chibi-basics/EYELASHES/${n}.png`,
-    `Cílios ${n}`,
+    `chibi-basics/eyelashes/${i + 1}.png`,
+    `Cílios ${i + 1}`,
     undefined,
-    n <= 2,
-    n > 2 ? 20 : undefined
+    false,
+    20
   )
-})
+)
 
-export const PUPILS: CharacterPiece[] = Array.from({ length: 8 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `pupil-b-${n}`,
+export const PUPILS: CharacterPiece[] = Array.from({ length: 16 }, (_, i) =>
+  piece(
+    `pupil-b-${i + 1}`,
     'pupils',
     B,
     'neutral',
-    `chibi-basics/PUPILS/${n}.png`,
-    `Pupila ${n}`,
+    `chibi-basics/pupils/${i + 1}.png`,
+    `Pupila ${i + 1}`,
     undefined,
-    n <= 2,
-    n > 2 ? 20 : undefined
+    false,
+    20
   )
-})
+)
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — BEARD
+// BEARD
 // ─────────────────────────────────────────────
 
-export const BEARD: CharacterPiece[] = Array.from({ length: 6 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `beard-b-${n}`,
+export const BEARD: CharacterPiece[] = Array.from({ length: 5 }, (_, i) =>
+  piece(
+    `beard-b-${i + 1}`,
     'beard',
     B,
     'masc',
-    `chibi-basics/BEARD/${n}.png`,
-    `Barba ${n}`,
+    `chibi-basics/beard/${i + 1}.png`,
+    `Barba ${i + 1}`,
     undefined,
     false,
     30
   )
-})
+)
 
 // ─────────────────────────────────────────────
-// CHIBI BASICS — TOP
+// TOP
 // ─────────────────────────────────────────────
 
 export const TOPS: CharacterPiece[] = [
-  // chibi-basics: 12 estilos
+  // ── chibi-basics ──
   ...Array.from({ length: 12 }, (_, i) => {
     const n = i + 1
     return piece(
@@ -631,22 +663,23 @@ export const TOPS: CharacterPiece[] = [
       'top',
       B,
       'neutral',
-      `chibi-basics/top/${n}.png`,
-      `Top ${n}`,
       `chibi-basics/top/colors/${n}.png`,
-      n === 1,
-      n > 1 ? 50 : undefined
+      `Parte de cima ${n}`,
+      undefined,
+      false,
+      50
     )
   }),
-  // masc-misc tops
+
+  // ── masc-misc ──
   piece(
     'top-m-blouson',
     'top',
     M,
     'masc',
-    'masc-misc/9-top-blouson-shirt(bw).png',
-    'Blouson',
     'masc-misc/9-top-blouson-shirt(color).png',
+    'Blouson',
+    undefined,
     false,
     60
   ),
@@ -688,9 +721,9 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-Kpop-suit(bw).png',
-    'Kpop suit',
     'masc-misc/9-top-Kpop-suit(color).png',
+    'Kpop suit',
+    undefined,
     false,
     80
   ),
@@ -699,9 +732,9 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-polo(bw).png',
-    'Polo',
     'masc-misc/9-top-polo(color).png',
+    'Polo',
+    undefined,
     false,
     60
   ),
@@ -710,9 +743,9 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-pull-and-shirt(bw).png',
-    'Pull + camisa',
     'masc-misc/9-top-pull-and-shirt(color).png',
+    'Pull + camisa',
+    undefined,
     false,
     60
   ),
@@ -721,9 +754,9 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-royalcape-top(bw).png',
-    'Capa real',
     'masc-misc/9-top-royalcape-top(color).png',
+    'Capa real',
+    undefined,
     false,
     100
   ),
@@ -732,9 +765,9 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-royalcape-back(bw).png',
-    'Capa real (costas)',
     'masc-misc/9-top-royalcape-back(color).png',
+    'Capa real (costas)',
+    undefined,
     false,
     100
   ),
@@ -743,9 +776,9 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-royal-prince(bw).png',
-    'Príncipe',
     'masc-misc/9-top-royal-prince(color).png',
+    'Príncipe',
+    undefined,
     false,
     100
   ),
@@ -754,9 +787,9 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-sweatshirt(bw).png',
-    'Moletom',
     'masc-misc/9-top-sweatshirt(color).png',
+    'Moletom',
+    undefined,
     false,
     60
   ),
@@ -765,46 +798,116 @@ export const TOPS: CharacterPiece[] = [
     'top',
     M,
     'masc',
-    'masc-misc/9-top-timber(bw).png',
-    'Timber',
     'masc-misc/9-top-timber(color).png',
+    'Timber',
+    undefined,
     false,
     60
   ),
+  // top-m-tshirt removido (arquivo não existe)
   piece(
-    'top-m-tshirt',
+    'top-m-tshirt-p1',
     'top',
     M,
     'masc',
-    'masc-misc/9-top-tshirt(bw).png',
-    'Camiseta',
-    'masc-misc/9-top-tshirt(color).png',
-    true
+    'masc-misc/9-top-tshirt(pattern1).png',
+    'Camiseta estampa 1',
+    undefined,
+    false,
+    70
+  ),
+  piece(
+    'top-m-tshirt-p2',
+    'top',
+    M,
+    'masc',
+    'masc-misc/9-top-tshirt(pattern2).png',
+    'Camiseta estampa 2',
+    undefined,
+    false,
+    70
+  ),
+  piece(
+    'top-m-tshirt-p3',
+    'top',
+    M,
+    'masc',
+    'masc-misc/9-top-tshirt(pattern3).png',
+    'Camiseta estampa 3',
+    undefined,
+    false,
+    70
+  ),
+  piece(
+    'top-m-tshirt-p4',
+    'top',
+    M,
+    'masc',
+    'masc-misc/9-top-tshirt(pattern4).png',
+    'Camiseta estampa 4',
+    undefined,
+    false,
+    70
+  ),
+  piece(
+    'top-m-tshirt-p5',
+    'top',
+    M,
+    'masc',
+    'masc-misc/9-top-tshirt(pattern5).png',
+    'Camiseta estampa 5',
+    undefined,
+    false,
+    70
   ),
   piece(
     'top-m-tshirtXXL',
     'top',
     M,
     'masc',
-    'masc-misc/9-top-tshirtXXL(bw).png',
-    'Camiseta oversized',
     'masc-misc/9-top-tshirtXXL(color).png',
+    'Camiseta oversized',
+    undefined,
     false,
     60
   ),
-  // power couples 1
+  piece(
+    'top-m-marcel1',
+    'top',
+    M,
+    'masc',
+    'masc-misc/9-marcel1.png',
+    'Marcel 1',
+    undefined,
+    false,
+    60
+  ),
+  piece(
+    'top-m-marcel2',
+    'top',
+    M,
+    'masc',
+    'masc-misc/9-marcel2.png',
+    'Marcel 2',
+    undefined,
+    false,
+    60
+  ),
+
+  // ── power-couples-1 ──
   piece(
     'top-p1',
     'top',
     P1,
     'neutral',
     'power-couples-1/top.png',
-    'Conjunto 1',
+    'Top casal 1',
     undefined,
     false,
     80
   ),
-  // power couples 2
+
+  // ── power-couples-2 ──
   piece(
     'top-p2',
     'top',
@@ -827,149 +930,20 @@ export const TOPS: CharacterPiece[] = [
     false,
     80
   ),
-  // summer tops
-  piece(
-    'top-s-1',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/top1.png',
-    'Verão top 1',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-2',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/top2.png',
-    'Verão top 2',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-3',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/top3.png',
-    'Verão top 3',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-4',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/top4.png',
-    'Verão top 4',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-5',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/top5.png',
-    'Verão top 5',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-6',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/top6.png',
-    'Verão top 6',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-combi',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/combi.png',
-    'Maiô inteiro',
-    undefined,
-    false,
-    60
-  ),
-  piece(
-    'top-s-cream',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/cream.png',
-    'Cream',
-    undefined,
-    false,
-    60
-  ),
-  piece(
-    'top-s-sunburn',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/sunburn.png',
-    'Sunburn',
-    undefined,
-    false,
-    60
-  ),
-  piece(
-    'top-s-tan1',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/tan1.png',
-    'Tan 1',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-tan2',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/tan2.png',
-    'Tan 2',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-tan3',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/tan3.png',
-    'Tan 3',
-    undefined,
-    false,
-    50
-  ),
-  piece(
-    'top-s-tan4',
-    'top',
-    S,
-    'fem',
-    'summer/color assets/tan4.png',
-    'Tan 4',
-    undefined,
-    false,
-    50
+
+  // ── summer ──
+  ...Array.from({ length: 6 }, (_, i) =>
+    piece(
+      `top-s-${i + 1}`,
+      'top',
+      S,
+      'fem',
+      `summer/color-assets/top${i + 1}.png`,
+      `Top praia ${i + 1}`,
+      undefined,
+      false,
+      50
+    )
   ),
 ]
 
@@ -978,7 +952,7 @@ export const TOPS: CharacterPiece[] = [
 // ─────────────────────────────────────────────
 
 export const BOTTOMS: CharacterPiece[] = [
-  // chibi-basics: 8 estilos
+  // ── chibi-basics ──
   ...Array.from({ length: 8 }, (_, i) => {
     const n = i + 1
     return piece(
@@ -986,22 +960,23 @@ export const BOTTOMS: CharacterPiece[] = [
       'bottom',
       B,
       'neutral',
-      `chibi-basics/bottom/${n}.png`,
-      `Bottom ${n}`,
       `chibi-basics/bottom/color/${n}.png`,
-      n === 1,
-      n > 1 ? 50 : undefined
+      `Parte de baixo ${n}`,
+      undefined,
+      false,
+      50
     )
   }),
-  // masc-misc bottoms
+
+  // ── masc-misc ──
   piece(
     'bottom-m-academic',
     'bottom',
     M,
     'masc',
-    'masc-misc/9-bottom-academic(bw).png',
-    'Acadêmico',
     'masc-misc/9-bottom-academic(color).png',
+    'Acadêmico',
+    undefined,
     false,
     60
   ),
@@ -1010,9 +985,9 @@ export const BOTTOMS: CharacterPiece[] = [
     'bottom',
     M,
     'masc',
-    'masc-misc/9-bottom-costume(bw).png',
-    'Fantasia',
     'masc-misc/9-bottom-costume(color).png',
+    'Fantasia',
+    undefined,
     false,
     60
   ),
@@ -1032,19 +1007,20 @@ export const BOTTOMS: CharacterPiece[] = [
     'bottom',
     M,
     'masc',
-    'masc-misc/9-bottom-jean(bw).png',
-    'Jeans',
     'masc-misc/9-bottom-jean(color).png',
-    true
+    'Jeans',
+    undefined,
+    false,
+    50
   ),
   piece(
     'bottom-m-short',
     'bottom',
     M,
     'masc',
-    'masc-misc/9-bottom-short(bw).png',
-    'Short',
     'masc-misc/9-bottom-short(color).png',
+    'Short',
+    undefined,
     false,
     50
   ),
@@ -1053,13 +1029,14 @@ export const BOTTOMS: CharacterPiece[] = [
     'bottom',
     M,
     'masc',
-    'masc-misc/9-bottom-underwear-boxer(bw).png',
-    'Boxer',
     'masc-misc/9-bottom-underwear-boxer(color).png',
+    'Boxer',
+    undefined,
     false,
     40
   ),
-  // power couples
+
+  // ── power-couples-1 ──
   piece(
     'bottom-p1',
     'bottom',
@@ -1071,6 +1048,8 @@ export const BOTTOMS: CharacterPiece[] = [
     false,
     70
   ),
+
+  // ── power-couples-2 ──
   piece(
     'bottom-p2',
     'bottom',
@@ -1082,54 +1061,21 @@ export const BOTTOMS: CharacterPiece[] = [
     false,
     70
   ),
-  piece(
-    'bottom-p2-skirt',
-    'bottom',
-    P2,
-    'neutral',
-    'power-couples-2/skirt.png',
-    'Saia',
-    undefined,
-    false,
-    70
-  ),
-  piece(
-    'bottom-p2-skirt-back',
-    'bottom',
-    P2,
-    'neutral',
-    'power-couples-2/skirt_back.png',
-    'Saia (costas)',
-    undefined,
-    false,
-    70
-  ),
-  piece(
-    'bottom-p2-skirt-top',
-    'bottom',
-    P2,
-    'neutral',
-    'power-couples-2/skirt_top.png',
-    'Saia top',
-    undefined,
-    false,
-    70
-  ),
-  // summer
-  ...Array.from({ length: 8 }, (_, i) => {
-    const n = i + 1
-    return piece(
-      `bottom-s-${n}`,
+
+  // ── summer ──
+  ...Array.from({ length: 8 }, (_, i) =>
+    piece(
+      `bottom-s-${i + 1}`,
       'bottom',
       S,
       'fem',
-      `summer/color assets/bottom${n}.png`,
-      `Verão bottom ${n}`,
+      `summer/color-assets/bottom${i + 1}.png`,
+      `Bottom praia ${i + 1}`,
       undefined,
       false,
       50
     )
-  }),
+  ),
 ]
 
 // ─────────────────────────────────────────────
@@ -1137,6 +1083,7 @@ export const BOTTOMS: CharacterPiece[] = [
 // ─────────────────────────────────────────────
 
 export const DRESSES: CharacterPiece[] = [
+  // ── chibi-basics ──
   ...Array.from({ length: 7 }, (_, i) => {
     const n = i + 1
     return piece(
@@ -1144,13 +1091,15 @@ export const DRESSES: CharacterPiece[] = [
       'dress',
       B,
       'fem',
-      `chibi-basics/dress/${n}.png`,
-      `Vestido ${n}`,
       `chibi-basics/dress/COLORS/${n}.png`,
-      n === 1,
-      n > 1 ? 70 : undefined
+      `Vestido ${n}`,
+      undefined,
+      false,
+      70
     )
   }),
+
+  // ── power-couples-1 ──
   piece(
     'dress-p1',
     'dress',
@@ -1162,6 +1111,79 @@ export const DRESSES: CharacterPiece[] = [
     false,
     90
   ),
+
+  // ── summer ──
+  piece(
+    'dress-s-combi',
+    'dress',
+    S,
+    'fem',
+    'summer/color-assets/combi.png',
+    'Maiô inteiro',
+    undefined,
+    false,
+    60
+  ),
+]
+
+// ─────────────────────────────────────────────
+// SAIA COSTAS — fica atrás do body (layer própria)
+// kit com saia e saia_top do P2
+// ─────────────────────────────────────────────
+
+export const SAIA_COSTAS: CharacterPiece[] = [
+  piece(
+    'saia-costas-p2',
+    'saia_costas',
+    P2,
+    'neutral',
+    'power-couples-2/skirt_back.png',
+    'Saia (costas)',
+    undefined,
+    false,
+    70
+  ),
+]
+
+// ─────────────────────────────────────────────
+// SAIA TOP — fica acima de tudo (layer própria)
+// usa junto com saia costas e/ou skirt do P2
+// ─────────────────────────────────────────────
+
+export const SAIA_TOP: CharacterPiece[] = [
+  piece(
+    'saia-top-p2',
+    'saia_top',
+    P2,
+    'neutral',
+    'power-couples-2/skirt_top.png',
+    'Saia (topo)',
+    undefined,
+    false,
+    70
+  ),
+]
+
+// ─────────────────────────────────────────────
+// BOTTOM — saia do casal P2 (camada normal)
+// complementa o kit saia costas + saia top
+// adicionada aqui separada pra ficar clara
+// ─────────────────────────────────────────────
+// (já está em BOTTOMS como bottom-p2-skirt — mas removemos e passamos pra categoria bottom normal)
+// Nota: skirt.png fica em bottom normal, skirt_back em saia_costas, skirt_top em saia_top
+
+export const SKIRT_KIT: CharacterPiece[] = [
+  piece(
+    'bottom-p2-skirt',
+    'bottom',
+    P2,
+    'neutral',
+    'power-couples-2/skirt.png',
+    'Saia casal',
+    undefined,
+    false,
+    70
+  ),
 ]
 
 // ─────────────────────────────────────────────
@@ -1169,6 +1191,7 @@ export const DRESSES: CharacterPiece[] = [
 // ─────────────────────────────────────────────
 
 export const SHOES: CharacterPiece[] = [
+  // ── chibi-basics ──
   ...Array.from({ length: 4 }, (_, i) => {
     const n = i + 1
     return piece(
@@ -1176,13 +1199,15 @@ export const SHOES: CharacterPiece[] = [
       'shoes',
       B,
       'neutral',
-      `chibi-basics/shoes/${n}.png`,
-      `Sapato ${n}`,
       `chibi-basics/shoes/COLOR/${n}.png`,
-      n === 1,
-      n > 1 ? 40 : undefined
+      `Sapato ${n}`,
+      undefined,
+      false,
+      40
     )
   }),
+
+  // ── power-couples-1 ──
   piece(
     'shoes-p1',
     'shoes',
@@ -1205,6 +1230,8 @@ export const SHOES: CharacterPiece[] = [
     false,
     50
   ),
+
+  // ── power-couples-2 ──
   piece(
     'shoes-p2',
     'shoes',
@@ -1227,13 +1254,15 @@ export const SHOES: CharacterPiece[] = [
     false,
     50
   ),
+
+  // ── summer ──
   piece(
     'shoes-s',
     'shoes',
     S,
     'fem',
-    'summer/color assets/shoes.png',
-    'Sandália verão',
+    'summer/color-assets/shoes.png',
+    'Sandália praia',
     undefined,
     false,
     40
@@ -1244,27 +1273,53 @@ export const SHOES: CharacterPiece[] = [
 // GLOVES
 // ─────────────────────────────────────────────
 
-export const GLOVES: CharacterPiece[] = Array.from({ length: 6 }, (_, i) => {
-  const n = i + 1
-  return piece(
-    `gloves-b-${n}`,
+export const GLOVES: CharacterPiece[] = [
+  // ── chibi-basics ──
+  ...Array.from({ length: 6 }, (_, i) =>
+    piece(
+      `gloves-b-${i + 1}`,
+      'gloves',
+      B,
+      'neutral',
+      `chibi-basics/gloves/COLOR/${i + 1}.png`,
+      `Luva ${i + 1}`,
+      undefined,
+      false,
+      40
+    )
+  ),
+
+  // ── power-couples-1 ──
+  piece(
+    'gloves-p1',
     'gloves',
-    B,
+    P1,
     'neutral',
-    `chibi-basics/gloves/${n}.png`,
-    `Luva ${n}`,
-    `chibi-basics/gloves/COLOR/${n}.png`,
+    'power-couples-1/glove.png',
+    'Luva casal 1',
+    undefined,
     false,
     40
-  )
-})
+  ),
+  piece(
+    'gloves-p1-b',
+    'gloves',
+    P1,
+    'neutral',
+    'power-couples-1/gloveB.png',
+    'Luva casal 1b',
+    undefined,
+    false,
+    40
+  ),
+]
 
 // ─────────────────────────────────────────────
-// ACESSÓRIOS (power couples + summer)
+// ACESSÓRIOS — camada normal (abaixo do cabelo)
 // ─────────────────────────────────────────────
 
 export const ACCESSORIES: CharacterPiece[] = [
-  // power couples 1
+  // ── power-couples-1 ──
   piece(
     'acc-p1-bracelet',
     'accessory',
@@ -1299,39 +1354,6 @@ export const ACCESSORIES: CharacterPiece[] = [
     40
   ),
   piece(
-    'acc-p1-glove',
-    'accessory',
-    P1,
-    'neutral',
-    'power-couples-1/glove.png',
-    'Luva 1',
-    undefined,
-    false,
-    40
-  ),
-  piece(
-    'acc-p1-gloveB',
-    'accessory',
-    P1,
-    'neutral',
-    'power-couples-1/gloveB.png',
-    'Luva 1b',
-    undefined,
-    false,
-    40
-  ),
-  piece(
-    'acc-p1-jacket',
-    'accessory',
-    P1,
-    'neutral',
-    'power-couples-1/jacket.png',
-    'Jaqueta 1',
-    undefined,
-    false,
-    80
-  ),
-  piece(
     'acc-p1-mouth',
     'accessory',
     P1,
@@ -1364,7 +1386,8 @@ export const ACCESSORIES: CharacterPiece[] = [
     false,
     30
   ),
-  // power couples 2
+
+  // ── power-couples-2 ──
   piece(
     'acc-p2-belt',
     'accessory',
@@ -1421,17 +1444,6 @@ export const ACCESSORIES: CharacterPiece[] = [
     20
   ),
   piece(
-    'acc-p2-jacket',
-    'accessory',
-    P2,
-    'neutral',
-    'power-couples-2/jacket.png',
-    'Jaqueta 2',
-    undefined,
-    false,
-    80
-  ),
-  piece(
     'acc-p2-necklace',
     'accessory',
     P2,
@@ -1453,58 +1465,68 @@ export const ACCESSORIES: CharacterPiece[] = [
     false,
     40
   ),
-  // summer
+]
+
+export const JAQUETAS: CharacterPiece[] = [
   piece(
-    'acc-s-1',
-    'accessory',
-    S,
+    'acc-p1-jacket',
+    'jaqueta',
+    P1,
     'neutral',
-    'summer/color assets/access1.png',
-    'Acessório verão 1',
+    'power-couples-1/jacket.png',
+    'Jaqueta 1',
     undefined,
     false,
-    30
+    80
   ),
   piece(
-    'acc-s-2',
-    'accessory',
-    S,
+    'acc-p2-jacket',
+    'jaqueta',
+    P2,
     'neutral',
-    'summer/color assets/access2.png',
-    'Acessório verão 2',
+    'power-couples-2/jacket.png',
+    'Jaqueta 2',
     undefined,
     false,
-    30
+    80
   ),
+]
+
+// ─────────────────────────────────────────────
+// ACESSÓRIOS CIMA — acima dos acessórios normais, abaixo do cabelo
+// access3 praia
+// ─────────────────────────────────────────────
+
+export const ACCESSORIES_CIMA: CharacterPiece[] = [
   piece(
     'acc-s-3',
-    'accessory',
+    'accessory_cima',
     S,
     'neutral',
-    'summer/color assets/access3.png',
-    'Acessório verão 3',
+    'summer/color-assets/access3.png',
+    'Acessório praia 3',
     undefined,
     false,
     30
   ),
   piece(
     'acc-s-4',
-    'accessory',
+    'accessory_cima',
     S,
     'neutral',
-    'summer/color assets/access4.png',
-    'Acessório verão 4',
+    'summer/color-assets/access4.png',
+    'Acessório praia 4',
     undefined,
     false,
     30
   ),
   piece(
     'acc-s-5',
-    'accessory',
+    'accessory_cima',
     S,
     'neutral',
-    'summer/color assets/access5.png',
-    'Acessório verão 5',
+    'summer/color-assets/access5.png',
+    'Acessório praia 5',
     undefined,
     false,
     30
@@ -1512,10 +1534,41 @@ export const ACCESSORIES: CharacterPiece[] = [
 ]
 
 // ─────────────────────────────────────────────
-// TATUAGENS (power couples 2)
+// ACESSÓRIOS TOPO — acima de tudo
+// access1 e access2 praia + saia_top já tem layer própria
+// ─────────────────────────────────────────────
+
+export const ACCESSORIES_TOPO: CharacterPiece[] = [
+  piece(
+    'acc-s-1',
+    'accessory_topo',
+    S,
+    'neutral',
+    'summer/color-assets/access1.png',
+    'Acessório praia 1',
+    undefined,
+    false,
+    30
+  ),
+  piece(
+    'acc-s-2',
+    'accessory_topo',
+    S,
+    'neutral',
+    'summer/color-assets/access2.png',
+    'Acessório praia 2',
+    undefined,
+    false,
+    30
+  ),
+]
+
+// ─────────────────────────────────────────────
+// TATUAGENS + BRONZEADO
 // ─────────────────────────────────────────────
 
 export const TATTOOS: CharacterPiece[] = [
+  // ── power-couples-2 ──
   piece(
     'tatoo-dragon',
     'tattoo',
@@ -1560,6 +1613,74 @@ export const TATTOOS: CharacterPiece[] = [
     false,
     60
   ),
+
+  // ── summer ──
+  piece(
+    'tan-s-1',
+    'tattoo',
+    S,
+    'fem',
+    'summer/color-assets/tan1.png',
+    'Bronzeado 1',
+    undefined,
+    false,
+    30
+  ),
+  piece(
+    'tan-s-2',
+    'tattoo',
+    S,
+    'fem',
+    'summer/color-assets/tan2.png',
+    'Bronzeado 2',
+    undefined,
+    false,
+    30
+  ),
+  piece(
+    'tan-s-3',
+    'tattoo',
+    S,
+    'fem',
+    'summer/color-assets/tan3.png',
+    'Bronzeado 3',
+    undefined,
+    false,
+    30
+  ),
+  piece(
+    'tan-s-4',
+    'tattoo',
+    S,
+    'fem',
+    'summer/color-assets/tan4.png',
+    'Bronzeado 4',
+    undefined,
+    false,
+    30
+  ),
+  piece(
+    'sunburn-s',
+    'tattoo',
+    S,
+    'fem',
+    'summer/color-assets/sunburn.png',
+    'Queimadura solar',
+    undefined,
+    false,
+    30
+  ),
+  piece(
+    'cream-s',
+    'tattoo',
+    S,
+    'fem',
+    'summer/color-assets/cream.png',
+    'Protetor solar',
+    undefined,
+    false,
+    20
+  ),
 ]
 
 // ─────────────────────────────────────────────
@@ -1569,7 +1690,6 @@ export const TATTOOS: CharacterPiece[] = [
 export const ALL_PIECES: CharacterPiece[] = [
   ...BODIES,
   ...HAIR,
-  ...HAIR_MASC,
   ...HAIR_BACK,
   ...HAIR_BONUS,
   ...BANGS,
@@ -1580,16 +1700,18 @@ export const ALL_PIECES: CharacterPiece[] = [
   ...BEARD,
   ...TOPS,
   ...BOTTOMS,
+  ...SKIRT_KIT,
   ...DRESSES,
+  ...SAIA_COSTAS,
+  ...SAIA_TOP,
   ...SHOES,
   ...GLOVES,
   ...ACCESSORIES,
+  ...JAQUETAS,
+  ...ACCESSORIES_CIMA,
+  ...ACCESSORIES_TOPO,
   ...TATTOOS,
 ]
-
-// ─────────────────────────────────────────────
-// HELPERS DE BUSCA
-// ─────────────────────────────────────────────
 
 export function getPieceById(id: string): CharacterPiece | undefined {
   return ALL_PIECES.find((p) => p.id === id)
@@ -1607,22 +1729,30 @@ export function getPiecesByPack(pack: CharacterPack): CharacterPiece[] {
   return ALL_PIECES.filter((p) => p.pack === pack)
 }
 
-// Ordem de renderização das camadas (de baixo pra cima)
+// ─────────────────────────────────────────────
+// LAYER ORDER — de baixo pra cima
+// ─────────────────────────────────────────────
+
 export const LAYER_ORDER: CharacterCategory[] = [
-  'body',
-  'tattoo',
+  'saia_costas', // atrás do body
   'hair_back',
-  'bottom',
-  'dress',
-  'top',
-  'shoes',
-  'gloves',
-  'accessory',
-  'hair',
-  'bangs',
-  'hair_bonus',
-  'beard',
+  'body',
   'eyebrows',
+  'tattoo',
+  'shoes',
+  'bottom',
+  'saia_top', // ← sobe pra cá, abaixo do dress e top
+  'dress',
+  'gloves',
+  'top',
+  'jaqueta', // ← acima do top
+  'accessory',
+  'accessory_cima',
+  'accessory_topo',
+  'hair',
+  'hair_bonus',
+  'bangs',
+  'beard',
   'eyelashes',
   'pupils',
   'mouth',

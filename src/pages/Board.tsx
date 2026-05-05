@@ -33,7 +33,7 @@ import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
 import MovieList from '../components/MovieList'
-import { CalendarDays, LayoutGrid, Sprout, Film, ArrowRightLeft, Layers } from 'lucide-react'
+import { CalendarDays, LayoutGrid, Sprout, Film, ArrowRightLeft, Layers, User } from 'lucide-react'
 import SpecialLetterModal from '../components/SpecialLetterModal'
 import SpecialLetter from '../components/SpecialLetter'
 import type { SpecialLetterItem } from '../types/board'
@@ -47,6 +47,8 @@ import type { CountdownPinItem } from '../types/board'
 import CountdownPin from '../components/CountdownPin'
 import CyclePinItem from '../components/CyclePinItem'
 import CycleModal from '../components/CycleModal'
+import CharacterModal from '../components/CharacterModal'
+import { useCharacter } from '../hooks/useCharacter'
 import type { CyclePinItem as CyclePinItemType } from '../types/board'
 
 function makeId() {
@@ -138,6 +140,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   } | null>(null)
   const isNana = uid === import.meta.env.VITE_NANA_UID
   const [showCycleModal, setShowCycleModal] = useState(false)
+  const [showCharacter, setShowCharacter] = useState(false)
+  const { config: characterConfig, saveConfig: saveCharacterConfig } = useCharacter(uid)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
   const { extraBoards } = useBoards(uid)
   const defaultBoard: BoardMeta = {
@@ -759,6 +763,33 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           <Sprout size={22} strokeWidth={2} />
         </div>
 
+        {/* Botão personagem */}
+        <div
+          onClick={() => setShowCharacter(true)}
+          style={{
+            position: 'fixed',
+            bottom: 344,
+            right: 20,
+            zIndex: 48,
+            background: 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
+            border: '2px solid #c478a8',
+            borderRadius: '50%',
+            width: 48,
+            height: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#5a1a3a',
+            cursor: 'pointer',
+            boxShadow: '0 3px 10px rgba(196,120,168,0.35)',
+            transition: 'transform 0.15s',
+            userSelect: 'none',
+          }}
+          title="meu personagem"
+        >
+          <User size={22} strokeWidth={2} />
+        </div>
+
         {/* Botão widgets */}
         <div
           onClick={() => setShowWidgets(true)}
@@ -1244,6 +1275,14 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           />
         )}
         {showCycleModal && <CycleModal myUid={uid} onClose={() => setShowCycleModal(false)} />}
+        {showCharacter && (
+          <CharacterModal
+            myUid={uid}
+            config={characterConfig}
+            onSave={saveCharacterConfig}
+            onClose={() => setShowCharacter(false)}
+          />
+        )}
         {trashOpen && (
           <div
             onClick={handleTrashClose}
