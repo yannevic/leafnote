@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { RefreshCw, Download, ArrowDownToLine, Loader } from 'lucide-react'
 import BoardSwitcher from './BoardSwitcher'
 import type { BoardMeta } from '../lib/boards'
+import NotificationCenter from './NotificationCenter'
+import type { AppNotification } from '../hooks/useNotificationCenter'
 
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
@@ -17,6 +19,7 @@ interface TitleBarProps {
   updateProgress?: number
   onInstallUpdate?: () => void
   onCheckUpdate?: () => void
+  notifications?: AppNotification[]
 }
 
 export default function TitleBar({
@@ -29,6 +32,7 @@ export default function TitleBar({
   updateProgress = 0,
   onInstallUpdate,
   onCheckUpdate,
+  notifications = [],
 }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [version, setVersion] = useState('')
@@ -168,6 +172,8 @@ export default function TitleBar({
           } as React.CSSProperties
         }
       >
+        <NotificationCenter notifications={notifications} />
+
         <UpdateBtn
           status={updateStatus}
           progress={updateProgress}

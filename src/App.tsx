@@ -8,11 +8,32 @@ import TitleBar from './components/TitleBar'
 import UpdateNotifier, { UpdateStatus } from './components/UpdateNotifier'
 import { useBoards } from './hooks/useBoards'
 import ChangelogModal from './components/ChangelogModal'
+import { useNotificationCenter } from './hooks/useNotificationCenter'
 
 function AppInner({ user }: { user: User }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
     user.uid
   )
+  const [partnerUid, setPartnerUid] = useState<string>('')
+
+  useEffect(() => {
+    import('firebase/database').then(({ getDatabase, ref, onValue }) => {
+      const db = getDatabase()
+      const r = ref(db, 'users/' + user.uid + '/partnerUid')
+      const unsub = onValue(r, (snap) => {
+        setPartnerUid(snap.val() ?? '')
+      })
+      return () => unsub()
+    })
+  }, [user.uid])
+
+  const extraBoardNames = Object.fromEntries(extraBoards.map((b) => [b.id, b.name]))
+  const { notifications } = useNotificationCenter({
+    uid: user.uid,
+    partnerUid,
+    extraBoardNames,
+  })
+
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
   const [updateProgress, setUpdateProgress] = useState(0)
 
@@ -34,6 +55,7 @@ function AppInner({ user }: { user: User }) {
         updateProgress={updateProgress}
         onInstallUpdate={() => window.api.installUpdate()}
         onCheckUpdate={() => window.api.checkForUpdates()}
+        notifications={notifications}
       />
       <div className="flex-1 overflow-hidden">
         <HashRouter>

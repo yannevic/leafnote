@@ -10,8 +10,8 @@ autoUpdater.autoInstallOnAppQuit = true
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1450,
+    height: 990,
     frame: false,
     icon: join(__dirname, '../resources/icon.ico'),
     webPreferences: {
