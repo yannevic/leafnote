@@ -324,6 +324,35 @@ export async function checkWiltAll(): Promise<void> {
   )
 }
 
+// ─── Seed Exchange ────────────────────────────────────────────────────────────
+
+export const TIER_ORDER: FlowerRarity[] = ['comum', 'incomum', 'rara']
+
+export function getExchangeOptions(tier: FlowerRarity, currentType: FlowerType): FlowerType[] {
+  const sameTier = (Object.values(FLOWERS) as FlowerInfo[])
+    .filter((f) => f.rarity === tier && f.type !== currentType && f.type !== 'especial')
+    .map((f) => f.type)
+
+  const tierIndex = TIER_ORDER.indexOf(tier)
+  const nextTier = TIER_ORDER[tierIndex + 1]
+  const nextTierFlowers = nextTier
+    ? (Object.values(FLOWERS) as FlowerInfo[])
+        .filter((f) => f.rarity === nextTier && f.type !== 'especial')
+        .map((f) => f.type)
+    : []
+
+  return [...sameTier, ...nextTierFlowers]
+}
+
+export async function exchangeSeeds(seedIds: string[], rewardType: FlowerType): Promise<void> {
+  await Promise.all(seedIds.map((id) => remove(ref(db, `garden/seeds/${id}`))))
+  await addSeed(rewardType)
+  // Inicializa moedas se ainda não existir
+  const coinsRef = ref(db, 'garden/coins')
+  const snap = await get(coinsRef)
+  if (!snap.exists()) await set(coinsRef, 0)
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function rollDice(): number {

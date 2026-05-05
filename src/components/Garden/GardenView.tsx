@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Sprout, X, AlertTriangle, Leaf } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Sprout,
+  X,
+  AlertTriangle,
+  Leaf,
+  ArrowLeftRight,
+} from 'lucide-react'
+import SeedExchangeModal from './SeedExchangeModal'
 import { useGarden } from '../../hooks/useGarden'
 import { FLOWERS, SeedData } from '../../lib/garden'
 import Plant from './Plant'
@@ -42,6 +51,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const [showSeedModal, setShowSeedModal] = useState(false)
   const [plantingSeed, setPlantingSeed] = useState<SeedData | null>(null)
   const [_seedRollDone, setSeedRollDone] = useState(false)
+  const [showExchangeModal, setShowExchangeModal] = useState(false)
 
   const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
@@ -108,6 +118,24 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {/* Toggle modo pânico */}
+              <button
+                onClick={() => setShowExchangeModal(true)}
+                title="Trocar sementes"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: '#4F7E4E',
+                }}
+              >
+                <ArrowLeftRight size={15} />
+              </button>
               <button
                 onClick={togglePanic}
                 title={
@@ -481,6 +509,9 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
             </div>
           </div>
         </div>
+      )}
+      {showExchangeModal && (
+        <SeedExchangeModal seeds={seeds} onClose={() => setShowExchangeModal(false)} />
       )}
     </>
   )
