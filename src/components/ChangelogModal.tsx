@@ -54,18 +54,11 @@ const CHANGELOG: Record<string, string[]> = {
     '💄 ícone de moedas (porquinho)',
   ],
 
-  '2.1.21': [
-    '🐛 humor n sobrescreve os itens',
-  ],
+  '2.1.21': ['🐛 humor n sobrescreve os itens'],
 
-  '2.1.20': [
-    '🐛 corrige módulo de ciclo menstrual',
-  ],
+  '2.1.20': ['🐛 corrige módulo de ciclo menstrual'],
 
-  '2.1.19': [
-    '🌸 leafnote',
-    '🐛 corrige módulo de ciclo menstrual',
-  ],
+  '2.1.19': ['🌸 leafnote', '🐛 corrige módulo de ciclo menstrual'],
 
   '2.1.18': [
     '🌸 leafnote',
@@ -220,14 +213,25 @@ export default function ChangelogModal() {
           o que há de novo
         </div>
 
+        <style>{`
+          .changelog-scroll::-webkit-scrollbar { width: 5px; }
+          .changelog-scroll::-webkit-scrollbar-track { background: transparent; }
+          .changelog-scroll::-webkit-scrollbar-thumb { background: #d4aa80; border-radius: 99px; }
+          .changelog-scroll { scrollbar-width: thin; scrollbar-color: #d4aa80 transparent; }
+        `}</style>
+
         <ul
+          className="changelog-scroll"
           style={{
             listStyle: 'none',
             padding: 0,
+            paddingRight: 6,
             margin: 0,
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
+            maxHeight: 320,
+            overflowY: 'auto',
           }}
         >
           {CHANGELOG[version].map((item, i) => (
