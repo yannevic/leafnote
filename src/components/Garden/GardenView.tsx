@@ -7,7 +7,9 @@ import {
   AlertTriangle,
   Leaf,
   ArrowLeftRight,
+  HelpCircle,
 } from 'lucide-react'
+import GardenGuideModal from './GardenGuideModal'
 import SeedExchangeModal from './SeedExchangeModal'
 import { useGarden } from '../../hooks/useGarden'
 import { FLOWERS, SeedData } from '../../lib/garden'
@@ -52,6 +54,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const [plantingSeed, setPlantingSeed] = useState<SeedData | null>(null)
   const [_seedRollDone, setSeedRollDone] = useState(false)
   const [showExchangeModal, setShowExchangeModal] = useState(false)
+  const [showGuideModal, setShowGuideModal] = useState(false)
 
   const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
@@ -118,6 +121,24 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {/* Toggle modo pânico */}
+              <button
+                onClick={() => setShowGuideModal(true)}
+                title="Como funciona o jardim?"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: '#8b6914',
+                }}
+              >
+                <HelpCircle size={15} />
+              </button>
               <button
                 onClick={() => setShowExchangeModal(true)}
                 title="Trocar sementes"
@@ -513,6 +534,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
       {showExchangeModal && (
         <SeedExchangeModal seeds={seeds} onClose={() => setShowExchangeModal(false)} />
       )}
+      {showGuideModal && <GardenGuideModal onClose={() => setShowGuideModal(false)} />}
     </>
   )
 }

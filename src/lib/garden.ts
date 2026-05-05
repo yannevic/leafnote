@@ -328,6 +328,13 @@ export async function checkWiltAll(): Promise<void> {
 
 export const TIER_ORDER: FlowerRarity[] = ['comum', 'incomum', 'rara']
 
+export const EXCHANGE_COST: Record<FlowerRarity, number> = {
+  comum: 5,
+  incomum: 6,
+  rara: 7,
+  epica: 999,
+}
+
 export function getExchangeOptions(tier: FlowerRarity, currentType: FlowerType): FlowerType[] {
   const sameTier = (Object.values(FLOWERS) as FlowerInfo[])
     .filter((f) => f.rarity === tier && f.type !== currentType && f.type !== 'especial')
@@ -347,7 +354,6 @@ export function getExchangeOptions(tier: FlowerRarity, currentType: FlowerType):
 export async function exchangeSeeds(seedIds: string[], rewardType: FlowerType): Promise<void> {
   await Promise.all(seedIds.map((id) => remove(ref(db, `garden/seeds/${id}`))))
   await addSeed(rewardType)
-  // Inicializa moedas se ainda não existir
   const coinsRef = ref(db, 'garden/coins')
   const snap = await get(coinsRef)
   if (!snap.exists()) await set(coinsRef, 0)
@@ -360,10 +366,10 @@ export function rollDice(): number {
 }
 
 export function getFlowerFromSum(sum: number): FlowerType {
-  if (sum <= 2) return 'rosa'
-  if (sum <= 4) return 'margarida'
-  if (sum <= 6) return 'tulipa'
-  if (sum <= 8) return 'girassol'
+  if (sum <= 5) return 'rosa'
+  if (sum <= 8) return 'margarida'
+  if (sum <= 10) return 'tulipa'
+  if (sum <= 11) return 'girassol'
   return 'orquidea'
 }
 

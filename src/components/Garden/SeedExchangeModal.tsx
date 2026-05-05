@@ -8,6 +8,7 @@ import {
   TIER_ORDER,
   getExchangeOptions,
   exchangeSeeds,
+  EXCHANGE_COST,
 } from '../../lib/garden'
 
 interface Props {
@@ -38,6 +39,8 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
   const exchangeOptions: FlowerType[] =
     selectedTier && selectedFlowerType ? getExchangeOptions(selectedTier, selectedFlowerType) : []
 
+  const requiredCount = selectedTier ? EXCHANGE_COST[selectedTier] : 5
+
   const handleSelect = (seed: SeedData) => {
     const info = FLOWERS[seed.flowerType]
 
@@ -57,7 +60,8 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
       return
     }
 
-    if (selected.length >= 5) {
+    const cost = EXCHANGE_COST[info.rarity] ?? 5
+    if (selected.length >= cost) {
       setLimitWarning(true)
       setTimeout(() => setLimitWarning(false), 2500)
       return
@@ -71,7 +75,7 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
   }
 
   const handleConfirm = async () => {
-    if (!chosenReward || selected.length !== 5) return
+    if (!chosenReward || selected.length !== requiredCount) return
     setLoading(true)
     await exchangeSeeds(selected, chosenReward)
     setLoading(false)
@@ -151,8 +155,38 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
             Como funciona?
           </div>
           <div style={{ fontSize: 12, color: '#8E6D1A', lineHeight: 1.7 }}>
-            Selecione abaixo as 5 sementes coletadas do mesmo tier que deseja trocar. Depois,
-            escolha à direita qual semente deseja receber no lugar delas.
+            Selecione abaixo as sementes coletadas do mesmo tier que deseja trocar. Depois, escolha
+            à direita qual semente deseja receber no lugar delas.
+          </div>
+          <div style={{ marginTop: 8, display: 'flex', gap: 10 }}>
+            {(['comum', 'incomum', 'rara'] as FlowerRarity[]).map((r) => (
+              <div
+                key={r}
+                style={{
+                  flex: 1,
+                  background: selectedTier === r ? 'rgba(81,132,81,0.12)' : 'transparent',
+                  border: selectedTier === r ? '1.5px solid #518451' : '1.5px solid #d4aa8066',
+                  borderRadius: 7,
+                  padding: '5px 8px',
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    color: selectedTier === r ? '#518451' : '#8E6D1A',
+                    textTransform: 'capitalize',
+                    marginBottom: 2,
+                  }}
+                >
+                  {r}
+                </div>
+                <div style={{ fontSize: 11, color: '#8E6D1A', opacity: 0.85 }}>
+                  {EXCHANGE_COST[r]} sementes
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -169,7 +203,7 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
               fontWeight: 600,
             }}
           >
-            Limite de 5 sementes atingido!
+            Limite de {selectedTier ? EXCHANGE_COST[selectedTier] : 5} sementes atingido!
           </div>
         )}
 
