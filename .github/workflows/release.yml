@@ -49,7 +49,9 @@ jobs:
           "
 
           CHANGELOG_INPUT=$(cat CHANGELOG_NEXT.txt)
-          echo "changelog_input=$CHANGELOG_INPUT" >> $GITHUB_OUTPUT
+          echo "changelog_input<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_INPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
           ITEMS_JS=$(node -e "
             const raw = process.argv[1];
