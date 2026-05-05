@@ -9,7 +9,7 @@
 ✨ venda de sementes com confirmação |
 ✨ venda de flores florescidas |
 🌱 limite de slots no jardim (dinâmico) |
-✂️ arrancar planta com confirmação |
+🌿 arrancar planta com confirmação |
 ⏱️ tempo de crescimento por tier (comum/incomum/rara) |
 🐛 fix assets: renomeia jasmim para jasmin |
 💄 ícone de moedas (porquinho) |
