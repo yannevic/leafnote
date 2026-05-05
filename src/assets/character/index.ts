@@ -1734,21 +1734,20 @@ export function getPiecesByPack(pack: CharacterPack): CharacterPiece[] {
 // ─────────────────────────────────────────────
 
 export const LAYER_ORDER: CharacterCategory[] = [
-  'saia_costas', // atrás do body
+  'saia_costas',
   'hair_back',
   'body',
   'eyebrows',
   'tattoo',
   'shoes',
   'bottom',
-  'saia_top', // ← sobe pra cá, abaixo do dress e top
+  'saia_top',
   'dress',
   'gloves',
   'top',
-  'jaqueta', // ← acima do top
+  'jaqueta',
   'accessory',
   'accessory_cima',
-  'accessory_topo',
   'hair',
   'hair_bonus',
   'bangs',
@@ -1756,4 +1755,5 @@ export const LAYER_ORDER: CharacterCategory[] = [
   'eyelashes',
   'pupils',
   'mouth',
+  'accessory_topo', // ← agora fica acima de tudo
 ]

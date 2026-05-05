@@ -14,6 +14,7 @@ import {
   getPiecesByCategory,
   COLOR_VARIANT_LABELS,
 } from '../assets/character/index'
+import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
 
 // ── Scrollbar custom global (injeta uma vez) ──────────────────
 const SCROLLBAR_CSS = `
@@ -59,6 +60,7 @@ interface Tab {
 interface Props {
   myUid: string
   config: CharacterConfig
+  unlockedIds: Set<string>
   onSave: (config: CharacterConfig) => void
   onClose: () => void
 }
@@ -183,7 +185,7 @@ const TABS: Tab[] = [
   },
 ]
 
-const COLOR_VARIANTS = ['b', 'c', 'd', 'e', 'f', 'g', 'h']
+const COLOR_VARIANTS = FIRST_TIME_COLOR_VARIANTS
 
 function resolveSrc(piece: CharacterPiece, variant: string): string {
   if (!variant || !piece.hasColor || !piece.srcColor) return assetUrl(piece.src)
@@ -273,12 +275,14 @@ function MiniGrid({
   section,
   config,
   colorVariants,
+  unlockedIds,
   onSelect,
   onColorChange,
 }: {
   section: Section
   config: CharacterConfig
   colorVariants: Record<string, string>
+  unlockedIds: Set<string>
   onSelect: (piece: CharacterPiece, category: CharacterCategory) => void
   onColorChange: (category: CharacterCategory, variant: string) => void
 }) {
@@ -286,6 +290,7 @@ function MiniGrid({
   const pieces = getPiecesByCategory(category).filter((p) => {
     if (genderFilter && p.gender !== genderFilter) return false
     if (packFilter && p.pack !== packFilter) return false
+    if (!unlockedIds.has(p.id)) return false
     return true
   })
   if (pieces.length === 0) return null
@@ -407,24 +412,6 @@ function MiniGrid({
                   imageRendering: 'pixelated',
                 }}
               />
-              {p.cost !== undefined && p.cost > 0 && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    bottom: 3,
-                    right: 5,
-                    fontSize: 10,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    color: 'var(--color-bark-700)',
-                    background: 'rgba(245,236,215,0.92)',
-                    borderRadius: 4,
-                    padding: '0 4px',
-                    lineHeight: '15px',
-                  }}
-                >
-                  {p.cost}
-                </span>
-              )}
             </button>
           )
         })}
@@ -441,12 +428,14 @@ function SectionsPanel({
   sections,
   config,
   colorVariants,
+  unlockedIds, // ← adiciona aqui
   onSelect,
   onColorChange,
 }: {
   sections: Section[]
   config: CharacterConfig
   colorVariants: Record<string, string>
+  unlockedIds: Set<string> // ← adiciona aqui
   onSelect: (piece: CharacterPiece, category: CharacterCategory) => void
   onColorChange: (category: CharacterCategory, variant: string) => void
 }) {
@@ -494,6 +483,7 @@ function SectionsPanel({
               section={section}
               config={config}
               colorVariants={colorVariants}
+              unlockedIds={unlockedIds} // ← adiciona essa linha
               onSelect={onSelect}
               onColorChange={onColorChange}
             />
@@ -515,7 +505,12 @@ interface HistoryEntry {
   colorVariants: Record<string, string>
 }
 
-export default function CharacterModal({ config: initialConfig, onSave, onClose }: Props) {
+export default function CharacterModal({
+  config: initialConfig,
+  unlockedIds,
+  onSave,
+  onClose,
+}: Props) {
   const [config, setConfig] = useState<CharacterConfig>(initialConfig ?? DEFAULT_CHARACTER_CONFIG)
   const [colorVariants, setColorVariants] = useState<Record<string, string>>(() => {
     const defaults: Record<string, string> = {}
@@ -714,6 +709,7 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 20px',
+          paddingTop: 8, // ← adiciona isso
           borderBottom: '2px solid var(--color-wood-300)',
           background: 'var(--color-bark-100)',
           flexShrink: 0,
@@ -971,56 +967,46 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
           <div
             style={{
               display: 'flex',
-              gap: 2,
-              padding: '8px 16px 0',
+              gap: 4,
+              padding: '10px 16px',
+              borderBottom: '2px solid var(--color-wood-300)',
               background: 'var(--color-leaf-100)',
               flexShrink: 0,
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                gap: 4,
-                padding: '10px 16px',
-                borderBottom: '2px solid var(--color-wood-300)',
-                background: 'var(--color-leaf-100)',
-                flexShrink: 0,
-              }}
-            >
-              {TABS.map((tab) => {
-                const locked = tab.requiresBody && !hasBody
-                const isActive = activeTab === tab.id
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    title={locked ? 'Escolha um corpo primeiro' : undefined}
-                    style={{
-                      padding: '5px 18px',
-                      borderRadius: 20,
-                      border: isActive
-                        ? '2px solid var(--color-leaf-500)'
-                        : '2px solid var(--color-wood-300)',
-                      background: isActive ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
-                      color: locked
-                        ? 'var(--color-leaf-300)'
-                        : isActive
-                          ? '#fff'
-                          : 'var(--color-leaf-700)',
-                      fontSize: 13,
-                      fontWeight: isActive ? 700 : 500,
-                      fontFamily: 'Baloo 2, sans-serif',
-                      cursor: locked ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.15s',
-                      opacity: locked ? 0.5 : 1,
-                      boxShadow: isActive ? '0 2px 8px rgba(74,122,74,0.18)' : 'none',
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </div>
+            {TABS.map((tab) => {
+              const locked = tab.requiresBody && !hasBody
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  title={locked ? 'Escolha um corpo primeiro' : undefined}
+                  style={{
+                    padding: '5px 18px',
+                    borderRadius: 20,
+                    border: isActive
+                      ? '2px solid var(--color-leaf-500)'
+                      : '2px solid var(--color-wood-300)',
+                    background: isActive ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
+                    color: locked
+                      ? 'var(--color-leaf-300)'
+                      : isActive
+                        ? '#fff'
+                        : 'var(--color-leaf-700)',
+                    fontSize: 13,
+                    fontWeight: isActive ? 700 : 500,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    cursor: locked ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s',
+                    opacity: locked ? 0.5 : 1,
+                    boxShadow: isActive ? '0 2px 8px rgba(74,122,74,0.18)' : 'none',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              )
+            })}
           </div>
 
           {/* Aviso body */}
@@ -1103,6 +1089,7 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
               sections={activeSections}
               config={config}
               colorVariants={colorVariants}
+              unlockedIds={unlockedIds} // ← adiciona essa linha
               onSelect={handleSelect}
               onColorChange={handleColorChange}
             />

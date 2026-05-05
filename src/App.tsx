@@ -29,11 +29,7 @@ function AppInner({ user }: { user: User }) {
   }, [user.uid])
 
   const extraBoardNames = Object.fromEntries(extraBoards.map((b) => [b.id, b.name]))
-  const { notifications } = useNotificationCenter({
-    uid: user.uid,
-    partnerUid,
-    extraBoardNames,
-  })
+  const { notifications } = useNotificationCenter({ uid: user.uid, partnerUid, extraBoardNames })
 
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
   const [updateProgress, setUpdateProgress] = useState(0)

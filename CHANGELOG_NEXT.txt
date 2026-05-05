@@ -24,3 +24,9 @@
 ❌ botão "nenhum" por seção (exceto corpo) |
 📦 catálogo completo de assets em index.ts por pack e gender |
 🩱 suporte a saia casal (3 camadas: costas / normal / topo) |
+💾 save/load do personagem no Firebase (users/{uid}/character)
+🔓 sistema de itens desbloqueados por padrão (firstTimeConfig)
+↩️ undo/redo funcional no guarda-roupa
+🧹 limpar tudo preserva o corpo selecionado
+🎨 scroll customizado no painel de peças
+📐 preview maior e header centralizado no modal

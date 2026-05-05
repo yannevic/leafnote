@@ -141,7 +141,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const isNana = uid === import.meta.env.VITE_NANA_UID
   const [showCycleModal, setShowCycleModal] = useState(false)
   const [showCharacter, setShowCharacter] = useState(false)
-  const { config: characterConfig, saveConfig: saveCharacterConfig } = useCharacter(uid)
+  const {
+    config: characterConfig,
+    saveConfig: saveCharacterConfig,
+    unlockedIds,
+  } = useCharacter(uid)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
   const { extraBoards } = useBoards(uid)
   const defaultBoard: BoardMeta = {
@@ -1279,6 +1283,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           <CharacterModal
             myUid={uid}
             config={characterConfig}
+            unlockedIds={unlockedIds}
             onSave={saveCharacterConfig}
             onClose={() => setShowCharacter(false)}
           />

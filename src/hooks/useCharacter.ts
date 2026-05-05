@@ -3,44 +3,50 @@ import { useEffect, useState, useCallback } from 'react'
 import { ref, onValue, set } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { CharacterConfig, DEFAULT_CHARACTER_CONFIG } from '../assets/character/index'
+import {
+  FIRST_TIME_UNLOCKED_IDS,
+  FIRST_TIME_DEFAULT_CONFIG,
+} from '../assets/character/firstTimeConfig'
 
-// ─────────────────────────────────────────────
-// HELPER — normaliza dados vindos do Firebase
-// Arrays podem vir como objetos { 0: 'x', 1: 'y' }
-// ─────────────────────────────────────────────
+const MULTI_KEYS: (keyof CharacterConfig)[] = [
+  'hair_back',
+  'hair_bonus',
+  'gloves',
+  'beard',
+  'accessory',
+  'accessory_cima',
+  'accessory_topo',
+  'jaqueta',
+  'tattoo',
+]
 
 function normalizeConfig(raw: Record<string, unknown>): CharacterConfig {
-  const MULTI_KEYS = ['hair_back', 'hair_bonus', 'gloves', 'beard', 'accessory', 'tattoo'] as const
-
-  const config: CharacterConfig = {
+  const config = {
     ...DEFAULT_CHARACTER_CONFIG,
     ...raw,
     colorVariants: (raw.colorVariants as Record<string, string>) ?? {},
-  }
+  } as unknown as Record<string, unknown>
 
   for (const key of MULTI_KEYS) {
-    const val = raw[key]
+    const val = raw[key as string]
     if (!val) {
-      config[key] = []
+      config[key as string] = []
     } else if (Array.isArray(val)) {
-      config[key] = val.filter(Boolean)
+      config[key as string] = (val as string[]).filter(Boolean)
     } else if (typeof val === 'object') {
-      config[key] = Object.values(val as Record<string, string>).filter(Boolean)
+      config[key as string] = Object.values(val as Record<string, string>).filter(Boolean)
     } else {
-      config[key] = []
+      config[key as string] = []
     }
   }
 
-  return config
+  return config as unknown as CharacterConfig
 }
-
-// ─────────────────────────────────────────────
-// HOOK
-// ─────────────────────────────────────────────
 
 export function useCharacter(uid: string | null) {
   const [config, setConfig] = useState<CharacterConfig>(DEFAULT_CHARACTER_CONFIG)
   const [loading, setLoading] = useState(true)
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(FIRST_TIME_UNLOCKED_IDS)
 
   useEffect(() => {
     if (!uid) {
@@ -51,9 +57,38 @@ export function useCharacter(uid: string | null) {
     const r = ref(db, `users/${uid}/character`)
     const unsub = onValue(r, (snap) => {
       if (snap.exists()) {
-        setConfig(normalizeConfig(snap.val() as Record<string, unknown>))
+        const normalized = normalizeConfig(snap.val() as Record<string, unknown>)
+        setConfig(normalized)
+        // itens que o usuário já tem salvos também ficam desbloqueados no guarda-roupa
+        const saved = new Set(FIRST_TIME_UNLOCKED_IDS)
+        const singles = [
+          'body',
+          'hair',
+          'bangs',
+          'eyebrows',
+          'eyelashes',
+          'mouth',
+          'pupils',
+          'top',
+          'bottom',
+          'dress',
+          'shoes',
+          'saia_costas',
+          'saia_top',
+        ] as const
+        for (const key of singles) {
+          if (normalized[key]) saved.add(normalized[key] as string)
+        }
+        for (const key of MULTI_KEYS) {
+          for (const id of normalized[key as keyof CharacterConfig] as string[]) {
+            saved.add(id)
+          }
+        }
+        setUnlockedIds(saved)
       } else {
-        setConfig(DEFAULT_CHARACTER_CONFIG)
+        // primeira vez — usa config vazio mas já mostra peças desbloqueadas
+        setConfig(FIRST_TIME_DEFAULT_CONFIG)
+        setUnlockedIds(FIRST_TIME_UNLOCKED_IDS)
       }
       setLoading(false)
     })
@@ -70,5 +105,5 @@ export function useCharacter(uid: string | null) {
     [uid]
   )
 
-  return { config, loading, saveConfig }
+  return { config, loading, saveConfig, unlockedIds }
 }
