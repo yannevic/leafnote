@@ -32,7 +32,7 @@ if (!document.getElementById('char-scroll-style')) {
 }
 
 function assetUrl(path: string): string {
-  return `/character/${path}`
+  return `./character/${path}`
 }
 
 // ─────────────────────────────────────────────

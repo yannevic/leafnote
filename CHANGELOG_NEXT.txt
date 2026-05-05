@@ -29,4 +29,4 @@
 ↩️ undo/redo funcional no guarda-roupa |
 🧹 limpar tudo preserva o corpo selecionado |
 🎨 scroll customizado no painel de peças |
-📐 preview maior e header centralizado no modal |
+📐 preview maior e header centralizado no modal | 
