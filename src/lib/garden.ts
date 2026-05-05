@@ -1,7 +1,19 @@
 import { ref, set, get, push, remove, onValue, off, update } from 'firebase/database'
 import { db } from './firebase'
 
-export type FlowerType = 'rosa' | 'margarida' | 'tulipa' | 'girassol' | 'orquidea' | 'especial'
+export type FlowerType =
+  | 'rosa'
+  | 'margarida'
+  | 'tulipa'
+  | 'girassol'
+  | 'orquidea'
+  | 'lirio'
+  | 'jasmin'
+  | 'violeta'
+  | 'peonia'
+  | 'papoula'
+  | 'lavanda'
+  | 'especial'
 export type FlowerRarity = 'comum' | 'incomum' | 'rara' | 'epica'
 
 export interface FlowerInfo {
@@ -14,9 +26,15 @@ export interface FlowerInfo {
 export const FLOWERS: Record<FlowerType, FlowerInfo> = {
   rosa: { type: 'rosa', name: 'Rosa', rarity: 'comum', emoji: '🌸' },
   margarida: { type: 'margarida', name: 'Margarida', rarity: 'comum', emoji: '🌼' },
+  peonia: { type: 'peonia', name: 'Peônia', rarity: 'comum', emoji: '🌸' },
+  papoula: { type: 'papoula', name: 'Papoula', rarity: 'comum', emoji: '🌺' },
+  lavanda: { type: 'lavanda', name: 'Lavanda', rarity: 'comum', emoji: '💜' },
   tulipa: { type: 'tulipa', name: 'Tulipa', rarity: 'incomum', emoji: '🌷' },
   girassol: { type: 'girassol', name: 'Girassol', rarity: 'incomum', emoji: '🌻' },
+  jasmin: { type: 'jasmin', name: 'Jasmim', rarity: 'incomum', emoji: '🤍' },
+  violeta: { type: 'violeta', name: 'Violeta', rarity: 'incomum', emoji: '💜' },
   orquidea: { type: 'orquidea', name: 'Orquídea', rarity: 'rara', emoji: '🌺' },
+  lirio: { type: 'lirio', name: 'Lírio', rarity: 'rara', emoji: '🌸' },
   especial: { type: 'especial', name: 'Flor Épica', rarity: 'epica', emoji: '🌸' },
 }
 
@@ -335,9 +353,9 @@ export const EXCHANGE_COST: Record<FlowerRarity, number> = {
   epica: 999,
 }
 
-export function getExchangeOptions(tier: FlowerRarity, currentType: FlowerType): FlowerType[] {
+export function getExchangeOptions(tier: FlowerRarity, selectedTypes: FlowerType[]): FlowerType[] {
   const sameTier = (Object.values(FLOWERS) as FlowerInfo[])
-    .filter((f) => f.rarity === tier && f.type !== currentType && f.type !== 'especial')
+    .filter((f) => f.rarity === tier && !selectedTypes.includes(f.type) && f.type !== 'especial')
     .map((f) => f.type)
 
   const tierIndex = TIER_ORDER.indexOf(tier)
@@ -365,12 +383,20 @@ export function rollDice(): number {
   return Math.floor(Math.random() * 6) + 1
 }
 
+const COMMON_FLOWERS: FlowerType[] = ['rosa', 'margarida', 'peonia', 'papoula', 'lavanda']
+const UNCOMMON_FLOWERS: FlowerType[] = ['tulipa', 'girassol', 'jasmin', 'violeta']
+const RARE_FLOWERS: FlowerType[] = ['orquidea', 'lirio']
+
+function randomFrom(arr: FlowerType[]): FlowerType {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
 export function getFlowerFromSum(sum: number): FlowerType {
-  if (sum <= 5) return 'rosa'
-  if (sum <= 8) return 'margarida'
-  if (sum <= 10) return 'tulipa'
-  if (sum <= 11) return 'girassol'
-  return 'orquidea'
+  if (sum <= 5) return randomFrom(COMMON_FLOWERS)
+  if (sum <= 8) return randomFrom(COMMON_FLOWERS)
+  if (sum <= 10) return randomFrom(UNCOMMON_FLOWERS)
+  if (sum <= 11) return randomFrom(UNCOMMON_FLOWERS)
+  return randomFrom(RARE_FLOWERS)
 }
 
 export function canPlantToday(plants: PlantData[]): boolean {

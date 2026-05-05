@@ -9,6 +9,7 @@ import {
   getExchangeOptions,
   exchangeSeeds,
   EXCHANGE_COST,
+  FlowerInfo,
 } from '../../lib/garden'
 
 interface Props {
@@ -36,8 +37,10 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
   const selectedFlowerType: FlowerType | null =
     selected.length > 0 ? seeds.find((s) => s.id === selected[0])!.flowerType : null
 
-  const exchangeOptions: FlowerType[] =
-    selectedTier && selectedFlowerType ? getExchangeOptions(selectedTier, selectedFlowerType) : []
+  const selectedTypes = selected.map((id) => seeds.find((s) => s.id === id)!.flowerType)
+  const exchangeOptions: FlowerType[] = selectedTier
+    ? getExchangeOptions(selectedTier, selectedTypes)
+    : []
 
   const requiredCount = selectedTier ? EXCHANGE_COST[selectedTier] : 5
 
@@ -45,13 +48,6 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
     const info = FLOWERS[seed.flowerType]
 
     if (info.rarity === 'epica') return
-
-    if (info.rarity === 'rara' && info.type === 'orquidea') {
-      alert(
-        'Orquídeas não podem ser trocadas por enquanto. Em breve poderão ser vendidas por moedinhas!'
-      )
-      return
-    }
 
     if (selected.includes(seed.id)) {
       setSelected((v) => v.filter((id) => id !== seed.id))

@@ -135,11 +135,17 @@ export default function GardenGuideModal({ onClose }: Props) {
               }}
             >
               {[
-                { label: 'Rosa', rarity: 'comum', value: 'soma 2–5' },
-                { label: 'Margarida', rarity: 'comum', value: 'soma 6–8' },
-                { label: 'Tulipa', rarity: 'incomum', value: 'soma 9–10' },
-                { label: 'Girassol', rarity: 'incomum', value: 'soma 11' },
-                { label: 'Orquídea', rarity: 'rara', value: 'soma 12 (duplo 6!)' },
+                {
+                  label: 'Rosa, Margarida, Peônia, Papoula, Lavanda',
+                  rarity: 'comum',
+                  value: 'soma 2–8',
+                },
+                {
+                  label: 'Tulipa, Girassol, Jasmim, Violeta',
+                  rarity: 'incomum',
+                  value: 'soma 9–11',
+                },
+                { label: 'Orquídea, Lírio', rarity: 'rara', value: 'soma 12 (duplo 6!)' },
                 { label: 'Flor Especial', rarity: 'epica', value: 'streak de 30 dias' },
               ].map((row) => (
                 <div
@@ -213,7 +219,7 @@ export default function GardenGuideModal({ onClose }: Props) {
                 </div>
               ))}
             </div>
-            Orquídeas não podem ser trocadas por enquanto.
+            Orquídeas e Lírios podem ser trocados entre si.
           </Section>
 
           <Section icon={<Coins size={15} color="#c59f78" />} title="Moedinhas (em breve)">
