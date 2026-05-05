@@ -1,6 +1,6 @@
 // src/components/CharacterModal.tsx
-import { useState, useCallback } from 'react'
-import { X, Sparkles, Save, AlertCircle } from 'lucide-react'
+import { useState, useCallback, useRef } from 'react'
+import { ChevronLeft, Save, AlertCircle, Undo2, Redo2, Trash2, Sparkles } from 'lucide-react'
 import {
   ALL_PIECES,
   CharacterCategory,
@@ -15,6 +15,21 @@ import {
   COLOR_VARIANT_LABELS,
 } from '../assets/character/index'
 
+// ── Scrollbar custom global (injeta uma vez) ──────────────────
+const SCROLLBAR_CSS = `
+  .char-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+  .char-scroll::-webkit-scrollbar-track { background: transparent; }
+  .char-scroll::-webkit-scrollbar-thumb { background: var(--color-wood-300); border-radius: 99px; }
+  .char-scroll::-webkit-scrollbar-thumb:hover { background: var(--color-wood-400); }
+  .char-scroll { scrollbar-width: thin; scrollbar-color: var(--color-wood-300) transparent; }
+`
+if (!document.getElementById('char-scroll-style')) {
+  const s = document.createElement('style')
+  s.id = 'char-scroll-style'
+  s.textContent = SCROLLBAR_CSS
+  document.head.appendChild(s)
+}
+
 function assetUrl(path: string): string {
   return `/character/${path}`
 }
@@ -26,26 +41,21 @@ function assetUrl(path: string): string {
 interface SubTab {
   id: string
   label: string
-  // cada seção dentro da sub-aba
   sections: Section[]
 }
-
 interface Section {
   label: string
   category: CharacterCategory
   genderFilter?: CharacterGender
   packFilter?: CharacterPack
 }
-
 interface Tab {
   id: string
   label: string
   subTabs: SubTab[]
   requiresBody?: boolean
-  // tabs simples sem sub (rosto, cabelo) usam flatSections
   flatSections?: Section[]
 }
-
 interface Props {
   myUid: string
   config: CharacterConfig
@@ -54,11 +64,10 @@ interface Props {
 }
 
 // ─────────────────────────────────────────────
-// ESTRUTURA DE TABS
+// ESTRUTURA DE TABS (igual ao original)
 // ─────────────────────────────────────────────
 
 const TABS: Tab[] = [
-  // ── CORPO ──
   {
     id: 'corpo',
     label: 'Corpo',
@@ -66,8 +75,6 @@ const TABS: Tab[] = [
     subTabs: [],
     flatSections: [{ label: 'Corpo', category: 'body' }],
   },
-
-  // ── ROSTO ──
   {
     id: 'rosto',
     label: 'Rosto',
@@ -80,8 +87,6 @@ const TABS: Tab[] = [
       { label: 'Sobrancelha', category: 'eyebrows' },
     ],
   },
-
-  // ── CABELO ──
   {
     id: 'cabelo',
     label: 'Cabelo',
@@ -96,8 +101,6 @@ const TABS: Tab[] = [
       { label: 'Frente extra', category: 'hair', genderFilter: 'masc' },
     ],
   },
-
-  // ── ROUPAS ──
   {
     id: 'roupas',
     label: 'Roupas',
@@ -151,18 +154,12 @@ const TABS: Tab[] = [
       },
     ],
   },
-
-  // ── EXTRAS ──
   {
     id: 'extras',
     label: 'Extras',
     requiresBody: true,
     subTabs: [
-      {
-        id: 'padrao-extras',
-        label: 'Padrão',
-        sections: [{ label: 'Barba', category: 'beard' }],
-      },
+      { id: 'padrao-extras', label: 'Padrão', sections: [{ label: 'Barba', category: 'beard' }] },
       {
         id: 'casal-extras',
         label: 'Casal',
@@ -188,20 +185,12 @@ const TABS: Tab[] = [
 
 const COLOR_VARIANTS = ['b', 'c', 'd', 'e', 'f', 'g', 'h']
 
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
-
 function resolveSrc(piece: CharacterPiece, variant: string): string {
   if (!variant || !piece.hasColor || !piece.srcColor) return assetUrl(piece.src)
   return assetUrl(piece.srcColor.replace(/(\d+)(\.png)$/, `$1${variant}$2`))
 }
-
 function sectionKey(s: Section): string {
-  const parts: string[] = [s.category]
-  if (s.genderFilter) parts.push(s.genderFilter)
-  if (s.packFilter) parts.push(s.packFilter)
-  return parts.join('|')
+  return [s.category, s.genderFilter, s.packFilter].filter(Boolean).join('|')
 }
 
 // ─────────────────────────────────────────────
@@ -211,16 +200,16 @@ function sectionKey(s: Section): string {
 function CharacterPreview({
   config,
   colorVariants,
+  size = 222,
 }: {
   config: CharacterConfig
   colorVariants: Record<string, string>
+  size?: number
 }) {
   const layers: { piece: CharacterPiece; src: string }[] = []
-
   for (const cat of LAYER_ORDER) {
     const multi = isMultiSlot(cat as CharacterCategory)
     const variant = colorVariants[cat] ?? ''
-
     if (multi) {
       const ids = (config[cat as keyof CharacterConfig] as string[]) ?? []
       for (const id of ids) {
@@ -235,9 +224,9 @@ function CharacterPreview({
       }
     }
   }
-
+  const height = Math.round(size * (350 / 222))
   return (
-    <div style={{ position: 'relative', width: 222, height: 350 }}>
+    <div style={{ position: 'relative', width: size, height }}>
       {layers.length === 0 && (
         <div
           style={{
@@ -277,7 +266,7 @@ function CharacterPreview({
 }
 
 // ─────────────────────────────────────────────
-// MINI GRADE — grade de peças de uma seção
+// MINI GRADE
 // ─────────────────────────────────────────────
 
 function MiniGrid({
@@ -299,12 +288,10 @@ function MiniGrid({
     if (packFilter && p.pack !== packFilter) return false
     return true
   })
-
   if (pieces.length === 0) return null
 
   const multi = isMultiSlot(category)
   const currentVariant = colorVariants[category] ?? 'b'
-
   const selectedIds: string[] = multi
     ? ((config[category as keyof CharacterConfig] as string[]) ?? [])
     : (() => {
@@ -317,7 +304,6 @@ function MiniGrid({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* Seletor de cor */}
       {hasSomeColor && (
         <div
           style={{
@@ -325,7 +311,7 @@ function MiniGrid({
             gap: 4,
             flexWrap: 'wrap',
             padding: '5px 10px',
-            background: 'var(--color-bark-100)',
+            background: 'rgba(255,255,255,0.5)',
             borderRadius: 10,
             border: '1px solid var(--color-wood-300)',
           }}
@@ -356,8 +342,6 @@ function MiniGrid({
           ))}
         </div>
       )}
-
-      {/* Grade */}
       <div
         style={{
           display: 'grid',
@@ -366,7 +350,6 @@ function MiniGrid({
           alignContent: 'start',
         }}
       >
-        {/* Botão nenhum */}
         {!multi && category !== 'body' && (
           <button
             onClick={() => onSelect({ id: '__none__', category } as CharacterPiece, category)}
@@ -388,14 +371,12 @@ function MiniGrid({
               color: 'var(--color-leaf-600)',
             }}
           >
-            <X size={20} />
+            <Trash2 size={18} />
           </button>
         )}
-
         {pieces.map((p) => {
           const selected = isSelected(p.id)
           const src = resolveSrc(p, currentVariant)
-
           return (
             <button
               key={p.id}
@@ -408,7 +389,7 @@ function MiniGrid({
                 border: selected
                   ? '2px solid var(--color-petal-400)'
                   : '2px solid var(--color-wood-300)',
-                background: selected ? 'var(--color-petal-200)' : 'var(--color-bark-100)',
+                background: selected ? 'var(--color-petal-200)' : 'rgba(255,255,255,0.55)',
                 padding: 3,
                 cursor: 'pointer',
                 transition: 'all 0.15s',
@@ -453,7 +434,7 @@ function MiniGrid({
 }
 
 // ─────────────────────────────────────────────
-// PAINEL DE SEÇÕES — renderiza várias seções empilhadas
+// PAINEL DE SEÇÕES
 // ─────────────────────────────────────────────
 
 function SectionsPanel({
@@ -471,35 +452,27 @@ function SectionsPanel({
 }) {
   return (
     <div
+      className="char-scroll"
       style={{
         display: 'flex',
         flexDirection: 'column',
         gap: 20,
         overflowY: 'auto',
         height: '100%',
-        paddingRight: 4,
+        paddingRight: 8,
       }}
     >
       {sections.map((section) => {
         const key = sectionKey(section)
-        // Verifica se tem peças antes de renderizar
         const pieces = getPiecesByCategory(section.category).filter((p) => {
           if (section.genderFilter && p.gender !== section.genderFilter) return false
           if (section.packFilter && p.pack !== section.packFilter) return false
           return true
         })
         if (pieces.length === 0) return null
-
         return (
           <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {/* Label da seção */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span
                 style={{
                   fontSize: 12,
@@ -508,20 +481,15 @@ function SectionsPanel({
                   fontFamily: 'Baloo 2, sans-serif',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {section.label}
               </span>
               <div
-                style={{
-                  flex: 1,
-                  height: 1,
-                  background: 'var(--color-wood-300)',
-                  borderRadius: 1,
-                }}
+                style={{ flex: 1, height: 1, background: 'var(--color-wood-300)', borderRadius: 1 }}
               />
             </div>
-
             <MiniGrid
               section={section}
               config={config}
@@ -539,6 +507,13 @@ function SectionsPanel({
 // ─────────────────────────────────────────────
 // MODAL PRINCIPAL
 // ─────────────────────────────────────────────
+
+const MAX_HISTORY = 40
+
+interface HistoryEntry {
+  config: CharacterConfig
+  colorVariants: Record<string, string>
+}
 
 export default function CharacterModal({ config: initialConfig, onSave, onClose }: Props) {
   const [config, setConfig] = useState<CharacterConfig>(initialConfig ?? DEFAULT_CHARACTER_CONFIG)
@@ -558,49 +533,90 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
     for (const cat of colorCats) defaults[cat] = 'b'
     return { ...defaults, ...(initialConfig?.colorVariants ?? {}) }
   })
+
+  const historyRef = useRef<HistoryEntry[]>([
+    { config: initialConfig ?? DEFAULT_CHARACTER_CONFIG, colorVariants: {} },
+  ])
+  const historyIndexRef = useRef(0)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
+  // ✅ FIX: altura fixa para o botão limpar — sem layout shift
+  const [clearState, setClearState] = useState<'idle' | 'confirm'>('idle')
+
   const [activeTab, setActiveTab] = useState(TABS[0].id)
   const [activeSubTab, setActiveSubTab] = useState<string>('')
   const [bodyError, setBodyError] = useState(false)
 
   const currentTab = TABS.find((t) => t.id === activeTab) ?? TABS[0]
   const hasBody = !!config.body
-
-  // Sub-tab ativa: usa a primeira do tab se não estiver definida
   const effectiveSubTab =
     currentTab.subTabs.length > 0 ? activeSubTab || currentTab.subTabs[0].id : ''
-
   const currentSubTab = currentTab.subTabs.find((s) => s.id === effectiveSubTab)
-
-  // Seções a renderizar: sub-tab atual ou flatSections
   const activeSections: Section[] =
     currentTab.flatSections ?? currentSubTab?.sections ?? currentTab.subTabs[0]?.sections ?? []
+
+  // ✅ FIX: pushHistory recebe os valores finais como parâmetro, sem depender de stale closures
+  const pushHistory = useCallback(
+    (newConfig: CharacterConfig, newColorVariants: Record<string, string>) => {
+      const history = historyRef.current
+      const idx = historyIndexRef.current
+      history.splice(idx + 1)
+      history.push({ config: newConfig, colorVariants: newColorVariants })
+      if (history.length > MAX_HISTORY) history.shift()
+      historyIndexRef.current = history.length - 1
+      setCanUndo(historyIndexRef.current > 0)
+      setCanRedo(false)
+    },
+    []
+  )
+
+  const handleUndo = useCallback(() => {
+    const idx = historyIndexRef.current
+    if (idx <= 0) return
+    historyIndexRef.current = idx - 1
+    const entry = historyRef.current[historyIndexRef.current]
+    setConfig(entry.config)
+    setColorVariants(entry.colorVariants)
+    setCanUndo(historyIndexRef.current > 0)
+    setCanRedo(true)
+  }, [])
+
+  const handleRedo = useCallback(() => {
+    const history = historyRef.current
+    const idx = historyIndexRef.current
+    if (idx >= history.length - 1) return
+    historyIndexRef.current = idx + 1
+    const entry = history[historyIndexRef.current]
+    setConfig(entry.config)
+    setColorVariants(entry.colorVariants)
+    setCanUndo(true)
+    setCanRedo(historyIndexRef.current < history.length - 1)
+  }, [])
 
   const handleTabChange = (tabId: string) => {
     const tab = TABS.find((t) => t.id === tabId)
     if (!tab) return
-
     if (tab.requiresBody && !hasBody) {
       setBodyError(true)
       setTimeout(() => setBodyError(false), 3000)
       return
     }
-
     setBodyError(false)
     setActiveTab(tabId)
-    // Reset sub-tab para a primeira do novo tab
     setActiveSubTab(tab.subTabs[0]?.id ?? '')
   }
 
-  const handleSelect = useCallback((piece: CharacterPiece, category: CharacterCategory) => {
-    setConfig((prev) => {
+  // ✅ FIX: handleSelect usa functional update para pegar config atualizado
+  // e passa os valores corretos para pushHistory de forma síncrona
+  const handleSelect = useCallback(
+    (piece: CharacterPiece, category: CharacterCategory) => {
+      const prev = configRef.current
       const next = { ...prev }
 
       if (piece.id === '__none__') {
         ;(next as Record<string, unknown>)[category] = isMultiSlot(category) ? [] : null
-        return next
-      }
-
-      if (isMultiSlot(category)) {
+      } else if (isMultiSlot(category)) {
         const arr = [...((prev[category as keyof CharacterConfig] as string[]) ?? [])]
         const idx = arr.indexOf(piece.id)
         if (idx >= 0) arr.splice(idx, 1)
@@ -610,29 +626,70 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
         const current = prev[category as keyof CharacterConfig] as string | null
         const newVal = category === 'body' ? piece.id : current === piece.id ? null : piece.id
         ;(next as Record<string, unknown>)[category] = newVal
-
-        // Exclusão mútua: vestido limpa top e bottom; top/bottom limpa vestido
         if (category === 'dress' && newVal !== null) {
           next.top = null
           next.bottom = null
         }
-        if ((category === 'top' || category === 'bottom') && newVal !== null) {
-          next.dress = null
-        }
+        if ((category === 'top' || category === 'bottom') && newVal !== null) next.dress = null
       }
 
-      return next
-    })
-  }, [])
+      setConfig(next)
+      pushHistory(next, colorVariantsRef.current)
+    },
+    [pushHistory]
+  )
 
-  const handleColorChange = useCallback((category: CharacterCategory, variant: string) => {
-    setColorVariants((prev) => ({ ...prev, [category]: variant }))
-  }, [])
+  // Ref para colorVariants — permite acessar valor atual dentro de setConfig sem stale closure
+  const colorVariantsRef = useRef(colorVariants)
+  colorVariantsRef.current = colorVariants
+
+  const handleColorChange = useCallback(
+    (category: CharacterCategory, variant: string) => {
+      setColorVariants((prev) => {
+        const next = { ...prev, [category]: variant }
+        // configRef para mesma razão
+        pushHistory(configRef.current, next)
+        return next
+      })
+    },
+    [pushHistory]
+  )
+
+  const configRef = useRef(config)
+  configRef.current = config
+
+  // ✅ FIX: Limpar tudo preserva o body
+  const handleClearAll = () => {
+    const bodyId = config.body // preserva o corpo atual
+    const cleared: CharacterConfig = { ...DEFAULT_CHARACTER_CONFIG, body: bodyId }
+    setConfig(cleared)
+    pushHistory(cleared, colorVariants)
+    setClearState('idle')
+  }
 
   const handleSave = () => {
     onSave({ ...config, colorVariants })
     onClose()
   }
+
+  const actionBtnStyle = (enabled: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    padding: '7px 12px',
+    borderRadius: 10,
+    border: `1.5px solid ${enabled ? 'var(--color-wood-400)' : 'var(--color-wood-200)'}`,
+    background: enabled ? 'var(--color-bark-50)' : 'transparent',
+    color: enabled ? 'var(--color-leaf-700)' : 'var(--color-leaf-300)',
+    fontSize: 12,
+    fontFamily: 'Baloo 2, sans-serif',
+    fontWeight: 600,
+    cursor: enabled ? 'pointer' : 'not-allowed',
+    transition: 'all 0.15s',
+    opacity: enabled ? 1 : 0.5,
+    flex: 1,
+  })
 
   return (
     <div
@@ -647,148 +704,326 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
-      {/* HEADER */}
+      {/* ── HEADER ─────────────────────────────────────── */}
+      {/* ✅ FIX: height fixa + alignItems center garante centralização vertical */}
       <div
         style={{
+          height: 56,
+          minHeight: 56,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '8px 20px',
+          padding: '0 20px',
           borderBottom: '2px solid var(--color-wood-300)',
           background: 'var(--color-bark-100)',
           flexShrink: 0,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button
+          onClick={onClose}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '6px 14px 6px 10px',
+            borderRadius: 10,
+            border: '1.5px solid var(--color-wood-300)',
+            background: 'transparent',
+            color: 'var(--color-leaf-600)',
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: 'Baloo 2, sans-serif',
+            cursor: 'pointer',
+          }}
+        >
+          <ChevronLeft size={16} />
+          Voltar
+        </button>
+
+        {/* ✅ FIX: ícone Sparkles — muito mais bonito e legível */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <Sparkles size={18} color="var(--color-petal-400)" />
-          <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-leaf-800)' }}>
-            Meu Personagem
+          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-leaf-800)' }}>
+            Meu Guarda-Roupa
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={handleSave}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '5px 14px',
-              borderRadius: 10,
-              border: 'none',
-              background: 'var(--color-leaf-600)',
-              color: '#fff',
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: 'Baloo 2, sans-serif',
-              cursor: 'pointer',
-            }}
-          >
-            <Save size={14} />
-            Salvar
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: '1px solid var(--color-wood-300)',
-              background: 'transparent',
-              cursor: 'pointer',
-              color: 'var(--color-leaf-600)',
-            }}
-          >
-            <X size={16} />
-          </button>
-        </div>
+
+        <button
+          onClick={handleSave}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 18px',
+            borderRadius: 10,
+            border: 'none',
+            background: 'var(--color-leaf-600)',
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: 'Baloo 2, sans-serif',
+            cursor: 'pointer',
+          }}
+        >
+          <Save size={14} />
+          Salvar
+        </button>
       </div>
 
-      {/* BODY */}
+      {/* ── BODY ────────────────────────────────────────── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* PREVIEW */}
+        {/* ── COLUNA ESQUERDA ──────────────────────────── */}
+        {/* ✅ FIX: largura 280, preview maior, borda menor */}
         <div
           style={{
-            width: 250,
+            width: 280,
             flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
             borderRight: '2px solid var(--color-wood-300)',
             background: 'var(--color-leaf-100)',
-            padding: 16,
-            gap: 12,
+            overflow: 'hidden',
           }}
         >
+          {/* Preview — flex 1, centralizado */}
           <div
             style={{
-              background: '#fff',
-              borderRadius: 20,
-              padding: 16,
-              boxShadow: '0 4px 20px rgba(74,122,74,0.10)',
-              border: '2px solid var(--color-wood-300)',
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px 16px 8px',
+              minHeight: 0,
             }}
           >
-            <CharacterPreview config={config} colorVariants={colorVariants} />
+            {/* ✅ FIX: padding menor (8px), sem borda grossa, preview maior */}
+            <div
+              style={{
+                background: '#c9c9c9',
+                borderRadius: 20,
+                padding: 8,
+                boxShadow: '0 2px 16px rgba(74,122,74,0.10)',
+                border: '1.5px solid var(--color-wood-200)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                width: '100%',
+              }}
+            >
+              <CharacterPreview config={config} colorVariants={colorVariants} size={250} />
+            </div>
           </div>
-          <span style={{ fontSize: 11, color: 'var(--color-leaf-600)', textAlign: 'center' }}>
-            Preview em tempo real
-          </span>
+
+          {/* Controles fixos abaixo */}
+          <div
+            style={{
+              padding: '8px 12px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 7,
+              flexShrink: 0,
+            }}
+          >
+            {/* Undo / Redo */}
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={handleUndo}
+                disabled={!canUndo}
+                title="Desfazer"
+                style={actionBtnStyle(canUndo)}
+              >
+                <Undo2 size={13} /> Desfazer
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={!canRedo}
+                title="Refazer"
+                style={actionBtnStyle(canRedo)}
+              >
+                <Redo2 size={13} /> Refazer
+              </button>
+            </div>
+
+            {/* ✅ FIX: altura fixa no container do botão limpar — sem layout shift */}
+            <div style={{ height: 58, position: 'relative' }}>
+              {/* Estado idle */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  opacity: clearState === 'idle' ? 1 : 0,
+                  pointerEvents: clearState === 'idle' ? 'auto' : 'none',
+                  transition: 'opacity 0.15s',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <button
+                  onClick={() => setClearState('confirm')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    padding: '7px 12px',
+                    borderRadius: 10,
+                    border: '1.5px solid var(--color-petal-300)',
+                    background: 'transparent',
+                    color: 'var(--color-petal-500)',
+                    fontSize: 12,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    width: '100%',
+                  }}
+                >
+                  <Trash2 size={13} /> Limpar tudo
+                </button>
+              </div>
+
+              {/* Estado confirm — mesma altura, sem pulo */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  opacity: clearState === 'confirm' ? 1 : 0,
+                  pointerEvents: clearState === 'confirm' ? 'auto' : 'none',
+                  transition: 'opacity 0.15s',
+                  background: 'var(--color-petal-100)',
+                  border: '1.5px solid var(--color-petal-300)',
+                  borderRadius: 10,
+                  padding: '8px 10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                {/* ✅ FIX: texto sem bold, menor, cor suave */}
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 400,
+                    color: 'var(--color-soil-700)',
+                    fontFamily: 'Baloo 2, sans-serif',
+                    textAlign: 'center',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  Remover tudo?
+                </span>
+                <div style={{ display: 'flex', gap: 6, width: '100%' }}>
+                  <button
+                    onClick={handleClearAll}
+                    style={{
+                      flex: 1,
+                      padding: '4px 0',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: 'var(--color-petal-400)',
+                      color: '#fff',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: 'Baloo 2, sans-serif',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Sim
+                  </button>
+                  <button
+                    onClick={() => setClearState('idle')}
+                    style={{
+                      flex: 1,
+                      padding: '4px 0',
+                      borderRadius: 8,
+                      border: '1.5px solid var(--color-wood-300)',
+                      background: 'transparent',
+                      color: 'var(--color-leaf-600)',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fontFamily: 'Baloo 2, sans-serif',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Não
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* PAINEL DIREITO */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* ── PAINEL DIREITO ────────────────────────────── */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            background: 'var(--color-leaf-100)',
+            minHeight: '100%',
+          }}
+        >
           {/* Tabs principais */}
           <div
             style={{
               display: 'flex',
               gap: 2,
               padding: '8px 16px 0',
-              borderBottom: '2px solid var(--color-wood-300)',
-              background: 'var(--color-bark-100)',
+              background: 'var(--color-leaf-100)',
               flexShrink: 0,
             }}
           >
-            {TABS.map((tab) => {
-              const locked = tab.requiresBody && !hasBody
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  title={locked ? 'Escolha um corpo primeiro' : undefined}
-                  style={{
-                    padding: '5px 18px',
-                    borderRadius: '10px 10px 0 0',
-                    border: 'none',
-                    background: activeTab === tab.id ? 'var(--color-leaf-100)' : 'transparent',
-                    color: locked
-                      ? 'var(--color-leaf-400)'
-                      : activeTab === tab.id
-                        ? 'var(--color-leaf-800)'
-                        : 'var(--color-leaf-600)',
-                    fontSize: 13,
-                    fontWeight: activeTab === tab.id ? 700 : 400,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    cursor: locked ? 'not-allowed' : 'pointer',
-                    borderBottom:
-                      activeTab === tab.id
-                        ? '2px solid var(--color-leaf-100)'
-                        : '2px solid transparent',
-                    marginBottom: -2,
-                    transition: 'all 0.15s',
-                    opacity: locked ? 0.55 : 1,
-                  }}
-                >
-                  {tab.label}
-                </button>
-              )
-            })}
+            <div
+              style={{
+                display: 'flex',
+                gap: 4,
+                padding: '10px 16px',
+                borderBottom: '2px solid var(--color-wood-300)',
+                background: 'var(--color-leaf-100)',
+                flexShrink: 0,
+              }}
+            >
+              {TABS.map((tab) => {
+                const locked = tab.requiresBody && !hasBody
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    title={locked ? 'Escolha um corpo primeiro' : undefined}
+                    style={{
+                      padding: '5px 18px',
+                      borderRadius: 20,
+                      border: isActive
+                        ? '2px solid var(--color-leaf-500)'
+                        : '2px solid var(--color-wood-300)',
+                      background: isActive ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
+                      color: locked
+                        ? 'var(--color-leaf-300)'
+                        : isActive
+                          ? '#fff'
+                          : 'var(--color-leaf-700)',
+                      fontSize: 13,
+                      fontWeight: isActive ? 700 : 500,
+                      fontFamily: 'Baloo 2, sans-serif',
+                      cursor: locked ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.15s',
+                      opacity: locked ? 0.5 : 1,
+                      boxShadow: isActive ? '0 2px 8px rgba(74,122,74,0.18)' : 'none',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Aviso de body obrigatório */}
+          {/* Aviso body */}
           {bodyError && (
             <div
               style={{
@@ -811,7 +1046,7 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
             </div>
           )}
 
-          {/* Sub-tabs (Roupas e Extras) */}
+          {/* Sub-tabs */}
           {currentTab.subTabs.length > 0 && (
             <div
               style={{
@@ -852,8 +1087,18 @@ export default function CharacterModal({ config: initialConfig, onSave, onClose 
             </div>
           )}
 
-          {/* Conteúdo — seções empilhadas */}
-          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '12px 16px' }}>
+          {/* Seções com scroll customizado */}
+          <div
+            className="char-scroll"
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              padding: '12px 16px',
+              background: 'var(--color-leaf-100)',
+              alignSelf: 'stretch',
+            }}
+          >
             <SectionsPanel
               sections={activeSections}
               config={config}
