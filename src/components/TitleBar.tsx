@@ -4,7 +4,7 @@ import BoardSwitcher from './BoardSwitcher'
 import type { BoardMeta } from '../lib/boards'
 import NotificationCenter from './NotificationCenter'
 import type { AppNotification } from '../hooks/useNotificationCenter'
-
+import coinIcon from '../assets/coin.png'
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
 import type { UpdateStatus } from './UpdateNotifier'
@@ -20,6 +20,7 @@ interface TitleBarProps {
   onInstallUpdate?: () => void
   onCheckUpdate?: () => void
   notifications?: AppNotification[]
+  coins?: number
 }
 
 export default function TitleBar({
@@ -33,6 +34,7 @@ export default function TitleBar({
   onInstallUpdate,
   onCheckUpdate,
   notifications = [],
+  coins = 0,
 }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [version, setVersion] = useState('')
@@ -172,6 +174,21 @@ export default function TitleBar({
           } as React.CSSProperties
         }
       >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            marginRight: 4,
+            fontFamily: 'Baloo 2, sans-serif',
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#c4956a',
+          }}
+        >
+          <img src={coinIcon} style={{ width: 25, height: 25 }} />
+          <span style={{ fontSize: 15, fontWeight: 800, marginTop: 6 }}>{coins}</span>
+        </div>
         <NotificationCenter notifications={notifications} />
 
         <UpdateBtn

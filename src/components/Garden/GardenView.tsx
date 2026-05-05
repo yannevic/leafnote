@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import coinIcon from '../../assets/coin.png'
 import {
   ChevronLeft,
   ChevronRight,
@@ -155,10 +156,22 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   {plants.length}/{MAX_PLANTS}
                 </span>
               </h2>
-              <div style={{ fontSize: 11, color: '#8b6914', fontWeight: 600 }}>{coins} moedas</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {/* Toggle modo pânico */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontWeight: 800,
+                  marginRight: 4,
+                  color: '#8b6914',
+                }}
+              >
+                <img src={coinIcon} style={{ width: 22, height: 22, display: 'block' }} />
+                <span style={{ fontSize: 15, fontWeight: 800, marginTop: 6 }}>{coins}</span>
+              </div>
               <button
                 onClick={() => setShowGuideModal(true)}
                 title="Como funciona o jardim?"

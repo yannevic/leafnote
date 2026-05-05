@@ -12,3 +12,4 @@
 ✂️ arrancar planta com confirmação |
 ⏱️ tempo de crescimento por tier (comum/incomum/rara) |
 🐛 fix assets: renomeia jasmim para jasmin |
+💄 ícone de moedas (porquinho) |

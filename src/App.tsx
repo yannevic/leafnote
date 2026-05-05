@@ -9,6 +9,7 @@ import UpdateNotifier, { UpdateStatus } from './components/UpdateNotifier'
 import { useBoards } from './hooks/useBoards'
 import ChangelogModal from './components/ChangelogModal'
 import { useNotificationCenter } from './hooks/useNotificationCenter'
+import { subscribeCoins } from './lib/garden'
 
 function AppInner({ user }: { user: User }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
@@ -36,6 +37,12 @@ function AppInner({ user }: { user: User }) {
 
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
   const [updateProgress, setUpdateProgress] = useState(0)
+  const [coins, setCoins] = useState(0)
+
+  useEffect(() => {
+    const unsub = subscribeCoins(setCoins)
+    return unsub
+  }, [])
 
   return (
     <div className="fixed inset-0 flex flex-col">
@@ -56,6 +63,7 @@ function AppInner({ user }: { user: User }) {
         onInstallUpdate={() => window.api.installUpdate()}
         onCheckUpdate={() => window.api.checkForUpdates()}
         notifications={notifications}
+        coins={coins}
       />
       <div className="flex-1 overflow-hidden">
         <HashRouter>
