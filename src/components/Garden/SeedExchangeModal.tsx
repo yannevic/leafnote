@@ -5,11 +5,9 @@ import {
   FlowerType,
   FlowerRarity,
   SeedData,
-  TIER_ORDER,
   getExchangeOptions,
   exchangeSeeds,
   EXCHANGE_COST,
-  FlowerInfo,
 } from '../../lib/garden'
 
 interface Props {
@@ -33,9 +31,6 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
 
   const selectedTier: FlowerRarity | null =
     selected.length > 0 ? FLOWERS[seeds.find((s) => s.id === selected[0])!.flowerType].rarity : null
-
-  const selectedFlowerType: FlowerType | null =
-    selected.length > 0 ? seeds.find((s) => s.id === selected[0])!.flowerType : null
 
   const selectedTypes = selected.map((id) => seeds.find((s) => s.id === id)!.flowerType)
   const exchangeOptions: FlowerType[] = selectedTier
