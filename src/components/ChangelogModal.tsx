@@ -2,6 +2,24 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.22': [
+    '✨ sistema de troca de sementes entre flores do jardim',
+    '✨ modal guia do jardim com regras e dicas',
+    '🐛 correção na probabilidade dos dados (soma 2d6 por tier)',
+    '💄 ajustes visuais nos modais do jardim',
+    '✨ custo de troca dinâmico por tier (EXCHANGE_COST)',
+    '🌸 novas flores: Peônia, Papoula, Lavanda, Jasmim, Violeta e Lírio',
+    '🔓 Orquídea desbloqueada para o sistema de trocas',
+    '💰 sistema de economia com moedas',
+    '✨ venda de sementes com confirmação',
+    '✨ venda de flores florescidas',
+    '🌱 limite de slots no jardim (dinâmico)',
+    '🌿 arrancar planta com confirmação',
+    '⏱️ tempo de crescimento por tier (comum/incomum/rara)',
+    '🐛 fix assets: renomeia jasmim para jasmin',
+    '💄 ícone de moedas (porquinho)',
+  ],
+
   '2.1.21': [
     '🐛 humor n sobrescreve os itens',
   ],
