@@ -168,16 +168,13 @@ export async function waterPlant(
 
   const today = new Date().toLocaleDateString('en-CA')
 
-  // Se já regou hoje, ignora
   if (plant.water?.[uid] === true && plant.waterDate === today) return
 
-  // Salva o water do uid e a data de hoje
   await update(plantRef, {
     [`water/${uid}`]: true,
     waterDate: today,
   })
 
-  // Lê o estado atualizado pra decidir se os dois já regaram
   const snapAfter = await get(plantRef)
   if (!snapAfter.exists()) return
   const updated = snapAfter.val() as PlantData
@@ -188,8 +185,10 @@ export async function waterPlant(
 
   if (!bothWatered) return
 
+  const rarity = FLOWERS[plant.flowerType].rarity
+  const daysNeeded = DAYS_PER_STAGE[rarity]
   const newDaysWatered = plant.daysWatered + 1
-  const newStage = Math.min(5, Math.floor(newDaysWatered / 3) + 1)
+  const newStage = Math.min(5, Math.floor(newDaysWatered / daysNeeded) + 1)
 
   await update(plantRef, {
     lastWateredDate: today,
@@ -346,6 +345,30 @@ export async function checkWiltAll(): Promise<void> {
 
 export const TIER_ORDER: FlowerRarity[] = ['comum', 'incomum', 'rara']
 
+export const MAX_PLANTS = 4
+export const BASE_MAX_PLANTS = 4
+
+export const DAYS_PER_STAGE: Record<FlowerRarity, number> = {
+  comum: 2,
+  incomum: 3,
+  rara: 5,
+  epica: 6,
+}
+
+export const SEED_SELL_VALUE: Record<FlowerRarity, number> = {
+  comum: 2,
+  incomum: 5,
+  rara: 14,
+  epica: 40,
+}
+
+export const FLOWER_SELL_VALUE: Record<FlowerRarity, number> = {
+  comum: 6,
+  incomum: 18,
+  rara: 55,
+  epica: 180,
+}
+
 export const EXCHANGE_COST: Record<FlowerRarity, number> = {
   comum: 5,
   incomum: 6,
@@ -375,6 +398,42 @@ export async function exchangeSeeds(seedIds: string[], rewardType: FlowerType): 
   const coinsRef = ref(db, 'garden/coins')
   const snap = await get(coinsRef)
   if (!snap.exists()) await set(coinsRef, 0)
+}
+
+export async function getCoins(): Promise<number> {
+  const snap = await get(ref(db, 'garden/coins'))
+  return (snap.val() as number) ?? 0
+}
+
+export async function addCoins(amount: number): Promise<void> {
+  const coinsRef = ref(db, 'garden/coins')
+  const snap = await get(coinsRef)
+  const current = (snap.val() as number) ?? 0
+  await set(coinsRef, current + amount)
+}
+
+export async function sellSeed(seedId: string, flowerType: FlowerType): Promise<number> {
+  const rarity = FLOWERS[flowerType].rarity
+  const value = SEED_SELL_VALUE[rarity]
+  await remove(ref(db, `garden/seeds/${seedId}`))
+  await addCoins(value)
+  return value
+}
+
+export async function sellFlower(plantId: string, flowerType: FlowerType): Promise<number> {
+  const rarity = FLOWERS[flowerType].rarity
+  const value = FLOWER_SELL_VALUE[rarity]
+  await remove(ref(db, `garden/plants/${plantId}`))
+  await addCoins(value)
+  return value
+}
+
+export function subscribeCoins(callback: (coins: number) => void): () => void {
+  const r = ref(db, 'garden/coins')
+  const handler = onValue(r, (snap) => {
+    callback((snap.val() as number) ?? 0)
+  })
+  return () => off(r, 'value', handler)
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

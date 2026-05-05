@@ -1,6 +1,7 @@
 import { X, Droplets, Droplet } from 'lucide-react'
-import { PlantData, FLOWERS, RARITY_COLORS } from '../../lib/garden'
+import { PlantData, FLOWERS, RARITY_COLORS, FlowerType, FLOWER_SELL_VALUE } from '../../lib/garden'
 import { getFlowerImage } from '../../assets/garden'
+import { useState } from 'react'
 
 interface FlowerModalProps {
   plant: PlantData
@@ -11,6 +12,8 @@ interface FlowerModalProps {
   partnerWatered: boolean
   onWater: () => void
   onClose: () => void
+  onSellFlower: (plantId: string, flowerType: FlowerType) => Promise<number>
+  onRemovePlant: (plantId: string) => Promise<void>
 }
 
 export default function FlowerModal({
@@ -20,11 +23,28 @@ export default function FlowerModal({
   partnerWatered,
   onWater,
   onClose,
+  onSellFlower,
+  onRemovePlant,
 }: FlowerModalProps) {
   const info = FLOWERS[plant.flowerType]
   const imgSrc = getFlowerImage(plant.flowerType, plant.stage)
   const rarityColor = RARITY_COLORS[info.rarity]
   const isFullyGrown = plant.stage >= 5
+  const [sellDone, setSellDone] = useState(false)
+  const [removeDone, setRemoveDone] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+  const [earnedCoins, setEarnedCoins] = useState<number | null>(null)
+
+  const handleSell = async () => {
+    const value = await onSellFlower(plant.id, plant.flowerType)
+    setEarnedCoins(value)
+    setSellDone(true)
+  }
+
+  const handleRemove = async () => {
+    await onRemovePlant(plant.id)
+    setRemoveDone(true)
+  }
 
   const stageLabels: Record<number, string> = {
     1: 'Semente 🌱',
@@ -248,17 +268,123 @@ export default function FlowerModal({
             Você já regou hoje!
           </div>
         )}
-        {isFullyGrown && (
+        {isFullyGrown && !sellDone && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: 13,
+                color: 'var(--color-leaf-600)',
+                fontWeight: 700,
+              }}
+            >
+              Totalmente florescida
+            </div>
+            <button
+              onClick={handleSell}
+              style={{
+                width: '100%',
+                padding: '10px 0',
+                borderRadius: 12,
+                background: '#8b6914',
+                color: '#fff',
+                fontFamily: 'Baloo 2, sans-serif',
+                fontWeight: 700,
+                fontSize: 14,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Vender — {FLOWER_SELL_VALUE[info.rarity]} moedas
+            </button>
+          </div>
+        )}
+
+        {isFullyGrown && sellDone && (
           <div
             style={{
               textAlign: 'center',
-              padding: '10px 0',
               fontSize: 14,
-              color: 'var(--color-leaf-600)',
+              color: '#2d5a2d',
               fontWeight: 700,
+              padding: '10px 0',
             }}
           >
-            Totalmente florescida
+            +{earnedCoins} moedas recebidas!
+          </div>
+        )}
+
+        {!isFullyGrown && !confirmRemove && !removeDone && (
+          <button
+            onClick={() => setConfirmRemove(true)}
+            style={{
+              width: '100%',
+              marginTop: 8,
+              padding: '7px 0',
+              borderRadius: 12,
+              background: 'none',
+              color: '#b05050',
+              fontFamily: 'Baloo 2, sans-serif',
+              fontWeight: 600,
+              fontSize: 13,
+              border: '1.5px solid #e8a0a0',
+              cursor: 'pointer',
+            }}
+          >
+            Arrancar planta
+          </button>
+        )}
+
+        {!isFullyGrown && confirmRemove && !removeDone && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button
+              onClick={() => setConfirmRemove(false)}
+              style={{
+                flex: 1,
+                padding: '7px 0',
+                borderRadius: 12,
+                background: 'none',
+                border: '1.5px solid var(--color-wood-300)',
+                color: 'var(--color-bark-700)',
+                fontFamily: 'Baloo 2, sans-serif',
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleRemove}
+              style={{
+                flex: 1,
+                padding: '7px 0',
+                borderRadius: 12,
+                background: '#b05050',
+                border: 'none',
+                color: '#fff',
+                fontFamily: 'Baloo 2, sans-serif',
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              Confirmar
+            </button>
+          </div>
+        )}
+
+        {!isFullyGrown && removeDone && (
+          <div
+            style={{
+              textAlign: 'center',
+              fontSize: 13,
+              color: '#b05050',
+              fontWeight: 600,
+              padding: '8px 0',
+            }}
+          >
+            Planta removida.
           </div>
         )}
       </div>

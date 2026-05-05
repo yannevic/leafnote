@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ref, onValue, off } from 'firebase/database'
+import { ref, onValue, off, remove } from 'firebase/database'
 import { db } from '../lib/firebase'
 import {
   PlantData,
@@ -20,6 +20,10 @@ import {
   saveWelcomeRoll,
   setPanicMode,
   resetPlantWater,
+  subscribeCoins,
+  sellSeed,
+  sellFlower,
+  MAX_PLANTS,
 } from '../lib/garden'
 
 export function useGarden(uid: string, partnerUid: string) {
@@ -30,6 +34,7 @@ export function useGarden(uid: string, partnerUid: string) {
   const [welcomeGiven, setWelcomeGiven] = useState(true)
   const [welcomeRolls, setWelcomeRolls] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
+  const [coins, setCoins] = useState(0)
 
   useEffect(() => {
     const unsubPlants = subscribePlants((data) => {
@@ -67,6 +72,11 @@ export function useGarden(uid: string, partnerUid: string) {
       setWelcomeRolls((snap.val() as Record<string, number>) ?? {})
     })
     return () => off(r, 'value', handler)
+  }, [])
+
+  useEffect(() => {
+    const unsub = subscribeCoins(setCoins)
+    return unsub
   }, [])
 
   const water = async (plantId: string) => {
@@ -123,15 +133,28 @@ export function useGarden(uid: string, partnerUid: string) {
     return event ? event.rolls?.[partnerUid] != null : false
   }
 
-  const canPlant = canPlantToday(plants)
+  const canPlant = canPlantToday(plants) && plants.length < MAX_PLANTS
   const welcomePending = !welcomeGiven
   const partnerRolledWelcome = welcomeRolls[partnerUid] != null
   const iAlreadyRolledWelcome = welcomeRolls[uid] != null
+
+  const handleSellSeed = async (seedId: string, flowerType: FlowerType): Promise<number> => {
+    return sellSeed(seedId, flowerType)
+  }
+
+  const handleSellFlower = async (plantId: string, flowerType: FlowerType): Promise<number> => {
+    return sellFlower(plantId, flowerType)
+  }
+
+  const handleRemovePlant = async (plantId: string): Promise<void> => {
+    await remove(ref(db, `garden/plants/${plantId}`))
+  }
 
   return {
     plants,
     seeds,
     loading,
+    coins,
     water,
     plant,
     addNewSeed,
@@ -148,5 +171,8 @@ export function useGarden(uid: string, partnerUid: string) {
     partnerRolledEvent,
     partnerRolledWelcome,
     iAlreadyRolledWelcome,
+    sellSeed: handleSellSeed,
+    sellFlower: handleSellFlower,
+    removePlant: handleRemovePlant,
   }
 }

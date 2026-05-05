@@ -4,4 +4,11 @@
 💄 ajustes visuais nos modais do jardim |
 ✨ custo de troca dinâmico por tier (EXCHANGE_COST) |
 🌸 novas flores: Peônia, Papoula, Lavanda, Jasmim, Violeta e Lírio |
-🔓 Orquídea desbloqueada para o sistema de trocas | 
+🔓 Orquídea desbloqueada para o sistema de trocas |
+💰 sistema de economia com moedas |
+✨ venda de sementes com confirmação |
+✨ venda de flores florescidas |
+🌱 limite de slots no jardim (dinâmico) |
+✂️ arrancar planta com confirmação |
+⏱️ tempo de crescimento por tier (comum/incomum/rara) |
+🐛 fix assets: renomeia jasmim para jasmin |

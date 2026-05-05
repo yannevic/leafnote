@@ -12,7 +12,7 @@ import {
 import GardenGuideModal from './GardenGuideModal'
 import SeedExchangeModal from './SeedExchangeModal'
 import { useGarden } from '../../hooks/useGarden'
-import { FLOWERS, SeedData } from '../../lib/garden'
+import { FLOWERS, SeedData, SEED_SELL_VALUE, FlowerType, MAX_PLANTS } from '../../lib/garden'
 import Plant from './Plant'
 import FlowerModal from './FlowerModal'
 import SeedRollModal from './SeedRollModal'
@@ -32,6 +32,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
     plants,
     seeds,
     loading,
+    coins,
     water,
     plant,
     alreadyWatered,
@@ -46,6 +47,9 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
     partnerRolledEvent,
     partnerRolledWelcome,
     iAlreadyRolledWelcome,
+    sellSeed,
+    sellFlower,
+    removePlant,
   } = useGarden(uid, partnerUid)
 
   const [page, setPage] = useState(0)
@@ -55,6 +59,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const [_seedRollDone, setSeedRollDone] = useState(false)
   const [showExchangeModal, setShowExchangeModal] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
+  const [sellFeedback, setSellFeedback] = useState<string | null>(null)
 
   const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
@@ -70,6 +75,33 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
     await plant(plantingSeed.id, plantingSeed.flowerType)
     setPlantingSeed(null)
     setShowSeedModal(false)
+  }
+
+  const [confirmSellSeed, setConfirmSellSeed] = useState<SeedData | null>(null)
+
+  const handleSellSeed = async (seed: SeedData) => {
+    setConfirmSellSeed(seed)
+  }
+
+  const handleConfirmSellSeed = async () => {
+    if (!confirmSellSeed) return
+    const value = await sellSeed(confirmSellSeed.id, confirmSellSeed.flowerType)
+    setSellFeedback(`+${value} moedas`)
+    setConfirmSellSeed(null)
+    setTimeout(() => setSellFeedback(null), 2000)
+  }
+
+  const handleSellFlower = async (plantId: string, flowerType: FlowerType) => {
+    const value = await sellFlower(plantId, flowerType)
+    setSellFeedback(`+${value} moedas`)
+    setSelectedPlantId(null)
+    setTimeout(() => setSellFeedback(null), 2000)
+    return value
+  }
+
+  const handleRemovePlant = async (plantId: string) => {
+    await removePlant(plantId)
+    setSelectedPlantId(null)
   }
 
   // Modal de roll ativo: welcome ou evento de estágio
@@ -106,19 +138,25 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
         >
           {/* Cabeçalho */}
           <div className="flex items-center justify-between mb-5">
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 22,
-                fontWeight: 700,
-                color: 'var(--color-leaf-950)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Leaf size={20} style={{ color: 'var(--color-leaf-600)' }} /> Jardim
-            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: 'var(--color-leaf-950)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Leaf size={20} style={{ color: 'var(--color-leaf-600)' }} /> Jardim
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#8b6914' }}>
+                  {plants.length}/{MAX_PLANTS}
+                </span>
+              </h2>
+              <div style={{ fontSize: 11, color: '#8b6914', fontWeight: 600 }}>{coins} moedas</div>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {/* Toggle modo pânico */}
               <button
@@ -297,6 +335,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                     <Sprout size={14} style={{ marginRight: 5, display: 'inline' }} /> Sementes (
                     {seeds.length})
                   </span>
+
                   <button
                     onClick={() => setShowSeedModal(true)}
                     disabled={seeds.length === 0 || !canPlant}
@@ -336,19 +375,38 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                     {seeds.map((s) => {
                       const info = FLOWERS[s.flowerType]
                       return (
-                        <span
+                        <div
                           key={s.id}
                           style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
                             background: 'var(--color-leaf-100)',
                             borderRadius: 8,
-                            padding: '3px 10px',
+                            padding: '3px 6px 3px 10px',
                             fontSize: 12,
                             fontWeight: 600,
                             color: 'var(--color-leaf-950)',
                           }}
                         >
                           {info.emoji} {info.name}
-                        </span>
+                          <button
+                            onClick={() => handleSellSeed(s)}
+                            title={`Vender por ${SEED_SELL_VALUE[info.rarity]} moedas`}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#8b6914',
+                              fontSize: 10,
+                              fontWeight: 700,
+                              fontFamily: 'Baloo 2, sans-serif',
+                              padding: '1px 4px',
+                            }}
+                          >
+                            vender
+                          </button>
+                        </div>
                       )
                     })}
                   </div>
@@ -370,6 +428,8 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
           partnerWatered={partnerWatered(selectedPlant.id)}
           onWater={handleWater}
           onClose={() => setSelectedPlantId(null)}
+          onSellFlower={handleSellFlower}
+          onRemovePlant={handleRemovePlant}
         />
       )}
 
@@ -529,6 +589,102 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {confirmSellSeed && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 400,
+          }}
+          onClick={() => setConfirmSellSeed(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#FFF8F0',
+              border: '2px solid #C59F78',
+              borderRadius: 14,
+              padding: '24px 28px',
+              fontFamily: 'Baloo 2, sans-serif',
+              textAlign: 'center',
+              width: 280,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#8E6D1A', marginBottom: 6 }}>
+              Vender semente
+            </div>
+            <div style={{ fontSize: 13, color: '#5a4010', marginBottom: 18 }}>
+              {FLOWERS[confirmSellSeed.flowerType].emoji} {FLOWERS[confirmSellSeed.flowerType].name}{' '}
+              por{' '}
+              <strong>{SEED_SELL_VALUE[FLOWERS[confirmSellSeed.flowerType].rarity]} moedas</strong>?
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setConfirmSellSeed(null)}
+                style={{
+                  flex: 1,
+                  padding: '7px 0',
+                  borderRadius: 10,
+                  background: 'none',
+                  border: '1.5px solid #C59F78',
+                  color: '#8E6D1A',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmSellSeed}
+                style={{
+                  flex: 1,
+                  padding: '7px 0',
+                  borderRadius: 10,
+                  background: '#8b6914',
+                  border: 'none',
+                  color: '#fff',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                Vender
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sellFeedback && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 32,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#2d5a2d',
+            color: '#fff',
+            borderRadius: 20,
+            padding: '8px 20px',
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: 'Baloo 2, sans-serif',
+            zIndex: 9999,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+          }}
+        >
+          {sellFeedback}
         </div>
       )}
       {showExchangeModal && (
