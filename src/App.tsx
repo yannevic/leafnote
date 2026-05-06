@@ -10,6 +10,7 @@ import { useBoards } from './hooks/useBoards'
 import ChangelogModal from './components/ChangelogModal'
 import { useNotificationCenter } from './hooks/useNotificationCenter'
 import { subscribeCoins } from './lib/garden'
+import HouseCalibrate from './HouseCalibrate'
 
 function AppInner({ user }: { user: User }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
@@ -66,6 +67,7 @@ function AppInner({ user }: { user: User }) {
           <Routes>
             <Route path="/login" element={<Navigate to="/board" replace />} />
             <Route path="/board" element={<Board activeBoardId={activeBoardId} />} />
+            <Route path="/calibrate" element={<HouseCalibrate />} />
             <Route path="*" element={<Navigate to="/board" replace />} />
           </Routes>
         </HashRouter>

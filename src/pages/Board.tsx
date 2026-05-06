@@ -4,6 +4,8 @@ import { useAuthState } from 'react-firebase-hooks/auth'
 import { useNotifications } from '../hooks/useNotifications'
 import { auth } from '../lib/firebase'
 import { updateProfile } from 'firebase/auth'
+import HouseModal from '../components/HouseModal'
+import { House, ShoppingBag } from 'lucide-react'
 
 import {
   BoardItemType,
@@ -141,6 +143,9 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const isNana = uid === import.meta.env.VITE_NANA_UID
   const [showCycleModal, setShowCycleModal] = useState(false)
   const [showCharacter, setShowCharacter] = useState(false)
+  const [showHouse, setShowHouse] = useState(false)
+  const [_showShop, setShowShop] = useState(false) // loja — pra depois
+  const [expandedMenu, setExpandedMenu] = useState(false)
   const {
     config: characterConfig,
     saveConfig: saveCharacterConfig,
@@ -770,58 +775,99 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           <Sprout size={22} strokeWidth={2} />
         </div>
 
-        {/* Botão personagem */}
+        {/* Grupo expansível — guarda-roupa / casinha / loja */}
         <div
-          onClick={() => setShowCharacter(true)}
           style={{
             position: 'fixed',
             bottom: 344,
             right: 20,
             zIndex: 48,
-            background: 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
-            border: '2px solid #c478a8',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#5a1a3a',
-            cursor: 'pointer',
-            boxShadow: '0 3px 10px rgba(196,120,168,0.35)',
-            transition: 'transform 0.15s',
-            userSelect: 'none',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: 8,
           }}
-          title="meu personagem"
+          onMouseEnter={() => setExpandedMenu(true)}
+          onMouseLeave={() => setExpandedMenu(false)}
         >
-          <User size={22} strokeWidth={2} />
-        </div>
+          {/* Sub-botão: loja (aparece ao hover, acima) */}
+          <div
+            onClick={() => setShowShop(true)}
+            style={{
+              opacity: expandedMenu ? 1 : 0,
+              transform: expandedMenu ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.8)',
+              transition: 'all 0.2s cubic-bezier(.34,1.56,.64,1)',
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              background: 'linear-gradient(145deg, #fff8e1 0%, #f9c74f 100%)',
+              border: '2px solid #c9a227',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#7a5000',
+              cursor: 'pointer',
+              boxShadow: '0 3px 10px rgba(201,162,39,0.35)',
+              userSelect: 'none',
+            }}
+            title="loja 🛍️"
+          >
+            <ShoppingBag size={18} strokeWidth={2} />
+          </div>
 
-        {/* Botão widgets */}
-        <div
-          onClick={() => setShowWidgets(true)}
-          style={{
-            position: 'fixed',
-            bottom: 152,
-            right: 20,
-            zIndex: 48,
-            background: 'linear-gradient(145deg, #f5ecd7 0%, #c4956a 100%)',
-            border: '2px solid #a07840',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#5a3010',
-            cursor: 'pointer',
-            boxShadow: '0 3px 10px rgba(139,105,20,0.3)',
-            transition: 'transform 0.15s',
-            userSelect: 'none',
-          }}
-          title="abrir widgets"
-        >
-          <LayoutGrid size={22} strokeWidth={2} />
+          {/* Sub-botão: casinha */}
+          <div
+            onClick={() => setShowHouse(true)}
+            style={{
+              opacity: expandedMenu ? 1 : 0,
+              transform: expandedMenu ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.8)',
+              transition: 'all 0.2s cubic-bezier(.34,1.56,.64,1) 0.04s',
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              background: 'linear-gradient(145deg, #e8f5e8 0%, #7FB87F 100%)',
+              border: '2px solid #4a7a4a',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#1a3a1a',
+              cursor: 'pointer',
+              boxShadow: '0 3px 10px rgba(79,160,79,0.3)',
+              userSelect: 'none',
+            }}
+            title="casinha 🏠"
+          >
+            <House size={18} strokeWidth={2} />
+          </div>
+
+          {/* Botão principal — guarda-roupa (sempre visível) */}
+          <div
+            onClick={() => setShowCharacter(true)}
+            style={{
+              background: expandedMenu
+                ? 'linear-gradient(145deg, #f5d0ff 0%, #c478a8 100%)'
+                : 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
+              border: '2px solid #c478a8',
+              borderRadius: '50%',
+              width: 48,
+              height: 48,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#5a1a3a',
+              cursor: 'pointer',
+              boxShadow: expandedMenu
+                ? '0 4px 16px rgba(196,120,168,0.5)'
+                : '0 3px 10px rgba(196,120,168,0.35)',
+              transition: 'all 0.2s ease',
+              userSelect: 'none',
+            }}
+            title="guarda-roupa 👗"
+          >
+            <User size={22} strokeWidth={2} />
+          </div>
         </div>
 
         {/* Botão calendário */}
@@ -912,6 +958,33 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           >
             <Mail size={22} strokeWidth={2} />
           </div>
+        </div>
+
+        {/* Botão widgets */}
+        <div
+          onClick={() => setShowWidgets(true)}
+          style={{
+            position: 'fixed',
+            bottom: 152,
+            right: 20,
+            zIndex: 48,
+            background: 'linear-gradient(145deg, #f5ecd7 0%, #c4956a 100%)',
+            border: '2px solid #a07840',
+            borderRadius: '50%',
+            width: 48,
+            height: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#5a3010',
+            cursor: 'pointer',
+            boxShadow: '0 3px 10px rgba(139,105,20,0.3)',
+            transition: 'transform 0.15s',
+            userSelect: 'none',
+          }}
+          title="abrir widgets"
+        >
+          <LayoutGrid size={22} strokeWidth={2} />
         </div>
 
         {/* Painel de widgets */}
@@ -1072,6 +1145,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onClose={() => setShowMovies(false)}
           />
         )}
+
+        {showHouse && <HouseModal uid={uid} onClose={() => setShowHouse(false)} />}
 
         {showGarden && (
           <GardenView
