@@ -1,1076 +1,567 @@
-// src/components/CharacterModal.tsx
-import { useState, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   ChevronLeft,
   Save,
-  AlertCircle,
-  Undo2,
-  Redo2,
-  Trash2,
-  Sparkles,
-  Plus,
   Check,
-  X,
+  Home,
+  Layers,
+  PaintRoller,
+  PaintBucket,
+  Blend,
+  Grid2x2,
+  BrickWall,
+  Hexagon,
+  Circle,
+  AlignJustify,
+  Grip,
+  ChevronRight,
+  Palette,
+  Sparkles,
 } from 'lucide-react'
-import {
-  ALL_PIECES,
-  CharacterCategory,
-  CharacterConfig,
-  CharacterPiece,
-  CharacterGender,
-  CharacterPack,
-  DEFAULT_CHARACTER_CONFIG,
-  LAYER_ORDER,
-  isMultiSlot,
-  getPiecesByCategory,
-  COLOR_VARIANT_LABELS,
-} from '../assets/character/index'
-import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
-import type { CharacterPreset } from '../hooks/useCharacter'
+import { ref, onValue, set } from 'firebase/database'
+import { db } from '../lib/firebase'
 
-// ── Scrollbar custom global (injeta uma vez) ──────────────────
-const SCROLLBAR_CSS = `
-  .char-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-  .char-scroll::-webkit-scrollbar-track { background: transparent; }
-  .char-scroll::-webkit-scrollbar-thumb { background: var(--color-wood-300); border-radius: 99px; }
-  .char-scroll::-webkit-scrollbar-thumb:hover { background: var(--color-wood-400); }
-  .char-scroll { scrollbar-width: thin; scrollbar-color: var(--color-wood-300) transparent; }
-`
-if (!document.getElementById('char-scroll-style')) {
-  const s = document.createElement('style')
-  s.id = 'char-scroll-style'
-  s.textContent = SCROLLBAR_CSS
-  document.head.appendChild(s)
+interface HouseConfig {
+  floor: { sheet: string; col: number; row: number }
+  wall: { sheet: string; col: number; row: number }
+  wallRight: { sheet: string; col: number; row: number }
+  bgColor?: string
 }
 
-function assetUrl(path: string): string {
-  return `./character/${path}`
-}
+const BG_COLORS = [
+  { label: 'Verde sage', value: '#d6e8d0' },
+  { label: 'Céu', value: '#cce0f0' },
+  { label: 'Lavanda', value: '#e0d6ee' },
+  { label: 'Pêssego', value: '#f5dfd0' },
+  { label: 'Areia', value: '#ede8d8' },
+  { label: 'Rosa bebê', value: '#f5e0e8' },
+]
 
-// ─────────────────────────────────────────────
-// TIPOS LOCAIS
-// ─────────────────────────────────────────────
+const DEFAULT_BG = '#d6e8d0'
 
-interface SubTab {
+interface TileOption {
   id: string
   label: string
-  sections: Section[]
-}
-interface Section {
-  label: string
-  category: CharacterCategory
-  genderFilter?: CharacterGender
-  packFilter?: CharacterPack
-}
-interface Tab {
-  id: string
-  label: string
-  subTabs: SubTab[]
-  requiresBody?: boolean
-  flatSections?: Section[]
-}
-interface Props {
-  myUid: string
-  config: CharacterConfig
-  unlockedIds: Set<string>
-  presets: CharacterPreset[]
-  onSave: (config: CharacterConfig) => void
-  onSavePreset: (name: string, config: CharacterConfig) => Promise<void>
-  onDeletePreset: (id: string) => Promise<void>
-  onClose: () => void
+  sheet: string
+  col: number
+  row: number
+  tileW: number
+  tileH: number
+  sheetW: number
+  sheetH: number
 }
 
-// ─────────────────────────────────────────────
-// ESTRUTURA DE TABS (igual ao original)
-// ─────────────────────────────────────────────
+// SheetGroup agora suporta múltiplos sheets (para grupos consolidados)
+interface SheetDef {
+  sheet: string
+  tileW: number
+  tileH: number
+  sheetW: number
+  sheetH: number
+  cols: number
+  rows: number
+  totalTiles?: number
+  names?: string[]
+  overlap?: number
+}
 
-const TABS: Tab[] = [
+interface SheetGroup {
+  label: string
+  icon?: React.ReactNode
+  overlap?: number // overlap do grupo (herdado para chão)
+  // Grupos simples (sheet único)
+  sheet?: string
+  tileW?: number
+  tileH?: number
+  sheetW?: number
+  sheetH?: number
+  cols?: number
+  rows?: number
+  totalTiles?: number
+  names?: string[]
+  // Grupos compostos (múltiplos sheets)
+  sheets?: SheetDef[]
+}
+
+const FLOOR_GROUPS: SheetGroup[] = [
   {
-    id: 'corpo',
-    label: 'Corpo',
-    requiresBody: false,
-    subTabs: [],
-    flatSections: [{ label: 'Corpo', category: 'body' }],
-  },
-  {
-    id: 'rosto',
-    label: 'Rosto',
-    requiresBody: true,
-    subTabs: [],
-    flatSections: [
-      { label: 'Pupila', category: 'pupils' },
-      { label: 'Boca', category: 'mouth' },
-      { label: 'Cílios', category: 'eyelashes' },
-      { label: 'Sobrancelha', category: 'eyebrows' },
+    label: 'Carpete',
+    icon: <Grip size={12} />,
+    sheet: 'base floor/carpet spritesheet.png',
+    tileW: 256,
+    tileH: 128,
+    sheetW: 1024,
+    sheetH: 512,
+    cols: 4,
+    rows: 4,
+    totalTiles: 14,
+    names: [
+      'Verde escuro',
+      'Verde médio',
+      'Verde claro',
+      'Amarelo',
+      'Marrom',
+      'Salmão',
+      'Vermelho',
+      'Rosa',
+      'Lilás',
+      'Azul',
+      'Azul médio',
+      'Ciano',
+      'Cinza',
+      'Branco',
     ],
   },
   {
-    id: 'cabelo',
-    label: 'Cabelo',
-    requiresBody: true,
-    subTabs: [],
-    flatSections: [
-      { label: 'Trás', category: 'hair_back' },
-      { label: 'Frente', category: 'hair', genderFilter: 'neutral' },
-      { label: 'Franja', category: 'bangs', genderFilter: 'neutral' },
-      { label: 'Enfeite', category: 'hair_bonus' },
-      { label: 'Franja extra', category: 'bangs', genderFilter: 'masc' },
-      { label: 'Frente extra', category: 'hair', genderFilter: 'masc' },
-    ],
+    label: 'Xadrez',
+    icon: <Grid2x2 size={12} />,
+    sheet: 'base floor/chckerboard spritesheet.png',
+    tileW: 256,
+    tileH: 128,
+    sheetW: 1024,
+    sheetH: 512,
+    cols: 4,
+    rows: 4,
+    totalTiles: 15,
   },
   {
-    id: 'roupas',
-    label: 'Roupas',
-    requiresBody: true,
-    subTabs: [
-      {
-        id: 'padrao',
-        label: 'Padrão',
-        sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'chibi-basics' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'chibi-basics' },
-          { label: 'Vestido', category: 'dress', packFilter: 'chibi-basics' },
-          { label: 'Sapato', category: 'shoes', packFilter: 'chibi-basics' },
-          { label: 'Luva', category: 'gloves', packFilter: 'chibi-basics' },
-        ],
-      },
-      {
-        id: 'masculino',
-        label: 'Masculino',
-        sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'masc-misc' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'masc-misc' },
-          { label: 'Sapato', category: 'shoes', packFilter: 'masc-misc' },
-        ],
-      },
-      {
-        id: 'casal',
-        label: 'Casal',
-        sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'power-couples-1' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'power-couples-1' },
-          { label: 'Vestido', category: 'dress', packFilter: 'power-couples-1' },
-          { label: 'Sapato', category: 'shoes', packFilter: 'power-couples-1' },
-          { label: 'Luva', category: 'gloves', packFilter: 'power-couples-1' },
-          { label: 'Parte de cima (casal 2)', category: 'top', packFilter: 'power-couples-2' },
-          { label: 'Parte de baixo (casal 2)', category: 'bottom', packFilter: 'power-couples-2' },
-          { label: 'Saia (costas)', category: 'saia_costas', packFilter: 'power-couples-2' },
-          { label: 'Saia (topo)', category: 'saia_top', packFilter: 'power-couples-2' },
-          { label: 'Sapato (casal 2)', category: 'shoes', packFilter: 'power-couples-2' },
-        ],
-      },
-      {
-        id: 'praia',
-        label: 'Praia',
-        sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'summer' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'summer' },
-          { label: 'Maiô inteiro', category: 'dress', packFilter: 'summer' },
-          { label: 'Sandália', category: 'shoes', packFilter: 'summer' },
-        ],
-      },
-    ],
+    label: 'Pedra',
+    icon: <Hexagon size={12} />,
+    sheet: 'base floor/cobblestone spritesheet.png',
+    tileW: 256,
+    tileH: 128,
+    sheetW: 512,
+    sheetH: 256,
+    cols: 2,
+    rows: 2,
   },
   {
-    id: 'extras',
-    label: 'Extras',
-    requiresBody: true,
-    subTabs: [
-      { id: 'padrao-extras', label: 'Padrão', sections: [{ label: 'Barba', category: 'beard' }] },
-      {
-        id: 'casal-extras',
-        label: 'Casal',
-        sections: [
-          { label: 'Jaqueta', category: 'jaqueta' },
-          { label: 'Acessório (casal 1)', category: 'accessory', packFilter: 'power-couples-1' },
-          { label: 'Acessório (casal 2)', category: 'accessory', packFilter: 'power-couples-2' },
-          { label: 'Tatuagem', category: 'tattoo', packFilter: 'power-couples-2' },
-        ],
-      },
-      {
-        id: 'praia-extras',
-        label: 'Praia',
-        sections: [
-          { label: 'Acessório praia', category: 'accessory_cima', packFilter: 'summer' },
-          { label: 'Acessório topo', category: 'accessory_topo', packFilter: 'summer' },
-          { label: 'Bronzeado', category: 'tattoo', packFilter: 'summer' },
-        ],
-      },
-    ],
+    label: 'Seixos',
+    icon: <Circle size={12} />,
+    sheet: 'base floor/pebbles spritesheet.png',
+    tileW: 256,
+    tileH: 128,
+    sheetW: 512,
+    sheetH: 256,
+    cols: 2,
+    rows: 2,
+  },
+  {
+    label: 'Pedra quadrada',
+    icon: <Grid2x2 size={12} />,
+    sheet: 'base floor/stone square spritesheet.png',
+    tileW: 256,
+    tileH: 128,
+    sheetW: 1280,
+    sheetH: 640,
+    cols: 5,
+    rows: 5,
+    totalTiles: 24,
+    overlap: 2,
+  },
+  {
+    label: 'Madeira',
+    icon: <AlignJustify size={12} />,
+    sheet: 'base floor/wood spritesheet.png',
+    tileW: 256,
+    tileH: 128,
+    sheetW: 768,
+    sheetH: 384,
+    cols: 3,
+    rows: 3,
+    totalTiles: 8,
+    overlap: 2,
+  },
+  {
+    label: 'P&B',
+    icon: <Blend size={12} />,
+    sheet: 'base floor/black and white.png',
+    tileW: 256,
+    tileH: 128,
+    sheetW: 1024,
+    sheetH: 384,
+    cols: 4,
+    rows: 3,
   },
 ]
 
-const COLOR_VARIANTS = FIRST_TIME_COLOR_VARIANTS
+const WALL_GROUPS: SheetGroup[] = [
+  // ── Tinta lisa — pastel + terrosa + clara + cinza + branca juntas
+  {
+    label: 'Tinta lisa',
+    icon: <PaintBucket size={12} />,
+    sheets: [
+      {
+        sheet: 'base walls/walls_paint_pastel.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+      {
+        sheet: 'base walls/walls_paint_earthy.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+      {
+        sheet: 'base walls/walls_paint_bright.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+      {
+        sheet: 'base walls/walls_paint_grey.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+      {
+        sheet: 'base walls/BASE_WHITE_WALL.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 256,
+        sheetH: 384,
+        cols: 1,
+        rows: 1,
+      },
+    ],
+  },
+  // ── Tinta listrada — pastel listrado + terrosa listrada + clara listrada + cinza listrado
+  {
+    label: 'Tinta listrada',
+    icon: <Blend size={12} />,
+    sheets: [
+      {
+        sheet: 'base walls/walls_paint_pastel_stripes.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+      {
+        sheet: 'base walls/walls_paint_earthy_stripes.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+      {
+        sheet: 'base walls/walls_paint_bright_stripes.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+      {
+        sheet: 'base walls/walls_paint_grey_stripes.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 768,
+        cols: 4,
+        rows: 2,
+      },
+    ],
+  },
+  // ── Outros
+  {
+    label: 'Tijolo',
+    icon: <BrickWall size={12} />,
+    sheet: 'base walls/spritesheet(10).png',
+    tileW: 256,
+    tileH: 384,
+    sheetW: 768,
+    sheetH: 768,
+    cols: 3,
+    rows: 2,
+  },
+  {
+    label: 'Azulejo xadrez',
+    icon: <Grid2x2 size={12} />,
+    sheet: 'base walls/spritesheet(11).png',
+    tileW: 256,
+    tileH: 384,
+    sheetW: 1280,
+    sheetH: 1152,
+    cols: 5,
+    rows: 3,
+    totalTiles: 13,
+  },
+  {
+    label: 'Pedras',
+    icon: <Hexagon size={12} />,
+    sheet: 'base walls/spritesheet(12).png',
+    tileW: 256,
+    tileH: 384,
+    sheetW: 1280,
+    sheetH: 768,
+    cols: 5,
+    rows: 2,
+  },
+  {
+    label: 'Madeira ornada',
+    icon: <AlignJustify size={12} />,
+    sheet: 'base walls/spritesheet(13).png',
+    tileW: 256,
+    tileH: 384,
+    sheetW: 1280,
+    sheetH: 768,
+    cols: 5,
+    rows: 2,
+  },
+  {
+    label: 'Madeira simples',
+    icon: <AlignJustify size={12} />,
+    sheet: 'base walls/spritesheet(14).png',
+    tileW: 256,
+    tileH: 384,
+    sheetW: 1280,
+    sheetH: 768,
+    cols: 5,
+    rows: 2,
+  },
+]
 
-function resolveSrc(piece: CharacterPiece, variant: string): string {
-  if (!variant || !piece.hasColor || !piece.srcColor) return assetUrl(piece.src)
-  return assetUrl(piece.srcColor.replace(/(\d+)(\.png)$/, `$1${variant}$2`))
+// Converte um SheetGroup (simples ou composto) em lista de TileOptions
+function groupToTiles(g: SheetGroup): TileOption[] {
+  const tiles: TileOption[] = []
+
+  // Grupo composto — múltiplos sheets
+  if (g.sheets) {
+    for (const s of g.sheets) {
+      const total = s.totalTiles ?? s.cols * s.rows
+      for (let row = 0; row < s.rows; row++) {
+        for (let col = 0; col < s.cols; col++) {
+          const idx = row * s.cols + col
+          if (idx >= total) continue
+          tiles.push({
+            id: `${s.sheet}__${col}_${row}`,
+            label: s.names?.[idx] ?? `${g.label} ${tiles.length + 1}`,
+            sheet: s.sheet,
+            col,
+            row,
+            tileW: s.tileW,
+            tileH: s.tileH,
+            sheetW: s.sheetW,
+            sheetH: s.sheetH,
+          })
+        }
+      }
+    }
+    return tiles
+  }
+
+  // Grupo simples — sheet único
+  const total = g.totalTiles ?? g.cols! * g.rows!
+  for (let row = 0; row < g.rows!; row++) {
+    for (let col = 0; col < g.cols!; col++) {
+      const idx = row * g.cols! + col
+      if (idx >= total) continue
+      tiles.push({
+        id: `${g.sheet}__${col}_${row}`,
+        label: g.names?.[idx] ?? `${g.label} ${idx + 1}`,
+        sheet: g.sheet!,
+        col,
+        row,
+        tileW: g.tileW!,
+        tileH: g.tileH!,
+        sheetW: g.sheetW!,
+        sheetH: g.sheetH!,
+      })
+    }
+  }
+  return tiles
 }
-function sectionKey(s: Section): string {
-  return [s.category, s.genderFilter, s.packFilter].filter(Boolean).join('|')
+
+// Fix: busca overlap pelo sheet em grupos simples E compostos
+function findOverlapForSheet(groups: SheetGroup[], sheet: string): number {
+  for (const g of groups) {
+    if (g.sheets) {
+      const s = g.sheets.find((s) => s.sheet === sheet)
+      if (s) return s.overlap ?? 0
+    } else if (g.sheet === sheet) {
+      return g.overlap ?? 0
+    }
+  }
+  return 0
 }
 
-// ─────────────────────────────────────────────
-// PRESETS
-// ─────────────────────────────────────────────
+function tileStyle(
+  t: TileOption,
+  displayW: number,
+  displayH: number,
+  offsetX = 0,
+  offsetY = 0
+): React.CSSProperties {
+  const scaleX = displayW / t.tileW
+  const scaleY = displayH / t.tileH
+  return {
+    backgroundImage: `url("./house/${t.sheet.replace(/ /g, '%20')}")`,
+    backgroundSize: `${t.sheetW * scaleX}px ${t.sheetH * scaleY}px`,
+    backgroundPosition: `-${t.col * t.tileW * scaleX - offsetX}px -${t.row * t.tileH * scaleY - offsetY}px`,
+    backgroundRepeat: 'no-repeat',
+    width: displayW,
+    height: displayH,
+    imageRendering: 'pixelated',
+  }
+}
 
-const MAX_FREE_PRESETS = 6
+// Encontra o sheetW/sheetH de um sheet em qualquer grupo (simples ou composto)
+function findSheetDims(groups: SheetGroup[], sheet: string): { sheetW: number; sheetH: number } {
+  for (const g of groups) {
+    if (g.sheets) {
+      const s = g.sheets.find((s) => s.sheet === sheet)
+      if (s) return { sheetW: s.sheetW, sheetH: s.sheetH }
+    } else if (g.sheet === sheet) {
+      return { sheetW: g.sheetW!, sheetH: g.sheetH! }
+    }
+  }
+  return { sheetW: 1024, sheetH: 768 }
+}
 
-function PresetsPanel({
-  presets,
-  currentConfig,
-  currentColorVariants,
-  onApply,
-  onSavePreset,
-  onDeletePreset,
-}: {
-  presets: CharacterPreset[]
-  currentConfig: CharacterConfig
-  currentColorVariants: Record<string, string>
-  onApply: (config: CharacterConfig) => void
-  onSavePreset: (name: string, config: CharacterConfig) => Promise<void>
-  onDeletePreset: (id: string) => Promise<void>
-}) {
-  const [savingNew, setSavingNew] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
+const DEFAULT_CONFIG: HouseConfig = {
+  floor: { sheet: 'base floor/carpet spritesheet.png', col: 3, row: 3 }, // carpete branco
+  wall: { sheet: 'base walls/walls_paint_grey_stripes.png', col: 0, row: 0 },
+  wallRight: { sheet: 'base walls/walls_paint_grey_stripes.png', col: 0, row: 0 },
+  bgColor: DEFAULT_BG,
+}
+
+interface HouseModalProps {
+  uid: string
+  onClose: () => void
+}
+
+type HouseTab = 'floor' | 'wall' | 'bg'
+type WallSide = 'left' | 'right'
+
+export default function HouseModal({ onClose }: HouseModalProps) {
+  const [config, setConfig] = useState<HouseConfig>(DEFAULT_CONFIG)
+  const [tab, setTab] = useState<HouseTab>('floor')
+  const [wallSide, setWallSide] = useState<WallSide>('left')
+  const [savedFeedback, setSavedFeedback] = useState(false)
+  const [activeFloorGroup, setActiveFloorGroup] = useState(0)
+  const [activeWallGroup, setActiveWallGroup] = useState(0)
+  const [activeWallRightGroup, setActiveWallRightGroup] = useState(0)
+  const [panelOpen, setPanelOpen] = useState(true)
+
+  // Zoom + pan
+  const [scale, setScale] = useState(1)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const dragging = useRef(false)
+  const lastPos = useRef({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const r = ref(db, 'house/config')
+    return onValue(r, (snap) => {
+      if (snap.exists()) {
+        const data = snap.val() as HouseConfig
+        setConfig({
+          ...DEFAULT_CONFIG,
+          ...data,
+          wallRight: data.wallRight ?? DEFAULT_CONFIG.wallRight,
+          bgColor: data.bgColor ?? DEFAULT_BG,
+        })
+      }
+    })
+  }, [])
 
   const handleSave = async () => {
-    if (saving) return
-    const trimmed = newName.trim() || 'Preset'
-
-    const currentSnapshot = JSON.stringify({
-      ...currentConfig,
-      colorVariants: currentColorVariants,
-    })
-
-    const duplicateName = presets.find((p) => p.name.toLowerCase() === trimmed.toLowerCase())
-    const duplicateVisual = presets.find(
-      (p) =>
-        JSON.stringify({ ...p.config, colorVariants: p.config.colorVariants ?? {} }) ===
-        currentSnapshot
-    )
-
-    if (duplicateName) {
-      setDuplicateWarning(`Nome "${duplicateName.name}" já está em uso`)
-      setTimeout(() => setDuplicateWarning(null), 2500)
-      return
-    }
-
-    if (duplicateVisual) {
-      setDuplicateWarning(`Esse visual já está salvo como "${duplicateVisual.name}"`)
-      setTimeout(() => setDuplicateWarning(null), 2500)
-      return
-    }
-
-    setSaving(true)
-    await onSavePreset(trimmed, { ...currentConfig, colorVariants: currentColorVariants })
-    setNewName('')
-    setSavingNew(false)
-    setSaving(false)
-  }
-
-  const handleDelete = async (id: string) => {
-    await onDeletePreset(id)
-    setDeleteConfirm(null)
-  }
-
-  const canAdd = presets.length < MAX_FREE_PRESETS
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px 0' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: 'var(--color-leaf-700)',
-            fontFamily: 'Baloo 2, sans-serif',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-          }}
-        >
-          Presets ({presets.length}/{MAX_FREE_PRESETS})
-        </span>
-        {canAdd && (
-          <button
-            onClick={() => setSavingNew(true)}
-            title="Salvar preset atual"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 3,
-              padding: '2px 8px',
-              borderRadius: 8,
-              border: '1.5px solid var(--color-wood-300)',
-              background: 'var(--color-bark-100)',
-              color: 'var(--color-leaf-600)',
-              fontSize: 11,
-              fontFamily: 'Baloo 2, sans-serif',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={12} /> Salvar atual
-          </button>
-        )}
-      </div>
-
-      {/* Campo de nome novo preset */}
-      {savingNew && (
-        <div style={{ display: 'flex', gap: 4 }}>
-          <input
-            autoFocus
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSave()
-            }}
-            placeholder="Nome do preset..."
-            maxLength={20}
-            style={{
-              flex: 1,
-              padding: '4px 8px',
-              borderRadius: 8,
-              border: '1.5px solid var(--color-wood-300)',
-              background: '#fff',
-              fontSize: 12,
-              fontFamily: 'Baloo 2, sans-serif',
-              color: 'var(--color-soil-900)',
-              outline: 'none',
-            }}
-          />
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 8,
-              border: 'none',
-              background: 'var(--color-leaf-600)',
-              color: '#fff',
-              fontSize: 11,
-              fontWeight: 700,
-              fontFamily: 'Baloo 2, sans-serif',
-              cursor: 'pointer',
-            }}
-          >
-            <Check size={12} />
-          </button>
-          <button
-            onClick={() => {
-              setSavingNew(false)
-              setNewName('')
-            }}
-            style={{
-              padding: '4px 8px',
-              borderRadius: 8,
-              border: '1.5px solid var(--color-wood-300)',
-              background: 'transparent',
-              color: 'var(--color-leaf-600)',
-              fontSize: 11,
-              cursor: 'pointer',
-            }}
-          >
-            <X size={12} />
-          </button>
-        </div>
-      )}
-
-      {duplicateWarning && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '5px 10px',
-            borderRadius: 8,
-            background: 'var(--color-petal-200)',
-            border: '1.5px solid var(--color-petal-400)',
-            fontSize: 11,
-            fontFamily: 'Baloo 2, sans-serif',
-            color: 'var(--color-soil-900)',
-          }}
-        >
-          <AlertCircle size={12} color="var(--color-petal-400)" style={{ flexShrink: 0 }} />
-          {duplicateWarning}
-        </div>
-      )}
-
-      {/* Grade 2x2 com scroll */}
-      <div
-        className="char-scroll"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 6,
-          maxHeight: 180,
-          overflowY: 'auto',
-          paddingRight: 4,
-          paddingBottom: 4,
-        }}
-      >
-        {presets.length === 0 && (
-          <div
-            style={{
-              gridColumn: '1 / -1',
-              textAlign: 'center',
-              fontSize: 11,
-              color: 'var(--color-leaf-400)',
-              fontFamily: 'Baloo 2, sans-serif',
-              padding: '12px 0',
-            }}
-          >
-            Nenhum preset salvo ainda
-          </div>
-        )}
-        {presets.map((preset) => (
-          <div
-            key={preset.id}
-            style={{
-              position: 'relative',
-              borderRadius: 10,
-              border: '1.5px solid var(--color-wood-300)',
-              background: 'rgba(255,255,255,0.6)',
-              overflow: 'hidden',
-              cursor: 'pointer',
-            }}
-          >
-            {/* Miniatura clicável */}
-            <div
-              onClick={() => onApply(preset.config)}
-              style={{
-                padding: 4,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 3,
-              }}
-            >
-              <CharacterPreview
-                config={preset.config}
-                colorVariants={preset.config.colorVariants ?? {}}
-                size={80}
-              />
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: 'var(--color-leaf-800)',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  textAlign: 'center',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  width: '100%',
-                  paddingInline: 2,
-                }}
-              >
-                {preset.name}
-              </span>
-            </div>
-
-            {/* Botão excluir */}
-            {deleteConfirm === preset.id ? (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'rgba(245,213,220,0.97)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 4,
-                  borderRadius: 10,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: 'var(--color-soil-900)',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
-                  Excluir?
-                </span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <button
-                    onClick={() => handleDelete(preset.id)}
-                    style={{
-                      padding: '2px 8px',
-                      borderRadius: 6,
-                      border: 'none',
-                      background: 'var(--color-petal-400)',
-                      color: '#fff',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      fontFamily: 'Baloo 2, sans-serif',
-                    }}
-                  >
-                    Sim
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirm(null)}
-                    style={{
-                      padding: '2px 8px',
-                      borderRadius: 6,
-                      border: '1px solid var(--color-wood-300)',
-                      background: 'transparent',
-                      color: 'var(--color-leaf-600)',
-                      fontSize: 10,
-                      cursor: 'pointer',
-                      fontFamily: 'Baloo 2, sans-serif',
-                    }}
-                  >
-                    Não
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setDeleteConfirm(preset.id)}
-                style={{
-                  position: 'absolute',
-                  top: 3,
-                  right: 3,
-                  width: 18,
-                  height: 18,
-                  borderRadius: 5,
-                  border: 'none',
-                  background: 'rgba(232,160,176,0.7)',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 0,
-                }}
-              >
-                <X size={10} />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Divisor */}
-      <div
-        style={{ height: 1, background: 'var(--color-wood-300)', borderRadius: 1, marginTop: 2 }}
-      />
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────
-// PREVIEW
-// ─────────────────────────────────────────────
-
-function CharacterPreview({
-  config,
-  colorVariants,
-  size = 222,
-}: {
-  config: CharacterConfig
-  colorVariants: Record<string, string>
-  size?: number
-}) {
-  const layers: { piece: CharacterPiece; src: string }[] = []
-  for (const cat of LAYER_ORDER) {
-    const multi = isMultiSlot(cat as CharacterCategory)
-    const variant = colorVariants[cat] ?? ''
-    if (multi) {
-      const ids = (config[cat as keyof CharacterConfig] as string[]) ?? []
-      for (const id of ids) {
-        const p = ALL_PIECES.find((x) => x.id === id)
-        if (p) layers.push({ piece: p, src: resolveSrc(p, variant) })
-      }
-    } else {
-      const id = config[cat as keyof CharacterConfig] as string | null
-      if (id) {
-        const p = ALL_PIECES.find((x) => x.id === id)
-        if (p) layers.push({ piece: p, src: resolveSrc(p, variant) })
-      }
-    }
-  }
-  const height = Math.round(size * (350 / 222))
-  return (
-    <div style={{ position: 'relative', width: size, height }}>
-      {layers.length === 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--color-leaf-400)',
-            fontSize: 12,
-            fontFamily: 'Baloo 2, sans-serif',
-            textAlign: 'center',
-            padding: '0 16px',
-          }}
-        >
-          Selecione um corpo para começar
-        </div>
-      )}
-      {layers.map(({ piece, src }) => (
-        <img
-          key={piece.id}
-          src={src}
-          alt={piece.label}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            imageRendering: 'pixelated',
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────
-// MINI GRADE
-// ─────────────────────────────────────────────
-
-function MiniGrid({
-  section,
-  config,
-  colorVariants,
-  unlockedIds,
-  onSelect,
-  onColorChange,
-}: {
-  section: Section
-  config: CharacterConfig
-  colorVariants: Record<string, string>
-  unlockedIds: Set<string>
-  onSelect: (piece: CharacterPiece, category: CharacterCategory) => void
-  onColorChange: (category: CharacterCategory, variant: string) => void
-}) {
-  const { category, genderFilter, packFilter } = section
-  const pieces = getPiecesByCategory(category).filter((p) => {
-    if (genderFilter && p.gender !== genderFilter) return false
-    if (packFilter && p.pack !== packFilter) return false
-    if (!unlockedIds.has(p.id)) return false
-    return true
-  })
-  if (pieces.length === 0) return null
-
-  const multi = isMultiSlot(category)
-  const currentVariant = colorVariants[category] ?? 'b'
-  const selectedIds: string[] = multi
-    ? ((config[category as keyof CharacterConfig] as string[]) ?? [])
-    : (() => {
-        const v = config[category as keyof CharacterConfig] as string | null
-        return v ? [v] : []
-      })()
-
-  const isSelected = (id: string) => selectedIds.includes(id)
-  const hasSomeColor = pieces.some((p) => p.hasColor)
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {hasSomeColor && (
-        <div
-          style={{
-            display: 'flex',
-            gap: 4,
-            flexWrap: 'wrap',
-            padding: '5px 10px',
-            background: 'rgba(255,255,255,0.5)',
-            borderRadius: 10,
-            border: '1px solid var(--color-wood-300)',
-          }}
-        >
-          {COLOR_VARIANTS.map((v) => (
-            <button
-              key={v}
-              onClick={() => onColorChange(category, v)}
-              style={{
-                padding: '2px 10px',
-                borderRadius: 8,
-                border:
-                  currentVariant === v
-                    ? '2px solid var(--color-petal-400)'
-                    : '2px solid transparent',
-                background:
-                  currentVariant === v ? 'var(--color-petal-200)' : 'var(--color-wood-300)',
-                color: 'var(--color-soil-900)',
-                fontSize: 11,
-                fontFamily: 'Baloo 2, sans-serif',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                fontWeight: currentVariant === v ? 700 : 400,
-              }}
-            >
-              {COLOR_VARIANT_LABELS[v]}
-            </button>
-          ))}
-        </div>
-      )}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
-          gap: 8,
-          alignContent: 'start',
-        }}
-      >
-        {!multi && category !== 'body' && (
-          <button
-            onClick={() => onSelect({ id: '__none__', category } as CharacterPiece, category)}
-            style={{
-              width: '100%',
-              aspectRatio: '3/4',
-              borderRadius: 12,
-              border:
-                selectedIds.length === 0
-                  ? '2px solid var(--color-petal-400)'
-                  : '2px solid var(--color-wood-300)',
-              background:
-                selectedIds.length === 0 ? 'var(--color-petal-200)' : 'var(--color-bark-100)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-              color: 'var(--color-leaf-600)',
-            }}
-          >
-            <Trash2 size={18} />
-          </button>
-        )}
-        {pieces.map((p) => {
-          const selected = isSelected(p.id)
-          const src = resolveSrc(p, currentVariant)
-          return (
-            <button
-              key={p.id}
-              onClick={() => onSelect(p, category)}
-              title={`${p.label}${p.cost ? ` — ${p.cost} moedas` : ''}`}
-              style={{
-                width: '100%',
-                aspectRatio: '3/4',
-                borderRadius: 12,
-                border: selected
-                  ? '2px solid var(--color-petal-400)'
-                  : '2px solid var(--color-wood-300)',
-                background: selected ? 'var(--color-petal-200)' : 'rgba(255,255,255,0.55)',
-                padding: 3,
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <img
-                src={src}
-                alt={p.label}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  imageRendering: 'pixelated',
-                }}
-              />
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────
-// PAINEL DE SEÇÕES
-// ─────────────────────────────────────────────
-
-function SectionsPanel({
-  sections,
-  config,
-  colorVariants,
-  unlockedIds, // ← adiciona aqui
-  onSelect,
-  onColorChange,
-}: {
-  sections: Section[]
-  config: CharacterConfig
-  colorVariants: Record<string, string>
-  unlockedIds: Set<string> // ← adiciona aqui
-  onSelect: (piece: CharacterPiece, category: CharacterCategory) => void
-  onColorChange: (category: CharacterCategory, variant: string) => void
-}) {
-  return (
-    <div
-      className="char-scroll"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 20,
-        overflowY: 'auto',
-        height: '100%',
-        paddingRight: 8,
-      }}
-    >
-      {sections.map((section) => {
-        const key = sectionKey(section)
-        const pieces = getPiecesByCategory(section.category).filter((p) => {
-          if (section.genderFilter && p.gender !== section.genderFilter) return false
-          if (section.packFilter && p.pack !== section.packFilter) return false
-          return true
-        })
-        if (pieces.length === 0) return null
-        return (
-          <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'var(--color-leaf-700)',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {section.label}
-              </span>
-              <div
-                style={{ flex: 1, height: 1, background: 'var(--color-wood-300)', borderRadius: 1 }}
-              />
-            </div>
-            <MiniGrid
-              section={section}
-              config={config}
-              colorVariants={colorVariants}
-              unlockedIds={unlockedIds} // ← adiciona essa linha
-              onSelect={onSelect}
-              onColorChange={onColorChange}
-            />
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────
-// MODAL PRINCIPAL
-// ─────────────────────────────────────────────
-
-const MAX_HISTORY = 40
-
-interface HistoryEntry {
-  config: CharacterConfig
-  colorVariants: Record<string, string>
-}
-
-export default function CharacterModal({
-  config: initialConfig,
-  unlockedIds,
-  presets,
-  onSave,
-  onSavePreset,
-  onDeletePreset,
-  onClose,
-}: Props) {
-  const [config, setConfig] = useState<CharacterConfig>(initialConfig ?? DEFAULT_CHARACTER_CONFIG)
-  const [colorVariants, setColorVariants] = useState<Record<string, string>>(() => {
-    const defaults: Record<string, string> = {}
-    const colorCats = [
-      'hair',
-      'hair_back',
-      'hair_bonus',
-      'bangs',
-      'top',
-      'bottom',
-      'gloves',
-      'shoes',
-      'dress',
-    ]
-    for (const cat of colorCats) defaults[cat] = 'b'
-    return { ...defaults, ...(initialConfig?.colorVariants ?? {}) }
-  })
-
-  const historyRef = useRef<HistoryEntry[]>([
-    { config: initialConfig ?? DEFAULT_CHARACTER_CONFIG, colorVariants: {} },
-  ])
-  const historyIndexRef = useRef(0)
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
-
-  // ✅ FIX: altura fixa para o botão limpar — sem layout shift
-  const [clearState, setClearState] = useState<'idle' | 'confirm'>('idle')
-  const [savedFeedback, setSavedFeedback] = useState(false)
-
-  const [activeTab, setActiveTab] = useState(TABS[0].id)
-  const [activeSubTab, setActiveSubTab] = useState<string>('')
-  const [bodyError, setBodyError] = useState(false)
-
-  const currentTab = TABS.find((t) => t.id === activeTab) ?? TABS[0]
-  const hasBody = !!config.body
-  const effectiveSubTab =
-    currentTab.subTabs.length > 0 ? activeSubTab || currentTab.subTabs[0].id : ''
-  const currentSubTab = currentTab.subTabs.find((s) => s.id === effectiveSubTab)
-  const activeSections: Section[] =
-    currentTab.flatSections ?? currentSubTab?.sections ?? currentTab.subTabs[0]?.sections ?? []
-
-  // ✅ FIX: pushHistory recebe os valores finais como parâmetro, sem depender de stale closures
-  const pushHistory = useCallback(
-    (newConfig: CharacterConfig, newColorVariants: Record<string, string>) => {
-      const history = historyRef.current
-      const idx = historyIndexRef.current
-      history.splice(idx + 1)
-      history.push({ config: newConfig, colorVariants: newColorVariants })
-      if (history.length > MAX_HISTORY) history.shift()
-      historyIndexRef.current = history.length - 1
-      setCanUndo(historyIndexRef.current > 0)
-      setCanRedo(false)
-    },
-    []
-  )
-
-  const handleUndo = useCallback(() => {
-    const idx = historyIndexRef.current
-    if (idx <= 0) return
-    historyIndexRef.current = idx - 1
-    const entry = historyRef.current[historyIndexRef.current]
-    setConfig(entry.config)
-    setColorVariants(entry.colorVariants)
-    setCanUndo(historyIndexRef.current > 0)
-    setCanRedo(true)
-  }, [])
-
-  const handleRedo = useCallback(() => {
-    const history = historyRef.current
-    const idx = historyIndexRef.current
-    if (idx >= history.length - 1) return
-    historyIndexRef.current = idx + 1
-    const entry = history[historyIndexRef.current]
-    setConfig(entry.config)
-    setColorVariants(entry.colorVariants)
-    setCanUndo(true)
-    setCanRedo(historyIndexRef.current < history.length - 1)
-  }, [])
-
-  const handleTabChange = (tabId: string) => {
-    const tab = TABS.find((t) => t.id === tabId)
-    if (!tab) return
-    if (tab.requiresBody && !hasBody) {
-      setBodyError(true)
-      setTimeout(() => setBodyError(false), 3000)
-      return
-    }
-    setBodyError(false)
-    setActiveTab(tabId)
-    setActiveSubTab(tab.subTabs[0]?.id ?? '')
-  }
-
-  // ✅ FIX: handleSelect usa functional update para pegar config atualizado
-  // e passa os valores corretos para pushHistory de forma síncrona
-  const handleSelect = useCallback(
-    (piece: CharacterPiece, category: CharacterCategory) => {
-      const prev = configRef.current
-      const next = { ...prev }
-
-      if (piece.id === '__none__') {
-        ;(next as Record<string, unknown>)[category] = isMultiSlot(category) ? [] : null
-      } else if (isMultiSlot(category)) {
-        const arr = [...((prev[category as keyof CharacterConfig] as string[]) ?? [])]
-        const idx = arr.indexOf(piece.id)
-        if (idx >= 0) arr.splice(idx, 1)
-        else arr.push(piece.id)
-        ;(next as Record<string, unknown>)[category] = arr
-      } else {
-        const current = prev[category as keyof CharacterConfig] as string | null
-        const newVal = category === 'body' ? piece.id : current === piece.id ? null : piece.id
-        ;(next as Record<string, unknown>)[category] = newVal
-        if (category === 'dress' && newVal !== null) {
-          next.top = null
-          next.bottom = null
-        }
-        if ((category === 'top' || category === 'bottom') && newVal !== null) next.dress = null
-      }
-
-      setConfig(next)
-      pushHistory(next, colorVariantsRef.current)
-    },
-    [pushHistory]
-  )
-
-  // Ref para colorVariants — permite acessar valor atual dentro de setConfig sem stale closure
-  const colorVariantsRef = useRef(colorVariants)
-  colorVariantsRef.current = colorVariants
-
-  const handleColorChange = useCallback(
-    (category: CharacterCategory, variant: string) => {
-      setColorVariants((prev) => {
-        const next = { ...prev, [category]: variant }
-        // configRef para mesma razão
-        pushHistory(configRef.current, next)
-        return next
-      })
-    },
-    [pushHistory]
-  )
-
-  const configRef = useRef(config)
-  configRef.current = config
-
-  const handleApplyPreset = useCallback(
-    (presetConfig: CharacterConfig) => {
-      const next = { ...presetConfig }
-      const nextVariants = presetConfig.colorVariants ?? {}
-      setConfig(next)
-      setColorVariants(nextVariants)
-      pushHistory(next, nextVariants)
-    },
-    [pushHistory]
-  )
-
-  // ✅ FIX: Limpar tudo preserva o body
-  const handleClearAll = () => {
-    const bodyId = config.body // preserva o corpo atual
-    const cleared: CharacterConfig = { ...DEFAULT_CHARACTER_CONFIG, body: bodyId }
-    setConfig(cleared)
-    pushHistory(cleared, colorVariants)
-    setClearState('idle')
-  }
-
-  const handleSave = () => {
-    onSave({ ...config, colorVariants })
+    await set(ref(db, 'house/config'), config)
     setSavedFeedback(true)
     setTimeout(() => setSavedFeedback(false), 2000)
   }
 
-  const actionBtnStyle = (enabled: boolean): React.CSSProperties => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    padding: '7px 12px',
-    borderRadius: 10,
-    border: `1.5px solid ${enabled ? 'var(--color-wood-400)' : 'var(--color-wood-200)'}`,
-    background: enabled ? 'var(--color-bark-50)' : 'transparent',
-    color: enabled ? 'var(--color-leaf-700)' : 'var(--color-leaf-300)',
-    fontSize: 12,
-    fontFamily: 'Baloo 2, sans-serif',
-    fontWeight: 600,
-    cursor: enabled ? 'pointer' : 'not-allowed',
-    transition: 'all 0.15s',
-    opacity: enabled ? 1 : 0.5,
-    flex: 1,
-  })
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    setScale((s) => Math.min(2, Math.max(0.4, s - e.deltaY * 0.001)))
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragging.current = true
+    lastPos.current = { x: e.clientX, y: e.clientY }
+  }
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragging.current) return
+    const dx = e.clientX - lastPos.current.x
+    const dy = e.clientY - lastPos.current.y
+    lastPos.current = { x: e.clientX, y: e.clientY }
+    setOffset((o) => ({ x: o.x + dx, y: o.y + dy }))
+  }
+  const handleMouseUp = () => {
+    dragging.current = false
+  }
+
+  const activeWallGroupIdx = wallSide === 'left' ? activeWallGroup : activeWallRightGroup
+  const setActiveWallGroupIdx = wallSide === 'left' ? setActiveWallGroup : setActiveWallRightGroup
+
+  const groups = tab === 'floor' ? FLOOR_GROUPS : WALL_GROUPS
+  const activeGroup = tab === 'floor' ? activeFloorGroup : activeWallGroupIdx
+  const setActiveGroup = tab === 'floor' ? setActiveFloorGroup : setActiveWallGroupIdx
+  const tiles = tab !== 'bg' ? groupToTiles(groups[activeGroup]) : []
+
+  const floorDims = findSheetDims(FLOOR_GROUPS, config.floor.sheet)
+  const wallDims = findSheetDims(WALL_GROUPS, config.wall.sheet)
+  const wallRightDims = findSheetDims(WALL_GROUPS, config.wallRight.sheet)
+
+  const selectedFloorTile: TileOption = {
+    id: 'sel-floor',
+    label: '',
+    sheet: config.floor.sheet,
+    col: config.floor.col,
+    row: config.floor.row,
+    tileW: 256,
+    tileH: 128,
+    ...floorDims,
+  }
+  const selectedWallTile: TileOption = {
+    id: 'sel-wall',
+    label: '',
+    sheet: config.wall.sheet,
+    col: config.wall.col,
+    row: config.wall.row,
+    tileW: 256,
+    tileH: 384,
+    ...wallDims,
+  }
+  const selectedWallRightTile: TileOption = {
+    id: 'sel-wall-right',
+    label: '',
+    sheet: config.wallRight.sheet,
+    col: config.wallRight.col,
+    row: config.wallRight.row,
+    tileW: 256,
+    tileH: 384,
+    ...wallRightDims,
+  }
+
+  // Fix: findOverlapForSheet busca em grupos simples E compostos
+  const currentOverlap = findOverlapForSheet(FLOOR_GROUPS, config.floor.sheet)
+
+  const editingWallConfig = wallSide === 'left' ? config.wall : config.wallRight
+  const setEditingWallConfig = (val: { sheet: string; col: number; row: number }) => {
+    if (wallSide === 'left') setConfig((c) => ({ ...c, wall: val }))
+    else setConfig((c) => ({ ...c, wallRight: val }))
+  }
+
+  const currentBg = config.bgColor ?? DEFAULT_BG
 
   return (
     <div
@@ -1085,8 +576,7 @@ export default function CharacterModal({
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
-      {/* ── HEADER ─────────────────────────────────────── */}
-      {/* ✅ FIX: height fixa + alignItems center garante centralização vertical */}
+      {/* HEADER */}
       <div
         style={{
           height: 56,
@@ -1095,7 +585,7 @@ export default function CharacterModal({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 20px',
-          paddingTop: 8, // ← adiciona isso
+          paddingTop: 8,
           borderBottom: '2px solid var(--color-wood-300)',
           background: 'var(--color-bark-100)',
           flexShrink: 0,
@@ -1118,15 +608,13 @@ export default function CharacterModal({
             cursor: 'pointer',
           }}
         >
-          <ChevronLeft size={16} />
-          Voltar
+          <ChevronLeft size={16} /> Voltar
         </button>
 
-        {/* ✅ FIX: ícone Sparkles — muito mais bonito e legível */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Sparkles size={18} color="var(--color-petal-400)" />
+          <Home size={18} color="var(--color-leaf-600)" />
           <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-leaf-800)' }}>
-            Meu Guarda-Roupa
+            Nossa Casinha
           </span>
         </div>
 
@@ -1162,345 +650,500 @@ export default function CharacterModal({
         </button>
       </div>
 
-      {/* ── BODY ────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* ── COLUNA ESQUERDA ──────────────────────────── */}
-        {/* ✅ FIX: largura 280, preview maior, borda menor */}
+      {/* BODY */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {/* CENA — fundo usa currentBg */}
         <div
           style={{
-            width: 280,
-            flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            borderRight: '2px solid var(--color-wood-300)',
-            background: 'var(--color-leaf-100)',
+            position: 'absolute',
+            inset: 0,
+            background: currentBg,
+            cursor: dragging.current ? 'grabbing' : 'grab',
             overflow: 'hidden',
+            transition: 'background 0.3s',
           }}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
-          {/* Presets */}
-          <PresetsPanel
-            presets={presets}
-            currentConfig={config}
-            currentColorVariants={colorVariants}
-            onApply={handleApplyPreset}
-            onSavePreset={onSavePreset}
-            onDeletePreset={onDeletePreset}
-          />
-          {/* Preview — flex 1, centralizado */}
           <div
             style={{
-              flex: 1,
+              position: 'absolute',
+              inset: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '16px 16px 8px',
-              minHeight: 0,
             }}
           >
-            {/* ✅ FIX: padding menor (8px), sem borda grossa, preview maior */}
             <div
               style={{
-                background: '#c9c9c9',
-                borderRadius: 20,
-                padding: 8,
-                boxShadow: '0 2px 16px rgba(74,122,74,0.10)',
-                border: '1.5px solid var(--color-wood-200)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
-                width: '100%',
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                transformOrigin: 'center center',
+                transition: dragging.current ? 'none' : 'transform 0.05s',
               }}
             >
-              <CharacterPreview config={config} colorVariants={colorVariants} size={250} />
-            </div>
-          </div>
-
-          {/* Controles fixos abaixo */}
-          <div
-            style={{
-              padding: '8px 12px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 7,
-              flexShrink: 0,
-            }}
-          >
-            {/* Undo / Redo */}
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button
-                onClick={handleUndo}
-                disabled={!canUndo}
-                title="Desfazer"
-                style={actionBtnStyle(canUndo)}
-              >
-                <Undo2 size={13} /> Desfazer
-              </button>
-              <button
-                onClick={handleRedo}
-                disabled={!canRedo}
-                title="Refazer"
-                style={actionBtnStyle(canRedo)}
-              >
-                <Redo2 size={13} /> Refazer
-              </button>
-            </div>
-
-            {/* ✅ FIX: altura fixa no container do botão limpar — sem layout shift */}
-            <div style={{ height: 58, position: 'relative' }}>
-              {/* Estado idle */}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  opacity: clearState === 'idle' ? 1 : 0,
-                  pointerEvents: clearState === 'idle' ? 'auto' : 'none',
-                  transition: 'opacity 0.15s',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <button
-                  onClick={() => setClearState('confirm')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    padding: '7px 12px',
-                    borderRadius: 10,
-                    border: '1.5px solid var(--color-petal-300)',
-                    background: 'transparent',
-                    color: 'var(--color-petal-500)',
-                    fontSize: 12,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    width: '100%',
-                  }}
-                >
-                  <Trash2 size={13} /> Limpar tudo
-                </button>
-              </div>
-
-              {/* Estado confirm — mesma altura, sem pulo */}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  opacity: clearState === 'confirm' ? 1 : 0,
-                  pointerEvents: clearState === 'confirm' ? 'auto' : 'none',
-                  transition: 'opacity 0.15s',
-                  background: 'var(--color-petal-100)',
-                  border: '1.5px solid var(--color-petal-300)',
-                  borderRadius: 10,
-                  padding: '8px 10px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                }}
-              >
-                {/* ✅ FIX: texto sem bold, menor, cor suave */}
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 400,
-                    color: 'var(--color-soil-700)',
-                    fontFamily: 'Baloo 2, sans-serif',
-                    textAlign: 'center',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  Remover tudo?
-                </span>
-                <div style={{ display: 'flex', gap: 6, width: '100%' }}>
-                  <button
-                    onClick={handleClearAll}
-                    style={{
-                      flex: 1,
-                      padding: '4px 0',
-                      borderRadius: 8,
-                      border: 'none',
-                      background: 'var(--color-petal-400)',
-                      color: '#fff',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      fontFamily: 'Baloo 2, sans-serif',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Sim
-                  </button>
-                  <button
-                    onClick={() => setClearState('idle')}
-                    style={{
-                      flex: 1,
-                      padding: '4px 0',
-                      borderRadius: 8,
-                      border: '1.5px solid var(--color-wood-300)',
-                      background: 'transparent',
-                      color: 'var(--color-leaf-600)',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      fontFamily: 'Baloo 2, sans-serif',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Não
-                  </button>
-                </div>
-              </div>
+              <HouseScene
+                floorTile={selectedFloorTile}
+                wallTile={selectedWallTile}
+                wallRightTile={selectedWallRightTile}
+                overlap={currentOverlap}
+              />
             </div>
           </div>
         </div>
 
-        {/* ── PAINEL DIREITO ────────────────────────────── */}
+        {/* PAINEL ESQUERDO RETRÁTIL */}
         <div
           style={{
-            flex: 1,
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
             display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            background: 'var(--color-leaf-100)',
-            minHeight: '100%',
+            zIndex: 10,
+            pointerEvents: 'none',
           }}
         >
-          {/* Tabs principais */}
           <div
             style={{
-              display: 'flex',
-              gap: 4,
-              padding: '10px 16px',
-              borderBottom: '2px solid var(--color-wood-300)',
-              background: 'var(--color-leaf-100)',
-              flexShrink: 0,
+              width: panelOpen ? 300 : 0,
+              overflow: 'hidden',
+              transition: 'width 0.25s ease',
+              pointerEvents: 'auto',
             }}
           >
-            {TABS.map((tab) => {
-              const locked = tab.requiresBody && !hasBody
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  title={locked ? 'Escolha um corpo primeiro' : undefined}
-                  style={{
-                    padding: '5px 18px',
-                    borderRadius: 20,
-                    border: isActive
-                      ? '2px solid var(--color-leaf-500)'
-                      : '2px solid var(--color-wood-300)',
-                    background: isActive ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
-                    color: locked
-                      ? 'var(--color-leaf-300)'
-                      : isActive
-                        ? '#fff'
-                        : 'var(--color-leaf-700)',
-                    fontSize: 13,
-                    fontWeight: isActive ? 700 : 500,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    cursor: locked ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.15s',
-                    opacity: locked ? 0.5 : 1,
-                    boxShadow: isActive ? '0 2px 8px rgba(74,122,74,0.18)' : 'none',
-                  }}
-                >
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Aviso body */}
-          {bodyError && (
             <div
               style={{
+                width: 300,
+                height: '100%',
+                background: 'var(--color-bark-100)',
+                borderRight: '2px solid var(--color-wood-300)',
                 display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                margin: '8px 16px 0',
-                padding: '8px 14px',
-                background: 'var(--color-petal-200)',
-                border: '1.5px solid var(--color-petal-400)',
-                borderRadius: 10,
-                color: 'var(--color-soil-900)',
-                fontSize: 13,
-                fontFamily: 'Baloo 2, sans-serif',
-                flexShrink: 0,
+                flexDirection: 'column',
+                overflow: 'hidden',
               }}
             >
-              <AlertCircle size={16} color="var(--color-petal-400)" style={{ flexShrink: 0 }} />
-              Escolha um corpo primeiro! Sem corpo as outras peças não aparecem corretamente.
-            </div>
-          )}
-
-          {/* Sub-tabs */}
-          {currentTab.subTabs.length > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                gap: 6,
-                padding: '8px 16px',
-                borderBottom: '1px solid var(--color-wood-300)',
-                background: 'var(--color-leaf-100)',
-                flexShrink: 0,
-                flexWrap: 'wrap',
-              }}
-            >
-              {currentTab.subTabs.map((sub) => {
-                const active = effectiveSubTab === sub.id
-                return (
+              {/* Tabs Chão / Parede / Fundo */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 4,
+                  padding: '10px 12px',
+                  borderBottom: '1px solid var(--color-wood-300)',
+                  flexShrink: 0,
+                }}
+              >
+                {[
+                  { id: 'floor' as const, icon: <Layers size={14} />, label: 'Chão' },
+                  { id: 'wall' as const, icon: <PaintRoller size={14} />, label: 'Parede' },
+                  { id: 'bg' as const, icon: <Palette size={14} />, label: 'Fundo' },
+                ].map((t) => (
                   <button
-                    key={sub.id}
-                    onClick={() => setActiveSubTab(sub.id)}
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
                     style={{
-                      padding: '3px 16px',
-                      borderRadius: 20,
-                      border: active
-                        ? '2px solid var(--color-petal-400)'
-                        : '2px solid var(--color-wood-300)',
-                      background: active ? 'var(--color-petal-200)' : 'transparent',
-                      color: active ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 5,
+                      padding: '6px 4px',
+                      borderRadius: 10,
+                      border:
+                        tab === t.id
+                          ? '2px solid var(--color-leaf-500)'
+                          : '2px solid var(--color-wood-300)',
+                      background: tab === t.id ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
+                      color: tab === t.id ? '#fff' : 'var(--color-leaf-700)',
                       fontSize: 12,
+                      fontWeight: tab === t.id ? 700 : 500,
                       fontFamily: 'Baloo 2, sans-serif',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
-                      fontWeight: active ? 700 : 400,
                     }}
                   >
-                    {sub.label}
+                    {t.icon} {t.label}
                   </button>
-                )
-              })}
-            </div>
-          )}
+                ))}
+              </div>
 
-          {/* Seções com scroll customizado */}
-          <div
-            className="char-scroll"
+              {/* ── ABA FUNDO ── */}
+              {tab === 'bg' && (
+                <div
+                  className="char-scroll"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    padding: '14px 14px',
+                    overflowY: 'auto',
+                    flex: 1,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: 'var(--color-leaf-700)',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    Cor de fundo
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {BG_COLORS.map((c) => {
+                      const isSelected = currentBg === c.value
+                      return (
+                        <button
+                          key={c.value}
+                          onClick={() => setConfig((cfg) => ({ ...cfg, bgColor: c.value }))}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            padding: '8px 12px',
+                            borderRadius: 10,
+                            border: isSelected
+                              ? '2px solid var(--color-petal-400)'
+                              : '2px solid var(--color-wood-300)',
+                            background: isSelected ? 'var(--color-petal-200)' : 'transparent',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '50%',
+                              background: c.value,
+                              border: '1.5px solid rgba(0,0,0,0.1)',
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: isSelected ? 700 : 400,
+                              color: isSelected ? 'var(--color-soil-900)' : 'var(--color-leaf-700)',
+                            }}
+                          >
+                            {c.label}
+                          </span>
+                          {isSelected && (
+                            <Check
+                              size={14}
+                              color="var(--color-leaf-600)"
+                              style={{ marginLeft: 'auto' }}
+                            />
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tabs Esquerda / Direita — só na aba Parede */}
+              {tab === 'wall' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 4,
+                    padding: '6px 12px',
+                    borderBottom: '1px solid var(--color-wood-300)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {[
+                    { id: 'left' as const, label: 'Esquerda' },
+                    { id: 'right' as const, label: 'Direita' },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setWallSide(s.id)}
+                      style={{
+                        flex: 1,
+                        padding: '4px 8px',
+                        borderRadius: 8,
+                        border:
+                          wallSide === s.id
+                            ? '2px solid var(--color-petal-400)'
+                            : '2px solid var(--color-wood-300)',
+                        background: wallSide === s.id ? 'var(--color-petal-200)' : 'transparent',
+                        color:
+                          wallSide === s.id ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
+                        fontSize: 12,
+                        fontWeight: wallSide === s.id ? 700 : 400,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Lista de grupos + grid de tiles — só nas abas Chão e Parede */}
+              {tab !== 'bg' && (
+                <>
+                  <div
+                    className="char-scroll"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 3,
+                      padding: '8px 10px',
+                      borderBottom: '1px solid var(--color-wood-300)',
+                      flexShrink: 0,
+                      overflowY: 'auto',
+                      maxHeight: 180,
+                    }}
+                  >
+                    {groups.map((g, i) => (
+                      <button
+                        key={g.label}
+                        onClick={() => setActiveGroup(i)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          padding: '5px 10px',
+                          borderRadius: 8,
+                          textAlign: 'left',
+                          border:
+                            activeGroup === i
+                              ? '2px solid var(--color-petal-400)'
+                              : '2px solid transparent',
+                          background: activeGroup === i ? 'var(--color-petal-200)' : 'transparent',
+                          color:
+                            activeGroup === i ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
+                          fontSize: 12,
+                          fontWeight: activeGroup === i ? 700 : 400,
+                          fontFamily: 'Baloo 2, sans-serif',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {g.icon} {g.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div
+                    className="char-scroll"
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 8,
+                      padding: '10px 12px',
+                      overflowY: 'auto',
+                      alignContent: 'flex-start',
+                      flex: 1,
+                    }}
+                  >
+                    {tiles.map((tile) => {
+                      const isFloor = tab === 'floor'
+                      const isSelected = isFloor
+                        ? config.floor.sheet === tile.sheet &&
+                          config.floor.col === tile.col &&
+                          config.floor.row === tile.row
+                        : editingWallConfig.sheet === tile.sheet &&
+                          editingWallConfig.col === tile.col &&
+                          editingWallConfig.row === tile.row
+                      const displayW = isFloor ? 80 : 52
+                      const displayH = isFloor ? 40 : 78
+                      const thumbOffsetX = isFloor ? 0 : 14
+                      const thumbOffsetY = isFloor ? 0 : 10
+
+                      return (
+                        <button
+                          key={tile.id}
+                          title={tile.label}
+                          onClick={() => {
+                            if (isFloor)
+                              setConfig((c) => ({
+                                ...c,
+                                floor: { sheet: tile.sheet, col: tile.col, row: tile.row },
+                              }))
+                            else
+                              setEditingWallConfig({
+                                sheet: tile.sheet,
+                                col: tile.col,
+                                row: tile.row,
+                              })
+                          }}
+                          style={{
+                            padding: 0,
+                            border: isSelected
+                              ? '2.5px solid var(--color-petal-400)'
+                              : '2px solid var(--color-wood-300)',
+                            borderRadius: 8,
+                            background: isSelected
+                              ? 'var(--color-petal-200)'
+                              : 'repeating-linear-gradient(45deg,#d0cdc8 0px,#d0cdc8 3px,#f0ede8 3px,#f0ede8 9px)',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            transition: 'all 0.15s',
+                            outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
+                            outlineOffset: 2,
+                            boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
+                          }}
+                        >
+                          <div style={{ overflow: 'hidden', width: displayW, height: displayH }}>
+                            <div
+                              style={{
+                                ...tileStyle(tile, displayW, displayH),
+                                marginLeft: isFloor ? 0 : thumbOffsetX,
+                                marginTop: isFloor ? 0 : thumbOffsetY,
+                              }}
+                            />
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Botão toggle */}
+          <button
+            onClick={() => setPanelOpen((v) => !v)}
             style={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: 'auto',
-              padding: '12px 16px',
-              background: 'var(--color-leaf-100)',
-              alignSelf: 'stretch',
+              pointerEvents: 'auto',
+              alignSelf: 'center',
+              width: 24,
+              height: 48,
+              background: 'var(--color-bark-100)',
+              border: '2px solid var(--color-wood-300)',
+              borderLeft: panelOpen ? 'none' : '2px solid var(--color-wood-300)',
+              borderRadius: panelOpen ? '0 8px 8px 0' : '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-leaf-600)',
+              transition: 'all 0.25s',
             }}
           >
-            <SectionsPanel
-              sections={activeSections}
-              config={config}
-              colorVariants={colorVariants}
-              unlockedIds={unlockedIds} // ← adiciona essa linha
-              onSelect={handleSelect}
-              onColorChange={handleColorChange}
-            />
-          </div>
+            {panelOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+          </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Cena isométrica ─────────────────────────────────────────────────────────
+
+function HouseScene({
+  floorTile,
+  wallTile,
+  wallRightTile,
+  overlap = 0,
+}: {
+  floorTile: TileOption
+  wallTile: TileOption
+  wallRightTile: TileOption
+  overlap?: number
+}) {
+  const SCALE = 1.0
+  const TW = 256 * SCALE
+  const TH = 128 * SCALE
+  const WW = 256 * SCALE
+  const WH = 384 * SCALE
+  const stepX = TW / 2
+  const stepY = TH / 2
+  const COLS = 4
+  const ROWS = 4
+
+  const floorTiles = []
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      floorTiles.push({ x: c * stepX - r * stepX, y: c * stepY + r * stepY, z: r * COLS + c })
+    }
+  }
+
+  const minX = Math.min(...floorTiles.map((t) => t.x))
+  const ox = -minX
+  const floorNorm = floorTiles.map((t) => ({ ...t, x: Math.round(t.x + ox), y: Math.round(t.y) }))
+
+  const wallLeftTiles = []
+  for (let c = 0; c < COLS; c++) {
+    const floor = floorNorm.find((t) => t.z === c)!
+    wallLeftTiles.push({
+      x: Math.round(floor.x - 4),
+      y: Math.round(floor.y - WH + TH + stepY - c * stepY * 2 + 250),
+      z: c,
+    })
+  }
+
+  const wallRightTiles = []
+  for (let r = 0; r < ROWS; r++) {
+    const floor = floorNorm.find((t) => t.z === r * COLS + (COLS - 1))!
+    wallRightTiles.push({
+      x: Math.round(floor.x + TW + 380),
+      y: Math.round(floor.y - WH + TH + stepY - r * stepY * 2 + 58),
+      z: r,
+    })
+  }
+
+  const maxFloorY = Math.max(...floorNorm.map((t) => t.y)) + TH
+  const minWallY = Math.min(...wallLeftTiles.map((t) => t.y), ...wallRightTiles.map((t) => t.y))
+  const sceneW = Math.max(...floorNorm.map((t) => t.x)) + TW + 380 + WW + 20
+  const sceneH = maxFloorY - minWallY
+  const wallOffsetY = -minWallY
+
+  return (
+    <div style={{ position: 'relative', width: sceneW, height: sceneH, marginTop: 40 }}>
+      {wallLeftTiles.map((pos, i) => (
+        <div
+          key={`wl${i}`}
+          style={{
+            position: 'absolute',
+            left: pos.x,
+            top: pos.y + wallOffsetY,
+            zIndex: pos.z + 1,
+            ...tileStyle(wallTile, WW, WH),
+          }}
+        />
+      ))}
+      {wallRightTiles.map((pos, i) => (
+        <div
+          key={`wr${i}`}
+          style={{
+            position: 'absolute',
+            left: pos.x - WW,
+            top: pos.y + wallOffsetY,
+            zIndex: pos.z + 1,
+            transform: 'scaleX(-1)',
+            transformOrigin: 'center top',
+            ...tileStyle(wallRightTile, WW, WH),
+          }}
+        />
+      ))}
+      {floorNorm.map((pos, i) => (
+        <div
+          key={`f${i}`}
+          style={{
+            position: 'absolute',
+            left: pos.x + 380,
+            top: Math.round(pos.y + wallOffsetY + (WH - TH) - 124 - 10),
+            zIndex: 20 + pos.z,
+            ...tileStyle(floorTile, TW + overlap, TH + overlap / 2),
+          }}
+        />
+      ))}
     </div>
   )
 }

@@ -1146,7 +1146,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           />
         )}
 
-        {showHouse && <HouseModal uid={uid} onClose={() => setShowHouse(false)} />}
+        {showHouse && <HouseModal myUid={uid} onClose={() => setShowHouse(false)} />}
 
         {showGarden && (
           <GardenView

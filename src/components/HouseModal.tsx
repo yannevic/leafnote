@@ -15,6 +15,8 @@ import {
   AlignJustify,
   Grip,
   ChevronRight,
+  Sparkles,
+  ImageIcon,
 } from 'lucide-react'
 import { ref, onValue, set } from 'firebase/database'
 import { db } from '../lib/firebase'
@@ -23,7 +25,44 @@ interface HouseConfig {
   floor: { sheet: string; col: number; row: number }
   wall: { sheet: string; col: number; row: number }
   wallRight: { sheet: string; col: number; row: number }
+  background?: string
 }
+
+interface BackgroundOption {
+  id: string
+  label: string
+  css: string
+}
+
+const BACKGROUNDS: BackgroundOption[] = [
+  {
+    id: 'sky',
+    label: 'Céu',
+    css: 'linear-gradient(to bottom, #c8e6f5 0%, #eef7fd 60%, #f8f3ee 100%)',
+  },
+  {
+    id: 'sunset',
+    label: 'Pôr do sol',
+    css: 'linear-gradient(to bottom, #fad4b0 0%, #f9c0c0 40%, #e8d5f5 100%)',
+  },
+  {
+    id: 'mist',
+    label: 'Névoa',
+    css: 'repeating-linear-gradient(180deg, #f0ecf8 0px, #f0ecf8 12px, #e6e0f4 12px, #e6e0f4 24px)',
+  },
+  {
+    id: 'garden',
+    label: 'Jardim',
+    css: 'radial-gradient(circle, #c8e8d0 1.5px, transparent 1.5px), #f0f8f2',
+  },
+  {
+    id: 'night',
+    label: 'Noturno',
+    css: 'linear-gradient(to bottom, #1a1a3e 0%, #2d2060 50%, #3d2a6e 100%)',
+  },
+]
+
+const DEFAULT_BACKGROUND = 'sky'
 
 interface TileOption {
   id: string
@@ -37,7 +76,6 @@ interface TileOption {
   sheetH: number
 }
 
-// SheetGroup agora suporta múltiplos sheets (para grupos consolidados)
 interface SheetDef {
   sheet: string
   tileW: number
@@ -54,8 +92,7 @@ interface SheetDef {
 interface SheetGroup {
   label: string
   icon?: React.ReactNode
-  overlap?: number // overlap do grupo (herdado para chão)
-  // Grupos simples (sheet único)
+  overlap?: number
   sheet?: string
   tileW?: number
   tileH?: number
@@ -65,7 +102,6 @@ interface SheetGroup {
   rows?: number
   totalTiles?: number
   names?: string[]
-  // Grupos compostos (múltiplos sheets)
   sheets?: SheetDef[]
 }
 
@@ -169,10 +205,60 @@ const FLOOR_GROUPS: SheetGroup[] = [
     cols: 4,
     rows: 3,
   },
+  {
+    label: 'Cute Decor ✦',
+    icon: <Sparkles size={12} />,
+    sheets: [
+      {
+        sheet: 'floor (tiles)/cut_floor_blue.png',
+        tileW: 256,
+        tileH: 128,
+        sheetW: 768,
+        sheetH: 256,
+        cols: 3,
+        rows: 2,
+      },
+      {
+        sheet: 'floor (tiles)/cut_floor_green.png',
+        tileW: 256,
+        tileH: 128,
+        sheetW: 768,
+        sheetH: 256,
+        cols: 3,
+        rows: 2,
+      },
+      {
+        sheet: 'floor (tiles)/cut_floor_orange.png',
+        tileW: 256,
+        tileH: 128,
+        sheetW: 768,
+        sheetH: 256,
+        cols: 3,
+        rows: 2,
+      },
+      {
+        sheet: 'floor (tiles)/cut_floor_pink.png',
+        tileW: 256,
+        tileH: 128,
+        sheetW: 768,
+        sheetH: 256,
+        cols: 3,
+        rows: 2,
+      },
+      {
+        sheet: 'floor (tiles)/cut_floor_violet.png',
+        tileW: 256,
+        tileH: 128,
+        sheetW: 768,
+        sheetH: 256,
+        cols: 3,
+        rows: 2,
+      },
+    ],
+  },
 ]
 
 const WALL_GROUPS: SheetGroup[] = [
-  // ── Tinta lisa — pastel + terrosa + clara + cinza + branca juntas
   {
     label: 'Tinta lisa',
     icon: <PaintBucket size={12} />,
@@ -224,7 +310,6 @@ const WALL_GROUPS: SheetGroup[] = [
       },
     ],
   },
-  // ── Tinta listrada — pastel listrado + terrosa listrada + clara listrada + cinza listrado
   {
     label: 'Tinta listrada',
     icon: <Blend size={12} />,
@@ -267,7 +352,6 @@ const WALL_GROUPS: SheetGroup[] = [
       },
     ],
   },
-  // ── Outros
   {
     label: 'Tijolo',
     icon: <BrickWall size={12} />,
@@ -324,13 +408,61 @@ const WALL_GROUPS: SheetGroup[] = [
     cols: 5,
     rows: 2,
   },
+  {
+    label: 'Cute Decor ✦',
+    icon: <Sparkles size={12} />,
+    sheets: [
+      {
+        sheet: 'walls (tiles)/cutie blue pastels.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 1152,
+        cols: 4,
+        rows: 3,
+      },
+      {
+        sheet: 'walls (tiles)/cutie green pastels.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 1152,
+        cols: 4,
+        rows: 3,
+      },
+      {
+        sheet: 'walls (tiles)/cutie orange pastels.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 1152,
+        cols: 4,
+        rows: 3,
+      },
+      {
+        sheet: 'walls (tiles)/cutie pink pastels.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 1152,
+        cols: 4,
+        rows: 3,
+      },
+      {
+        sheet: 'walls (tiles)/cutie violet pastels.png',
+        tileW: 256,
+        tileH: 384,
+        sheetW: 1024,
+        sheetH: 1152,
+        cols: 4,
+        rows: 3,
+      },
+    ],
+  },
 ]
 
-// Converte um SheetGroup (simples ou composto) em lista de TileOptions
 function groupToTiles(g: SheetGroup): TileOption[] {
   const tiles: TileOption[] = []
-
-  // Grupo composto — múltiplos sheets
   if (g.sheets) {
     for (const s of g.sheets) {
       const total = s.totalTiles ?? s.cols * s.rows
@@ -354,8 +486,6 @@ function groupToTiles(g: SheetGroup): TileOption[] {
     }
     return tiles
   }
-
-  // Grupo simples — sheet único
   const total = g.totalTiles ?? g.cols! * g.rows!
   for (let row = 0; row < g.rows!; row++) {
     for (let col = 0; col < g.cols!; col++) {
@@ -397,7 +527,6 @@ function tileStyle(
   }
 }
 
-// Encontra o sheetW/sheetH de um sheet em qualquer grupo (simples ou composto)
 function findSheetDims(groups: SheetGroup[], sheet: string): { sheetW: number; sheetH: number } {
   for (const g of groups) {
     if (g.sheets) {
@@ -411,17 +540,18 @@ function findSheetDims(groups: SheetGroup[], sheet: string): { sheetW: number; s
 }
 
 const DEFAULT_CONFIG: HouseConfig = {
-  floor: { sheet: 'base floor/carpet spritesheet.png', col: 3, row: 3 },
-  wall: { sheet: 'base walls/walls_paint_pastel.png', col: 0, row: 0 },
-  wallRight: { sheet: 'base walls/walls_paint_pastel.png', col: 0, row: 0 },
+  floor: { sheet: 'base floor/carpet spritesheet.png', col: 1, row: 3 },
+  wall: { sheet: 'base walls/walls_paint_grey_stripes.png', col: 0, row: 0 },
+  wallRight: { sheet: 'base walls/walls_paint_grey_stripes.png', col: 0, row: 0 },
+  background: DEFAULT_BACKGROUND,
 }
 
 interface HouseModalProps {
-  uid: string
+  myUid: string
   onClose: () => void
 }
 
-type HouseTab = 'floor' | 'wall'
+type HouseTab = 'floor' | 'wall' | 'background'
 type WallSide = 'left' | 'right'
 
 export default function HouseModal({ onClose }: HouseModalProps) {
@@ -434,7 +564,6 @@ export default function HouseModal({ onClose }: HouseModalProps) {
   const [activeWallRightGroup, setActiveWallRightGroup] = useState(0)
   const [panelOpen, setPanelOpen] = useState(true)
 
-  // Zoom + pan
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
@@ -449,6 +578,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
           ...DEFAULT_CONFIG,
           ...data,
           wallRight: data.wallRight ?? DEFAULT_CONFIG.wallRight,
+          background: data.background ?? DEFAULT_BACKGROUND,
         })
       }
     })
@@ -486,7 +616,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
   const groups = tab === 'floor' ? FLOOR_GROUPS : WALL_GROUPS
   const activeGroup = tab === 'floor' ? activeFloorGroup : activeWallGroupIdx
   const setActiveGroup = tab === 'floor' ? setActiveFloorGroup : setActiveWallGroupIdx
-  const tiles = groupToTiles(groups[activeGroup])
+  const tiles = tab !== 'background' ? groupToTiles(groups[activeGroup]) : []
 
   const floorDims = findSheetDims(FLOOR_GROUPS, config.floor.sheet)
   const wallDims = findSheetDims(WALL_GROUPS, config.wall.sheet)
@@ -523,7 +653,6 @@ export default function HouseModal({ onClose }: HouseModalProps) {
     ...wallRightDims,
   }
 
-  // Overlap do tile de chão selecionado
   const currentOverlap =
     tab === 'floor' ? (FLOOR_GROUPS.find((g) => g.sheet === config.floor.sheet)?.overlap ?? 0) : 0
 
@@ -532,6 +661,10 @@ export default function HouseModal({ onClose }: HouseModalProps) {
     if (wallSide === 'left') setConfig((c) => ({ ...c, wall: val }))
     else setConfig((c) => ({ ...c, wallRight: val }))
   }
+
+  const backgroundCss =
+    BACKGROUNDS.find((b) => b.id === (config.background ?? DEFAULT_BACKGROUND))?.css ??
+    BACKGROUNDS[0].css
 
   return (
     <div
@@ -627,7 +760,8 @@ export default function HouseModal({ onClose }: HouseModalProps) {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'var(--color-leaf-100)',
+            background: backgroundCss,
+            backgroundSize: '10px 10px',
             cursor: dragging.current ? 'grabbing' : 'grab',
             overflow: 'hidden',
           }}
@@ -694,7 +828,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                 overflow: 'hidden',
               }}
             >
-              {/* Tabs chão / parede */}
+              {/* Tabs chão / parede / fundos */}
               <div
                 style={{
                   display: 'flex',
@@ -707,6 +841,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                 {[
                   { id: 'floor' as const, icon: <Layers size={14} />, label: 'Chão' },
                   { id: 'wall' as const, icon: <PaintRoller size={14} />, label: 'Parede' },
+                  { id: 'background' as const, icon: <ImageIcon size={14} />, label: 'Fundo' },
                 ].map((t) => (
                   <button
                     key={t.id}
@@ -717,7 +852,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 5,
-                      padding: '6px 8px',
+                      padding: '6px 4px',
                       borderRadius: 10,
                       border:
                         tab === t.id
@@ -725,7 +860,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                           : '2px solid var(--color-wood-300)',
                       background: tab === t.id ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
                       color: tab === t.id ? '#fff' : 'var(--color-leaf-700)',
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: tab === t.id ? 700 : 500,
                       fontFamily: 'Baloo 2, sans-serif',
                       cursor: 'pointer',
@@ -737,7 +872,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                 ))}
               </div>
 
-              {/* Sub-tabs Esquerda / Direita */}
+              {/* Sub-tabs Esquerda / Direita — só na aba parede */}
               {tab === 'wall' && (
                 <div
                   style={{
@@ -779,118 +914,217 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                 </div>
               )}
 
-              {/* Lista de grupos */}
-              <div
-                className="char-scroll"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 3,
-                  padding: '8px 10px',
-                  borderBottom: '1px solid var(--color-wood-300)',
-                  flexShrink: 0,
-                  overflowY: 'auto',
-                  maxHeight: 180,
-                }}
-              >
-                {groups.map((g, i) => (
-                  <button
-                    key={g.label}
-                    onClick={() => setActiveGroup(i)}
+              {/* Lista de grupos + grid de tiles — só chão e parede */}
+              {tab !== 'background' && (
+                <>
+                  {/* Lista de grupos */}
+                  <div
+                    className="char-scroll"
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 7,
-                      padding: '5px 10px',
-                      borderRadius: 8,
-                      textAlign: 'left',
-                      border:
-                        activeGroup === i
-                          ? '2px solid var(--color-petal-400)'
-                          : '2px solid transparent',
-                      background: activeGroup === i ? 'var(--color-petal-200)' : 'transparent',
-                      color: activeGroup === i ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
-                      fontSize: 12,
-                      fontWeight: activeGroup === i ? 700 : 400,
-                      fontFamily: 'Baloo 2, sans-serif',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                      whiteSpace: 'nowrap',
+                      flexDirection: 'column',
+                      gap: 3,
+                      padding: '8px 10px',
+                      borderBottom: '1px solid var(--color-wood-300)',
+                      flexShrink: 0,
+                      overflowY: 'auto',
+                      maxHeight: 180,
                     }}
                   >
-                    {g.icon} {g.label}
-                  </button>
-                ))}
-              </div>
+                    {groups.map((g, i) => {
+                      const isCute = g.label === 'Cute Decor ✦'
+                      return (
+                        <button
+                          key={g.label}
+                          onClick={() => setActiveGroup(i)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 7,
+                            padding: '5px 10px',
+                            borderRadius: 8,
+                            textAlign: 'left',
+                            background:
+                              activeGroup === i
+                                ? isCute
+                                  ? '#e8d5f5'
+                                  : 'var(--color-petal-200)'
+                                : isCute
+                                  ? '#f5eeff'
+                                  : 'transparent',
+                            color:
+                              activeGroup === i
+                                ? isCute
+                                  ? '#6b3fa0'
+                                  : 'var(--color-soil-900)'
+                                : isCute
+                                  ? '#9b5fd4'
+                                  : 'var(--color-leaf-600)',
+                            border:
+                              activeGroup === i
+                                ? isCute
+                                  ? '2px solid #b57bee'
+                                  : '2px solid var(--color-petal-400)'
+                                : isCute
+                                  ? '2px solid #d4aaee'
+                                  : '2px solid transparent',
+                            fontSize: 12,
+                            fontWeight: activeGroup === i ? 700 : 400,
+                            fontFamily: 'Baloo 2, sans-serif',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {g.icon} {g.label}
+                        </button>
+                      )
+                    })}
+                  </div>
 
-              {/* Grid de tiles */}
-              <div
-                className="char-scroll"
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 8,
-                  padding: '10px 12px',
-                  overflowY: 'auto',
-                  alignContent: 'flex-start',
-                  flex: 1,
-                }}
-              >
-                {tiles.map((tile) => {
-                  const isFloor = tab === 'floor'
-                  const isSelected = isFloor
-                    ? config.floor.sheet === tile.sheet &&
-                      config.floor.col === tile.col &&
-                      config.floor.row === tile.row
-                    : editingWallConfig.sheet === tile.sheet &&
-                      editingWallConfig.col === tile.col &&
-                      editingWallConfig.row === tile.row
-                  const displayW = isFloor ? 80 : 52
-                  const displayH = isFloor ? 40 : 78
+                  {/* Grid de tiles */}
+                  <div
+                    className="char-scroll"
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 8,
+                      padding: '10px 12px',
+                      overflowY: 'auto',
+                      alignContent: 'flex-start',
+                      flex: 1,
+                    }}
+                  >
+                    {tiles.map((tile) => {
+                      const isFloor = tab === 'floor'
+                      const isSelected = isFloor
+                        ? config.floor.sheet === tile.sheet &&
+                          config.floor.col === tile.col &&
+                          config.floor.row === tile.row
+                        : editingWallConfig.sheet === tile.sheet &&
+                          editingWallConfig.col === tile.col &&
+                          editingWallConfig.row === tile.row
+                      const displayW = isFloor ? 80 : 52
+                      const displayH = isFloor ? 40 : 78
 
-                  return (
-                    <button
-                      key={tile.id}
-                      title={tile.label}
-                      onClick={() => {
-                        if (isFloor)
-                          setConfig((c) => ({
-                            ...c,
-                            floor: { sheet: tile.sheet, col: tile.col, row: tile.row },
-                          }))
-                        else
-                          setEditingWallConfig({ sheet: tile.sheet, col: tile.col, row: tile.row })
-                      }}
-                      style={{
-                        padding: 0,
-                        border: isSelected
-                          ? '2.5px solid var(--color-petal-400)'
-                          : '2px solid var(--color-wood-300)',
-                        borderRadius: 8,
-                        background: isSelected
-                          ? 'var(--color-petal-200)'
-                          : 'repeating-linear-gradient(45deg, #d0cdc8 0px, #d0cdc8 3px, #f0ede8 3px, #f0ede8 9px)',
-                        cursor: 'pointer',
-                        overflow: 'hidden',
-                        transition: 'all 0.15s',
-                        outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
-                        outlineOffset: 2,
-                        boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
-                      }}
-                    >
-                      <div style={{ overflow: 'hidden', width: displayW, height: displayH }}>
+                      return (
+                        <button
+                          key={tile.id}
+                          title={tile.label}
+                          onClick={() => {
+                            if (isFloor)
+                              setConfig((c) => ({
+                                ...c,
+                                floor: { sheet: tile.sheet, col: tile.col, row: tile.row },
+                              }))
+                            else
+                              setEditingWallConfig({
+                                sheet: tile.sheet,
+                                col: tile.col,
+                                row: tile.row,
+                              })
+                          }}
+                          style={{
+                            padding: 0,
+                            border: isSelected
+                              ? '2.5px solid var(--color-petal-400)'
+                              : '2px solid var(--color-wood-300)',
+                            borderRadius: 8,
+                            background: isSelected
+                              ? 'var(--color-petal-200)'
+                              : 'repeating-linear-gradient(45deg,#d0cdc8 0px,#d0cdc8 3px,#f0ede8 3px,#f0ede8 9px)',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            transition: 'all 0.15s',
+                            outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
+                            outlineOffset: 2,
+                            boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
+                          }}
+                        >
+                          <div style={{ overflow: 'hidden', width: displayW, height: displayH }}>
+                            <div
+                              style={{
+                                ...tileStyle(tile, displayW, displayH),
+                                marginLeft: isFloor ? 0 : 10,
+                                marginTop: isFloor ? 0 : 8,
+                              }}
+                            />
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* Grid de fundos */}
+              {tab === 'background' && (
+                <div
+                  className="char-scroll"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    padding: '12px',
+                    overflowY: 'auto',
+                    flex: 1,
+                    alignContent: 'flex-start',
+                  }}
+                >
+                  {BACKGROUNDS.map((bg) => {
+                    const isSelected = (config.background ?? DEFAULT_BACKGROUND) === bg.id
+                    return (
+                      <button
+                        key={bg.id}
+                        onClick={() => setConfig((c) => ({ ...c, background: bg.id }))}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: '8px 10px',
+                          borderRadius: 10,
+                          border: isSelected
+                            ? '2.5px solid var(--color-petal-400)'
+                            : '2px solid var(--color-wood-300)',
+                          background: isSelected
+                            ? 'var(--color-petal-200)'
+                            : 'var(--color-bark-50)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
+                          outlineOffset: 2,
+                          boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
+                        }}
+                      >
+                        {/* Preview do fundo */}
                         <div
                           style={{
-                            ...tileStyle(tile, displayW, displayH),
-                            marginLeft: isFloor ? 0 : 10,
-                            marginTop: isFloor ? 0 : 8,
+                            width: 64,
+                            height: 40,
+                            borderRadius: 7,
+                            flexShrink: 0,
+                            background:
+                              bg.id === 'garden'
+                                ? `radial-gradient(circle, #c8e8d0 1.5px, transparent 1.5px) 0 0 / 10px 10px, #f0f8f2`
+                                : bg.css,
+                            border: '1.5px solid rgba(0,0,0,0.08)',
                           }}
                         />
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: isSelected ? 700 : 500,
+                            color: isSelected ? 'var(--color-soil-900)' : 'var(--color-leaf-700)',
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          {bg.label}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -982,8 +1216,20 @@ function HouseScene({
   const sceneH = maxFloorY - minWallY
   const wallOffsetY = -minWallY
 
+  // FIX 3: linha divisória sutil no canto entre parede esq e dir
+  // O canto fica na aresta onde a última coluna da parede esq encontra a primeira da dir.
+  // Usamos o tile wallLeft[0] (mais à direita da parede esq) como referência.
+  const cornerTile = wallLeftTiles[0]
+  // A aresta do canto fica na borda direita do tile esquerdo mais próximo ao canto.
+  // Na cena isométrica o "canto" é uma linha vertical de ~WH pixels.
+  // Posição X: borda direita do tile de parede esquerda mais à direita (col=0, pois row=0→col 0 é o mais à direita).
+  // cornerX é o right edge do wallLeft tile de z=0: pos.x + WW
+  const cornerX = cornerTile.x + WW
+  const cornerY = cornerTile.y + wallOffsetY
+
   return (
     <div style={{ position: 'relative', width: sceneW, height: sceneH, marginTop: 40 }}>
+      {/* Parede esquerda */}
       {wallLeftTiles.map((pos, i) => (
         <div
           key={`wl${i}`}
@@ -996,6 +1242,8 @@ function HouseScene({
           }}
         />
       ))}
+
+      {/* Parede direita */}
       {wallRightTiles.map((pos, i) => (
         <div
           key={`wr${i}`}
@@ -1010,6 +1258,24 @@ function HouseScene({
           }}
         />
       ))}
+
+      {/* FIX 3: Linha divisória sutil no canto */}
+      <div
+        style={{
+          position: 'absolute',
+          left: cornerX + 255,
+          top: cornerY - 195,
+          width: 2,
+          height: WH - 130,
+          zIndex: 50,
+          // gradiente que vai de escuro no centro para transparente nas pontas
+          background:
+            'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 20%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0.18) 80%, transparent 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Chão */}
       {floorNorm.map((pos, i) => (
         <div
           key={`f${i}`}
