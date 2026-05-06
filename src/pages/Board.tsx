@@ -145,6 +145,9 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     config: characterConfig,
     saveConfig: saveCharacterConfig,
     unlockedIds,
+    presets,
+    savePreset,
+    deletePreset,
   } = useCharacter(uid)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
   const { extraBoards } = useBoards(uid)
@@ -1284,7 +1287,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             myUid={uid}
             config={characterConfig}
             unlockedIds={unlockedIds}
+            presets={presets}
             onSave={saveCharacterConfig}
+            onSavePreset={savePreset}
+            onDeletePreset={deletePreset}
             onClose={() => setShowCharacter(false)}
           />
         )}

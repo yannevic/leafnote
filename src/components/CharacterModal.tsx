@@ -1,6 +1,17 @@
 // src/components/CharacterModal.tsx
 import { useState, useCallback, useRef } from 'react'
-import { ChevronLeft, Save, AlertCircle, Undo2, Redo2, Trash2, Sparkles } from 'lucide-react'
+import {
+  ChevronLeft,
+  Save,
+  AlertCircle,
+  Undo2,
+  Redo2,
+  Trash2,
+  Sparkles,
+  Plus,
+  Check,
+  X,
+} from 'lucide-react'
 import {
   ALL_PIECES,
   CharacterCategory,
@@ -15,6 +26,7 @@ import {
   COLOR_VARIANT_LABELS,
 } from '../assets/character/index'
 import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
+import type { CharacterPreset } from '../hooks/useCharacter'
 
 // ── Scrollbar custom global (injeta uma vez) ──────────────────
 const SCROLLBAR_CSS = `
@@ -61,7 +73,10 @@ interface Props {
   myUid: string
   config: CharacterConfig
   unlockedIds: Set<string>
+  presets: CharacterPreset[]
   onSave: (config: CharacterConfig) => void
+  onSavePreset: (name: string, config: CharacterConfig) => Promise<void>
+  onDeletePreset: (id: string) => Promise<void>
   onClose: () => void
 }
 
@@ -193,6 +208,361 @@ function resolveSrc(piece: CharacterPiece, variant: string): string {
 }
 function sectionKey(s: Section): string {
   return [s.category, s.genderFilter, s.packFilter].filter(Boolean).join('|')
+}
+
+// ─────────────────────────────────────────────
+// PRESETS
+// ─────────────────────────────────────────────
+
+const MAX_FREE_PRESETS = 6
+
+function PresetsPanel({
+  presets,
+  currentConfig,
+  currentColorVariants,
+  onApply,
+  onSavePreset,
+  onDeletePreset,
+}: {
+  presets: CharacterPreset[]
+  currentConfig: CharacterConfig
+  currentColorVariants: Record<string, string>
+  onApply: (config: CharacterConfig) => void
+  onSavePreset: (name: string, config: CharacterConfig) => Promise<void>
+  onDeletePreset: (id: string) => Promise<void>
+}) {
+  const [savingNew, setSavingNew] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
+
+  const handleSave = async () => {
+    if (saving) return
+    const trimmed = newName.trim() || 'Preset'
+
+    const currentSnapshot = JSON.stringify({
+      ...currentConfig,
+      colorVariants: currentColorVariants,
+    })
+
+    const duplicateName = presets.find((p) => p.name.toLowerCase() === trimmed.toLowerCase())
+    const duplicateVisual = presets.find(
+      (p) =>
+        JSON.stringify({ ...p.config, colorVariants: p.config.colorVariants ?? {} }) ===
+        currentSnapshot
+    )
+
+    if (duplicateName) {
+      setDuplicateWarning(`Nome "${duplicateName.name}" já está em uso`)
+      setTimeout(() => setDuplicateWarning(null), 2500)
+      return
+    }
+
+    if (duplicateVisual) {
+      setDuplicateWarning(`Esse visual já está salvo como "${duplicateVisual.name}"`)
+      setTimeout(() => setDuplicateWarning(null), 2500)
+      return
+    }
+
+    setSaving(true)
+    await onSavePreset(trimmed, { ...currentConfig, colorVariants: currentColorVariants })
+    setNewName('')
+    setSavingNew(false)
+    setSaving(false)
+  }
+
+  const handleDelete = async (id: string) => {
+    await onDeletePreset(id)
+    setDeleteConfirm(null)
+  }
+
+  const canAdd = presets.length < MAX_FREE_PRESETS
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px 0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: 'var(--color-leaf-700)',
+            fontFamily: 'Baloo 2, sans-serif',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}
+        >
+          Presets ({presets.length}/{MAX_FREE_PRESETS})
+        </span>
+        {canAdd && (
+          <button
+            onClick={() => setSavingNew(true)}
+            title="Salvar preset atual"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+              padding: '2px 8px',
+              borderRadius: 8,
+              border: '1.5px solid var(--color-wood-300)',
+              background: 'var(--color-bark-100)',
+              color: 'var(--color-leaf-600)',
+              fontSize: 11,
+              fontFamily: 'Baloo 2, sans-serif',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={12} /> Salvar atual
+          </button>
+        )}
+      </div>
+
+      {/* Campo de nome novo preset */}
+      {savingNew && (
+        <div style={{ display: 'flex', gap: 4 }}>
+          <input
+            autoFocus
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSave()
+            }}
+            placeholder="Nome do preset..."
+            maxLength={20}
+            style={{
+              flex: 1,
+              padding: '4px 8px',
+              borderRadius: 8,
+              border: '1.5px solid var(--color-wood-300)',
+              background: '#fff',
+              fontSize: 12,
+              fontFamily: 'Baloo 2, sans-serif',
+              color: 'var(--color-soil-900)',
+              outline: 'none',
+            }}
+          />
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 8,
+              border: 'none',
+              background: 'var(--color-leaf-600)',
+              color: '#fff',
+              fontSize: 11,
+              fontWeight: 700,
+              fontFamily: 'Baloo 2, sans-serif',
+              cursor: 'pointer',
+            }}
+          >
+            <Check size={12} />
+          </button>
+          <button
+            onClick={() => {
+              setSavingNew(false)
+              setNewName('')
+            }}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 8,
+              border: '1.5px solid var(--color-wood-300)',
+              background: 'transparent',
+              color: 'var(--color-leaf-600)',
+              fontSize: 11,
+              cursor: 'pointer',
+            }}
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
+
+      {duplicateWarning && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '5px 10px',
+            borderRadius: 8,
+            background: 'var(--color-petal-200)',
+            border: '1.5px solid var(--color-petal-400)',
+            fontSize: 11,
+            fontFamily: 'Baloo 2, sans-serif',
+            color: 'var(--color-soil-900)',
+          }}
+        >
+          <AlertCircle size={12} color="var(--color-petal-400)" style={{ flexShrink: 0 }} />
+          {duplicateWarning}
+        </div>
+      )}
+
+      {/* Grade 2x2 com scroll */}
+      <div
+        className="char-scroll"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 6,
+          maxHeight: 180,
+          overflowY: 'auto',
+          paddingRight: 4,
+          paddingBottom: 4,
+        }}
+      >
+        {presets.length === 0 && (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              fontSize: 11,
+              color: 'var(--color-leaf-400)',
+              fontFamily: 'Baloo 2, sans-serif',
+              padding: '12px 0',
+            }}
+          >
+            Nenhum preset salvo ainda
+          </div>
+        )}
+        {presets.map((preset) => (
+          <div
+            key={preset.id}
+            style={{
+              position: 'relative',
+              borderRadius: 10,
+              border: '1.5px solid var(--color-wood-300)',
+              background: 'rgba(255,255,255,0.6)',
+              overflow: 'hidden',
+              cursor: 'pointer',
+            }}
+          >
+            {/* Miniatura clicável */}
+            <div
+              onClick={() => onApply(preset.config)}
+              style={{
+                padding: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              <CharacterPreview
+                config={preset.config}
+                colorVariants={preset.config.colorVariants ?? {}}
+                size={80}
+              />
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: 'var(--color-leaf-800)',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  width: '100%',
+                  paddingInline: 2,
+                }}
+              >
+                {preset.name}
+              </span>
+            </div>
+
+            {/* Botão excluir */}
+            {deleteConfirm === preset.id ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(245,213,220,0.97)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  borderRadius: 10,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: 'var(--color-soil-900)',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  Excluir?
+                </span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button
+                    onClick={() => handleDelete(preset.id)}
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: 6,
+                      border: 'none',
+                      background: 'var(--color-petal-400)',
+                      color: '#fff',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: 'Baloo 2, sans-serif',
+                    }}
+                  >
+                    Sim
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(null)}
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: 6,
+                      border: '1px solid var(--color-wood-300)',
+                      background: 'transparent',
+                      color: 'var(--color-leaf-600)',
+                      fontSize: 10,
+                      cursor: 'pointer',
+                      fontFamily: 'Baloo 2, sans-serif',
+                    }}
+                  >
+                    Não
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setDeleteConfirm(preset.id)}
+                style={{
+                  position: 'absolute',
+                  top: 3,
+                  right: 3,
+                  width: 18,
+                  height: 18,
+                  borderRadius: 5,
+                  border: 'none',
+                  background: 'rgba(232,160,176,0.7)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                }}
+              >
+                <X size={10} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Divisor */}
+      <div
+        style={{ height: 1, background: 'var(--color-wood-300)', borderRadius: 1, marginTop: 2 }}
+      />
+    </div>
+  )
 }
 
 // ─────────────────────────────────────────────
@@ -508,7 +878,10 @@ interface HistoryEntry {
 export default function CharacterModal({
   config: initialConfig,
   unlockedIds,
+  presets,
   onSave,
+  onSavePreset,
+  onDeletePreset,
   onClose,
 }: Props) {
   const [config, setConfig] = useState<CharacterConfig>(initialConfig ?? DEFAULT_CHARACTER_CONFIG)
@@ -538,6 +911,7 @@ export default function CharacterModal({
 
   // ✅ FIX: altura fixa para o botão limpar — sem layout shift
   const [clearState, setClearState] = useState<'idle' | 'confirm'>('idle')
+  const [savedFeedback, setSavedFeedback] = useState(false)
 
   const [activeTab, setActiveTab] = useState(TABS[0].id)
   const [activeSubTab, setActiveSubTab] = useState<string>('')
@@ -653,6 +1027,17 @@ export default function CharacterModal({
   const configRef = useRef(config)
   configRef.current = config
 
+  const handleApplyPreset = useCallback(
+    (presetConfig: CharacterConfig) => {
+      const next = { ...presetConfig }
+      const nextVariants = presetConfig.colorVariants ?? {}
+      setConfig(next)
+      setColorVariants(nextVariants)
+      pushHistory(next, nextVariants)
+    },
+    [pushHistory]
+  )
+
   // ✅ FIX: Limpar tudo preserva o body
   const handleClearAll = () => {
     const bodyId = config.body // preserva o corpo atual
@@ -664,7 +1049,8 @@ export default function CharacterModal({
 
   const handleSave = () => {
     onSave({ ...config, colorVariants })
-    onClose()
+    setSavedFeedback(true)
+    setTimeout(() => setSavedFeedback(false), 2000)
   }
 
   const actionBtnStyle = (enabled: boolean): React.CSSProperties => ({
@@ -753,16 +1139,26 @@ export default function CharacterModal({
             padding: '6px 18px',
             borderRadius: 10,
             border: 'none',
-            background: 'var(--color-leaf-600)',
+            background: savedFeedback ? 'var(--color-leaf-400)' : 'var(--color-leaf-600)',
             color: '#fff',
             fontSize: 13,
             fontWeight: 600,
             fontFamily: 'Baloo 2, sans-serif',
             cursor: 'pointer',
+            transition: 'background 0.2s',
+            minWidth: 100,
+            justifyContent: 'center',
           }}
         >
-          <Save size={14} />
-          Salvar
+          {savedFeedback ? (
+            <>
+              <Check size={14} /> Salvo!
+            </>
+          ) : (
+            <>
+              <Save size={14} /> Salvar
+            </>
+          )}
         </button>
       </div>
 
@@ -781,6 +1177,15 @@ export default function CharacterModal({
             overflow: 'hidden',
           }}
         >
+          {/* Presets */}
+          <PresetsPanel
+            presets={presets}
+            currentConfig={config}
+            currentColorVariants={colorVariants}
+            onApply={handleApplyPreset}
+            onSavePreset={onSavePreset}
+            onDeletePreset={onDeletePreset}
+          />
           {/* Preview — flex 1, centralizado */}
           <div
             style={{

@@ -1,6 +1,6 @@
 // src/hooks/useCharacter.ts
 import { useEffect, useState, useCallback } from 'react'
-import { ref, onValue, set } from 'firebase/database'
+import { ref, onValue, set, remove } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { CharacterConfig, DEFAULT_CHARACTER_CONFIG } from '../assets/character/index'
 import {
@@ -19,6 +19,13 @@ const MULTI_KEYS: (keyof CharacterConfig)[] = [
   'jaqueta',
   'tattoo',
 ]
+
+export interface CharacterPreset {
+  id: string
+  name: string
+  config: CharacterConfig
+  createdAt: number
+}
 
 function normalizeConfig(raw: Record<string, unknown>): CharacterConfig {
   const config = {
@@ -47,6 +54,7 @@ export function useCharacter(uid: string | null) {
   const [config, setConfig] = useState<CharacterConfig>(DEFAULT_CHARACTER_CONFIG)
   const [loading, setLoading] = useState(true)
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(FIRST_TIME_UNLOCKED_IDS)
+  const [presets, setPresets] = useState<CharacterPreset[]>([])
 
   useEffect(() => {
     if (!uid) {
@@ -59,7 +67,6 @@ export function useCharacter(uid: string | null) {
       if (snap.exists()) {
         const normalized = normalizeConfig(snap.val() as Record<string, unknown>)
         setConfig(normalized)
-        // itens que o usuário já tem salvos também ficam desbloqueados no guarda-roupa
         const saved = new Set(FIRST_TIME_UNLOCKED_IDS)
         const singles = [
           'body',
@@ -86,13 +93,29 @@ export function useCharacter(uid: string | null) {
         }
         setUnlockedIds(saved)
       } else {
-        // primeira vez — usa config vazio mas já mostra peças desbloqueadas
         setConfig(FIRST_TIME_DEFAULT_CONFIG)
         setUnlockedIds(FIRST_TIME_UNLOCKED_IDS)
       }
       setLoading(false)
     })
 
+    return () => unsub()
+  }, [uid])
+
+  useEffect(() => {
+    if (!uid) return
+    const r = ref(db, `users/${uid}/presets`)
+    const unsub = onValue(r, (snap) => {
+      if (snap.exists()) {
+        const raw = snap.val() as Record<string, Omit<CharacterPreset, 'id'>>
+        const list: CharacterPreset[] = Object.entries(raw)
+          .map(([id, val]) => ({ id, ...val }))
+          .sort((a, b) => a.createdAt - b.createdAt)
+        setPresets(list)
+      } else {
+        setPresets([])
+      }
+    })
     return () => unsub()
   }, [uid])
 
@@ -105,5 +128,27 @@ export function useCharacter(uid: string | null) {
     [uid]
   )
 
-  return { config, loading, saveConfig, unlockedIds }
+  const savePreset = useCallback(
+    async (name: string, presetConfig: CharacterConfig) => {
+      if (!uid) return
+      const id = `preset_${Date.now()}`
+      const preset: Omit<CharacterPreset, 'id'> = {
+        name: name.trim() || 'Preset',
+        config: presetConfig,
+        createdAt: Date.now(),
+      }
+      await set(ref(db, `users/${uid}/presets/${id}`), preset)
+    },
+    [uid]
+  )
+
+  const deletePreset = useCallback(
+    async (presetId: string) => {
+      if (!uid) return
+      await remove(ref(db, `users/${uid}/presets/${presetId}`))
+    },
+    [uid]
+  )
+
+  return { config, loading, saveConfig, unlockedIds, presets, savePreset, deletePreset }
 }
