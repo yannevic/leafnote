@@ -7,6 +7,7 @@ import {
   WALL_GROUPS,
   BACKGROUNDS,
   DEFAULT_BACKGROUND,
+  getBgStyle,
   findSheetDims,
   type TileOption,
 } from './HouseSceneShared'
@@ -17,7 +18,12 @@ import {
   isAvailableToday,
   type ShopItem,
 } from '../shop/shopPrices'
-import { ALL_PIECES, type CharacterPiece, LAYER_ORDER } from '../assets/character/index'
+import {
+  ALL_PIECES,
+  type CharacterPiece,
+  LAYER_ORDER,
+  COLOR_VARIANT_LABELS,
+} from '../assets/character/index'
 import coinIcon from '../assets/coin.png'
 
 // ─────────────────────────────────────────────
@@ -367,7 +373,7 @@ function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): Chara
 // Body neutro (body-b-1) + peça selecionada
 // ─────────────────────────────────────────────
 
-function Mannequin({ cart }: { cart: CharacterPiece[] }) {
+function Mannequin({ cart, variant }: { cart: CharacterPiece[]; variant: string }) {
   const bodyPiece = ALL_PIECES.find((p) => p.id === 'body-b-1')
 
   // Ordena cart pela layer order para renderizar em camadas corretas
@@ -405,7 +411,11 @@ function Mannequin({ cart }: { cart: CharacterPiece[] }) {
       {sorted.map((p) => (
         <img
           key={p.id}
-          src={`./character/${p.src}`}
+          src={
+            p.hasColor
+              ? `./character/${p.src.replace(/(\d+)(\.png)$/, `$1${variant}$2`)}`
+              : `./character/${p.src}`
+          }
           style={{
             position: 'absolute',
             inset: 0,
@@ -1015,6 +1025,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const [confirm, setConfirm] = useState<ConfirmState>({ item: null, piece: null, open: false })
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
   const [cart, setCart] = useState<CharacterPiece[]>([])
+  const [tryOnVariant, setTryOnVariant] = useState<string>('b')
   const [houseCart, setHouseCart] = useState<ShopItem[]>([])
 
   const toggleHouseCart = (item: ShopItem) => {
@@ -1337,17 +1348,31 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                   <div
                     style={{
                       width: 300,
-                      background:
-                        BACKGROUNDS.find((b) => b.id === previewBg)?.css ?? BACKGROUNDS[0].css,
+                      background: (BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0])
+                        .css,
+                      position: 'relative',
                       backgroundSize: '10px 10px',
                       border: '2px solid var(--color-wood-300)',
-                      borderLeft: 'none',
                       borderRadius: '0 0 12px 0',
                       display: 'flex',
                       flexDirection: 'column',
                       overflow: 'hidden',
                     }}
                   >
+                    {(() => {
+                      const activeBg = BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0]
+                      return activeBg.svg ? (
+                        <div
+                          dangerouslySetInnerHTML={{ __html: activeBg.svg }}
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            pointerEvents: 'none',
+                            zIndex: 0,
+                          }}
+                        />
+                      ) : null
+                    })()}
                     {/* Header */}
                     <div
                       style={{
@@ -1356,6 +1381,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         justifyContent: 'flex-end',
                         padding: '4px 8px',
                         background: 'rgba(255,255,255,0.7)',
+                        position: 'relative',
+                        zIndex: 1,
                         borderBottom: '1px solid var(--color-wood-300)',
                         flexShrink: 0,
                         gap: 4,
@@ -1414,6 +1441,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         overflow: 'hidden',
                         cursor: previewDragging.current ? 'grabbing' : 'grab',
                         position: 'relative',
+                        zIndex: 1,
                       }}
                       onWheel={(e) => {
                         e.preventDefault()
@@ -1474,6 +1502,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                           flexDirection: 'column',
                           maxHeight: 280,
                           flexShrink: 0,
+                          position: 'relative',
+                          zIndex: 1,
                         }}
                       >
                         <div
@@ -1862,7 +1892,47 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
               >
                 Provador
               </div>
-              <Mannequin cart={cart} />
+              <Mannequin cart={cart} variant={tryOnVariant} />
+              {cart.some((p) => p.hasColor) && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 4,
+                    justifyContent: 'center',
+                    padding: '4px 8px',
+                    background: 'white',
+                    border: '1.5px solid var(--color-wood-300)',
+                    borderRadius: 10,
+                    width: '100%',
+                  }}
+                >
+                  {Object.entries(COLOR_VARIANT_LABELS).map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => setTryOnVariant(key)}
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 8,
+                        border:
+                          tryOnVariant === key
+                            ? '2px solid var(--color-petal-400)'
+                            : '2px solid transparent',
+                        background:
+                          tryOnVariant === key ? 'var(--color-petal-200)' : 'var(--color-wood-300)',
+                        color: 'var(--color-soil-900)',
+                        fontSize: 10,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        fontWeight: tryOnVariant === key ? 700 : 400,
+                        cursor: 'pointer',
+                        transition: 'all 0.12s',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {cart.length > 0 && (
                 <div
                   style={{

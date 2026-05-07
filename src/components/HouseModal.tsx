@@ -26,6 +26,7 @@ import {
   findSheetDims,
   type TileOption,
   type SheetGroup,
+  getBgStyle,
 } from './HouseSceneShared'
 
 // ─────────────────────────────────────────────
@@ -204,9 +205,8 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
     else setConfig((c: HouseConfig) => ({ ...c, wallRight: val }))
   }
 
-  const backgroundCss =
-    BACKGROUNDS.find((b) => b.id === (config.background ?? DEFAULT_BACKGROUND))?.css ??
-    BACKGROUNDS[0].css
+  const activeBg =
+    BACKGROUNDS.find((b) => b.id === (config.background ?? DEFAULT_BACKGROUND)) ?? BACKGROUNDS[0]
 
   return (
     <div
@@ -327,7 +327,7 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
           style={{
             position: 'absolute',
             inset: 0,
-            background: backgroundCss,
+            background: activeBg.css,
             backgroundSize: '10px 10px',
             cursor: dragging.current ? 'grabbing' : 'grab',
             overflow: 'hidden',
@@ -338,6 +338,12 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
+          {activeBg.svg && (
+            <div
+              dangerouslySetInnerHTML={{ __html: activeBg.svg }}
+              style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}
+            />
+          )}
           <div
             style={{
               position: 'absolute',
@@ -754,6 +760,25 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
                             border: '1.5px solid rgba(0,0,0,0.08)',
                           }}
                         />
+                        <div
+                          style={{
+                            width: 64,
+                            height: 40,
+                            borderRadius: 7,
+                            flexShrink: 0,
+                            background: bg.css,
+                            border: '1.5px solid rgba(0,0,0,0.08)',
+                            overflow: 'hidden',
+                            position: 'relative',
+                          }}
+                        >
+                          {bg.svg && (
+                            <div
+                              dangerouslySetInnerHTML={{ __html: bg.svg }}
+                              style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+                            />
+                          )}
+                        </div>
                         <span
                           style={{
                             fontSize: 13,
