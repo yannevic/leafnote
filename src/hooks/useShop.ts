@@ -29,6 +29,30 @@ import {
 import { ALL_PIECES, type CharacterPiece } from '../assets/character/index'
 
 // ─────────────────────────────────────────────
+// WISHLIST
+// Path: users/{uid}/wishlist/{itemId}: true
+// Separada por usuário.
+// ─────────────────────────────────────────────
+
+export function subscribeWishlist(
+  uid: string,
+  callback: (wishlist: Set<string>) => void
+): () => void {
+  const r = ref(db, `users/${uid}/wishlist`)
+  const handler = onValue(r, (snap) => {
+    const val = snap.val() as Record<string, boolean> | null
+    callback(new Set<string>(val ? Object.keys(val).filter((k) => val[k] === true) : []))
+  })
+  return () => off(r, 'value', handler)
+}
+
+export async function toggleWishlistItem(uid: string, itemId: string): Promise<void> {
+  const r = ref(db, `users/${uid}/wishlist/${itemId}`)
+  const snap = await get(r)
+  await set(r, snap.val() === true ? null : true)
+}
+
+// ─────────────────────────────────────────────
 // TIPOS
 // ─────────────────────────────────────────────
 
@@ -197,8 +221,10 @@ export interface UseShopReturn {
   coins: number
   houseOwned: Set<string>
   characterOwned: Set<string>
+  wishlist: Set<string>
   buy: (item: ShopItem) => Promise<BuyResult>
   isOwned: (itemId: string, category: ShopCategory) => boolean
+  toggleWishlist: (itemId: string) => Promise<void>
   loading: boolean
 }
 
@@ -213,6 +239,7 @@ export function useShop(uid: string): UseShopReturn {
     return initial
   })
   const [loading, setLoading] = useState(true)
+  const [wishlist, setWishlist] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!uid) return
@@ -228,6 +255,7 @@ export function useShop(uid: string): UseShopReturn {
     const unsubHouse = subscribeHouseInventory(setHouseOwned)
 
     const unsubChar = subscribeCharacterInventory(uid, setCharacterOwned)
+    const unsubWishlist = subscribeWishlist(uid, setWishlist)
 
     return () => {
       unsubCoins()
@@ -246,7 +274,8 @@ export function useShop(uid: string): UseShopReturn {
     [houseOwned, characterOwned]
   )
 
-  return { coins, houseOwned, characterOwned, buy, isOwned, loading }
+  const toggleWishlist = useCallback((itemId: string) => toggleWishlistItem(uid, itemId), [uid])
+  return { coins, houseOwned, characterOwned, wishlist, buy, isOwned, toggleWishlist, loading }
 }
 
 // ─────────────────────────────────────────────

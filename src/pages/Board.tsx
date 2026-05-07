@@ -35,7 +35,16 @@ import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
 import MovieList from '../components/MovieList'
-import { CalendarDays, LayoutGrid, Sprout, Film, ArrowRightLeft, Layers, User } from 'lucide-react'
+import {
+  CalendarDays,
+  LayoutGrid,
+  Sprout,
+  Film,
+  ArrowRightLeft,
+  Layers,
+  User,
+  Sparkles,
+} from 'lucide-react'
 import SpecialLetterModal from '../components/SpecialLetterModal'
 import SpecialLetter from '../components/SpecialLetter'
 import type { SpecialLetterItem } from '../types/board'
@@ -773,51 +782,83 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         {/* Grupo expansível — guarda-roupa / casinha / loja */}
         <div
           style={{
-            position: 'fixed', // ← faltava isso
-            bottom: 344,
+            position: 'fixed',
+            bottom: 328,
             right: 20,
             zIndex: 48,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            gap: 8,
+            width: 140,
+            height: 140,
           }}
           onMouseEnter={() => setExpandedMenu(true)}
           onMouseLeave={() => setExpandedMenu(false)}
         >
-          {/* Sub-botão: loja (aparece ao hover, acima) */}
+          {/* Botão principal — só ícone, sem clique */}
           <div
-            onClick={() => setShowShop(true)}
             style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              background: expandedMenu
+                ? 'linear-gradient(145deg, #f5d0ff 0%, #c478a8 100%)'
+                : 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
+              border: '2px solid #c478a8',
+              borderRadius: '50%',
+              width: 48,
+              height: 48,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#5a1a3a',
+              cursor: 'default',
+              boxShadow: expandedMenu
+                ? '0 4px 16px rgba(196,120,168,0.5)'
+                : '0 3px 10px rgba(196,120,168,0.35)',
+              transition: 'all 0.2s ease',
+              userSelect: 'none',
+            }}
+          >
+            <Sparkles size={22} strokeWidth={2} />
+          </div>
+
+          {/* Sub-botão: guarda-roupa — 90° (esquerda) */}
+          <div
+            onClick={() => setShowCharacter(true)}
+            style={{
+              position: 'absolute',
+              bottom: 4,
+              right: expandedMenu ? 56 : 4,
               opacity: expandedMenu ? 1 : 0,
-              transform: expandedMenu ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.8)',
-              transition: 'all 0.2s cubic-bezier(.34,1.56,.64,1)',
+              transform: expandedMenu ? 'scale(1)' : 'scale(0.6)',
+              transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1)',
               pointerEvents: expandedMenu ? 'auto' : 'none',
-              background: 'linear-gradient(145deg, #fff8e1 0%, #f9c74f 100%)',
-              border: '2px solid #c9a227',
+              background: 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
+              border: '2px solid #c478a8',
               borderRadius: '50%',
               width: 40,
               height: 40,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#7a5000',
+              color: '#5a1a3a',
               cursor: 'pointer',
-              boxShadow: '0 3px 10px rgba(201,162,39,0.35)',
+              boxShadow: '0 3px 10px rgba(196,120,168,0.35)',
               userSelect: 'none',
             }}
-            title="loja 🛍️"
+            title="guarda-roupa"
           >
-            <ShoppingBag size={18} strokeWidth={2} />
+            <User size={18} strokeWidth={2} />
           </div>
 
-          {/* Sub-botão: casinha */}
+          {/* Sub-botão: casinha — 45° (diagonal) */}
           <div
             onClick={() => setShowHouse(true)}
             style={{
+              position: 'absolute',
+              bottom: expandedMenu ? 52 : 4,
+              right: expandedMenu ? 52 : 4,
               opacity: expandedMenu ? 1 : 0,
-              transform: expandedMenu ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.8)',
-              transition: 'all 0.2s cubic-bezier(.34,1.56,.64,1) 0.04s',
+              transform: expandedMenu ? 'scale(1)' : 'scale(0.6)',
+              transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1) 0.04s',
               pointerEvents: expandedMenu ? 'auto' : 'none',
               background: 'linear-gradient(145deg, #e8f5e8 0%, #7FB87F 100%)',
               border: '2px solid #4a7a4a',
@@ -832,36 +873,38 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               boxShadow: '0 3px 10px rgba(79,160,79,0.3)',
               userSelect: 'none',
             }}
-            title="casinha 🏠"
+            title="casinha"
           >
             <House size={18} strokeWidth={2} />
           </div>
 
-          {/* Botão principal — guarda-roupa (sempre visível) */}
+          {/* Sub-botão: loja — 0° (cima) */}
           <div
-            onClick={() => setShowCharacter(true)}
+            onClick={() => setShowShop(true)}
             style={{
-              background: expandedMenu
-                ? 'linear-gradient(145deg, #f5d0ff 0%, #c478a8 100%)'
-                : 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
-              border: '2px solid #c478a8',
+              position: 'absolute',
+              bottom: expandedMenu ? 56 : 4,
+              right: 4,
+              opacity: expandedMenu ? 1 : 0,
+              transform: expandedMenu ? 'scale(1)' : 'scale(0.6)',
+              transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1) 0.08s',
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              background: 'linear-gradient(145deg, #fff8e1 0%, #f9c74f 100%)',
+              border: '2px solid #c9a227',
               borderRadius: '50%',
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#5a1a3a',
+              color: '#7a5000',
               cursor: 'pointer',
-              boxShadow: expandedMenu
-                ? '0 4px 16px rgba(196,120,168,0.5)'
-                : '0 3px 10px rgba(196,120,168,0.35)',
-              transition: 'all 0.2s ease',
+              boxShadow: '0 3px 10px rgba(201,162,39,0.35)',
               userSelect: 'none',
             }}
-            title="guarda-roupa 👗"
+            title="loja"
           >
-            <User size={22} strokeWidth={2} />
+            <ShoppingBag size={18} strokeWidth={2} />
           </div>
         </div>
         {/* Botão calendário */}

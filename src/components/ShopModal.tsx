@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ShoppingBag, ChevronLeft, Home, Shirt, X, Eye, ShoppingCart } from 'lucide-react'
+import { ShoppingBag, ChevronLeft, Layers, Shirt, X, Eye, ShoppingCart, Heart } from 'lucide-react'
 import { useShop, getCharacterShopPieces, type BuyResult } from '../hooks/useShop'
 import {
   HouseScene,
@@ -483,6 +483,8 @@ interface ItemCardProps {
   selected?: boolean
   inCart?: boolean
   tryOnVariants?: Record<string, string>
+  isWishlisted?: boolean
+  onToggleWishlist?: () => void
   onBuy: () => void
   onPreview?: () => void
   onAddCart?: () => void
@@ -505,6 +507,8 @@ function ItemCard({
   selected,
   inCart,
   tryOnVariants = {},
+  isWishlisted,
+  onToggleWishlist,
   onBuy,
   onPreview,
   onAddCart,
@@ -550,6 +554,32 @@ function ItemCard({
         ;(e.currentTarget as HTMLDivElement).style.boxShadow = ''
       }}
     >
+      {onToggleWishlist && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleWishlist()
+          }}
+          style={{
+            position: 'absolute',
+            top: 6,
+            left: 3,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            zIndex: 2,
+          }}
+        >
+          <Heart
+            size={14}
+            color={isWishlisted ? '#e85d8a' : '#d1c4b8'}
+            fill={isWishlisted ? '#e85d8a' : 'none'}
+          />
+        </button>
+      )}
       {discount && !owned && (
         <div
           style={{
@@ -595,7 +625,7 @@ function ItemCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#f5f0eb',
+            background: '#c8bdb0',
             borderRadius: 8,
             overflow: 'hidden',
             position: 'relative',
@@ -1010,7 +1040,7 @@ interface ShopModalProps {
 }
 
 export function ShopModal({ uid, onClose }: ShopModalProps) {
-  const { coins, characterOwned, buy, isOwned } = useShop(uid)
+  const { coins, characterOwned, wishlist, buy, isOwned, toggleWishlist } = useShop(uid)
 
   const [mainTab, setMainTab] = useState<MainTab>('casa')
   const [houseSubTab, setHouseSubTab] = useState<HouseSubTab>('floor')
@@ -1338,7 +1368,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
       >
         {(
           [
-            { key: 'casa', label: 'Casinha', icon: <Home size={15} /> },
+            { key: 'casa', label: 'Ambiente', icon: <Layers size={15} /> },
             { key: 'roupas', label: 'Roupas', icon: <Shirt size={15} /> },
           ] as { key: MainTab; label: string; icon: React.ReactNode }[]
         ).map((tab) => (
@@ -1783,6 +1813,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             }}
                             onAddCart={() => toggleHouseCart(item)}
                             inCart={houseCart.some((i) => i.id === id)}
+                            isWishlisted={wishlist.has(id)}
+                            onToggleWishlist={() => toggleWishlist(id)}
                             onBuy={() => handleBuyHouse(item)}
                           />
                         )
@@ -2297,6 +2329,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             setClothesPreviewOpen(true)
                           }}
                           onAddCart={() => addToClothesCart(p)}
+                          isWishlisted={wishlist.has(p.id)}
+                          onToggleWishlist={() => toggleWishlist(p.id)}
                           onBuy={() => handleBuyPiece(p)}
                         />
                       ))}
