@@ -108,12 +108,21 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
 
   // ── NOVO: verifica se um tile está desbloqueado ──
   function isTileOwned(sheet: string, col: number, row: number): boolean {
+    const isDefault =
+      (sheet === DEFAULT_CONFIG.floor.sheet &&
+        col === DEFAULT_CONFIG.floor.col &&
+        row === DEFAULT_CONFIG.floor.row) ||
+      (sheet === DEFAULT_CONFIG.wall.sheet &&
+        col === DEFAULT_CONFIG.wall.col &&
+        row === DEFAULT_CONFIG.wall.row)
+    if (isDefault) return true
     const itemId = tileToItemId(sheet, col, row)
-    if (!itemId) return true // tile não mapeado na loja = sempre disponível
+    if (!itemId) return false
     return houseOwned.has(itemId)
   }
 
   function isBgOwned(bgId: string): boolean {
+    if (bgId === DEFAULT_BACKGROUND) return true
     return houseOwned.has(bgToItemId(bgId))
   }
 
@@ -555,6 +564,7 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
                     {tiles.map((tile) => {
                       const isFloor = tab === 'floor'
                       const owned = isTileOwned(tile.sheet, tile.col, tile.row)
+                      if (!owned) return null
                       const isSelected = isFloor
                         ? config.floor.sheet === tile.sheet &&
                           config.floor.col === tile.col &&
@@ -702,6 +712,7 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
                   {BACKGROUNDS.map((bg) => {
                     const isSelected = (config.background ?? DEFAULT_BACKGROUND) === bg.id
                     const owned = isBgOwned(bg.id)
+                    if (!owned) return null
                     return (
                       <button
                         key={bg.id}

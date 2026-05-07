@@ -71,7 +71,6 @@ export function subscribeHouseInventory(callback: (owned: Set<string>) => void):
     const val = snap.val() as Record<string, boolean> | null
     const owned = new Set<string>(val ? Object.keys(val).filter((k) => val[k] === true) : [])
     // Sempre inclui os itens default
-    DEFAULT_HOUSE_UNLOCKED.forEach((id) => owned.add(id))
     callback(owned)
   })
   return () => off(r, 'value', handler)
@@ -121,7 +120,7 @@ export async function buyItem(uid: string, item: ShopItem): Promise<BuyResult> {
     : `users/${uid}/inventory/${item.id}`
 
   const ownedSnap = await get(ref(db, inventoryPath))
-  const alreadyOwned = ownedSnap.val() === true || DEFAULT_HOUSE_UNLOCKED.includes(item.id)
+  const alreadyOwned = ownedSnap.val() === true
   if (alreadyOwned) {
     return { success: false, reason: 'already_owned' }
   }
@@ -171,11 +170,6 @@ export async function initDefaultInventory(uid: string): Promise<void> {
   if (flagSnap.val() === true) return
 
   const updates: Record<string, unknown> = {}
-
-  // Itens default da casinha
-  DEFAULT_HOUSE_UNLOCKED.forEach((id) => {
-    updates[`house/inventory/${id}`] = true
-  })
 
   // Roupas default do personagem
   DEFAULT_CHARACTER_UNLOCKED.forEach((id) => {
@@ -283,7 +277,6 @@ export async function getUnlockedHouseIds(): Promise<Set<string>> {
   const snap = await get(ref(db, 'house/inventory'))
   const val = snap.val() as Record<string, boolean> | null
   const owned = new Set<string>(val ? Object.keys(val).filter((k) => val[k] === true) : [])
-  DEFAULT_HOUSE_UNLOCKED.forEach((id) => owned.add(id))
   return owned
 }
 
