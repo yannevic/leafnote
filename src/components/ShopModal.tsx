@@ -1436,6 +1436,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                       }}
                       onWheel={(e) => {
                         e.preventDefault()
+                        e.stopPropagation()
                         setPreviewScale((s) => Math.min(1.5, Math.max(0.2, s - e.deltaY * 0.001)))
                       }}
                       onMouseDown={(e) => {
@@ -1867,7 +1868,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
 
         {/* ───── ABA ROUPAS ───── */}
         {mainTab === 'roupas' && (
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', height: '100%' }}>
             {/* Botão flutuante de provador/carrinho */}
             <div style={{ position: 'relative', flexShrink: 0, zIndex: 51 }}>
               <div
