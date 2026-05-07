@@ -269,9 +269,6 @@ export const HOUSE_TILE_MAP: Record<string, HouseTileRef> = {
 
   // ── WALLS — base walls/ ───────────────────
 
-  // Branca base
-  wall_white: { sheet: 'base walls/BASE_WHITE_WALL.png', col: 0, row: 0 },
-
   // Tinta lisa — pastel (4×2)
   wall_paint_pastel_1: { sheet: 'base walls/walls_paint_pastel.png', col: 0, row: 0 },
   wall_paint_pastel_2: { sheet: 'base walls/walls_paint_pastel.png', col: 1, row: 0 },
@@ -308,7 +305,7 @@ export const HOUSE_TILE_MAP: Record<string, HouseTileRef> = {
   wall_paint_grey_3: { sheet: 'base walls/walls_paint_grey.png', col: 2, row: 0 },
   wall_paint_grey_4: { sheet: 'base walls/walls_paint_grey.png', col: 3, row: 0 },
   wall_paint_grey_5: { sheet: 'base walls/walls_paint_grey.png', col: 0, row: 1 },
-  wall_stripes_grey: { sheet: 'base walls/walls_paint_grey.png', col: 1, row: 1 }, // item default
+  wall_paint_grey_6: { sheet: 'base walls/walls_paint_grey.png', col: 1, row: 1 },
   wall_paint_grey_7: { sheet: 'base walls/walls_paint_grey.png', col: 2, row: 1 },
   wall_paint_grey_8: { sheet: 'base walls/walls_paint_grey.png', col: 3, row: 1 },
 
@@ -583,7 +580,6 @@ export const SHOP_HOUSE_ITEMS: ShopItem[] = [
 
   // ── PAREDES — comuns ────────────────────
 
-  { id: 'wall_white', label: 'Branca', category: 'wall', tier: 'basic', cost: 0 }, // grátis
   { id: 'wall_paint_pastel_1', label: 'Tinta lisa 1', category: 'wall', tier: 'basic', cost: 80 },
   { id: 'wall_paint_pastel_2', label: 'Tinta lisa 2', category: 'wall', tier: 'basic', cost: 80 },
   { id: 'wall_paint_pastel_3', label: 'Tinta lisa 3', category: 'wall', tier: 'basic', cost: 80 },

@@ -58,7 +58,6 @@ const SHEET_COLS: Record<string, number> = {
   'floor (tiles)/cut_floor_pink.png': 3,
   'floor (tiles)/cut_floor_violet.png': 3,
   // walls
-  'base walls/BASE_WHITE_WALL.png': 1,
   'base walls/walls_paint_pastel.png': 4,
   'base walls/walls_paint_earthy.png': 4,
   'base walls/walls_paint_bright.png': 4,
@@ -180,12 +179,6 @@ function getWallSections(): ShopSection[] {
       ).map((i) => i.id),
     },
     {
-      label: 'Branca',
-      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'wall' && i.id === 'wall_white').map(
-        (i) => i.id
-      ),
-    },
-    {
       label: 'Cute Decor ✦',
       cute: true,
       ids: SHOP_HOUSE_ITEMS.filter(
@@ -284,7 +277,6 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
       )[tile.sheet] ?? 2)
     : ((
         {
-          'base walls/BASE_WHITE_WALL.png': 1,
           'base walls/walls_paint_pastel.png': 2,
           'base walls/walls_paint_earthy.png': 2,
           'base walls/walls_paint_bright.png': 2,
@@ -329,8 +321,8 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
           backgroundPosition: `-${tile.col * realW * scaleX}px -${tile.row * realH * scaleY}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
-          marginLeft: isFloor ? 0 : 13,
-          marginTop: isFloor ? 0 : 8,
+          marginLeft: isFloor ? 0 : tile.sheet === 'base walls/BASE_WHITE_WALL.png' ? 0 : 13,
+          marginTop: isFloor ? 0 : tile.sheet === 'base walls/BASE_WHITE_WALL.png' ? 0 : 8,
         }}
       />
     </div>
@@ -1081,7 +1073,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
       row: ref.row,
       tileW: isFloor ? 256 : 256,
       tileH: isFloor ? 128 : 384,
-      ...dims,
+      sheetW: dims.sheetW,
+      sheetH: dims.sheetH,
     }
   }
 
