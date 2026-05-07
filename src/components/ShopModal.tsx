@@ -477,6 +477,8 @@ interface ItemCardProps {
   isCute?: boolean
   isFloor?: boolean
   isCharacter?: boolean
+  isSmallPiece?: boolean
+  isMediumPiece?: boolean
   piece?: CharacterPiece
   selected?: boolean
   inCart?: boolean
@@ -497,6 +499,8 @@ function ItemCard({
   isCute,
   isFloor,
   isCharacter,
+  isSmallPiece,
+  isMediumPiece,
   piece,
   selected,
   inCart,
@@ -594,6 +598,7 @@ function ItemCard({
             background: '#f5f0eb',
             borderRadius: 8,
             overflow: 'hidden',
+            position: 'relative',
           }}
         >
           <img
@@ -602,7 +607,42 @@ function ItemCard({
                 ? `./character/${piece.src.replace(/(\d+)(\.png)$/, `$1${tryOnVariants[piece.category] ?? 'b'}$2`)}`
                 : `./character/${piece.src}`
             }
-            style={{ width: 56, height: 72, imageRendering: 'pixelated', objectFit: 'contain' }}
+            style={{
+              width: 56,
+              height: 72,
+              imageRendering: 'pixelated',
+              objectFit: 'contain',
+              transform: isSmallPiece
+                ? `scale(2.5) translateY(${(() => {
+                    const t: Record<string, string> = {
+                      gloves: '-8px',
+                      accessory_cima: '-8px',
+                      beard: '6px',
+                      accessory_topo: '6px',
+                      mouth: '0px',
+                      eyebrows: '0px',
+                      eyelashes: '0px',
+                      pupils: '0px',
+                      accessory: '0px',
+                      shoes: '-25px',
+                    }
+                    return t[piece?.category ?? ''] ?? '0px'
+                  })()})`
+                : isMediumPiece
+                  ? `scale(1.8) translateY(${(() => {
+                      const t: Record<string, string> = {
+                        hair: '4px',
+                        bangs: '4px',
+                        bottom: '-16px',
+                        dress: '-8px',
+                        saia_costas: '-16px',
+                        saia_top: '-16px',
+                      }
+                      return t[piece?.category ?? ''] ?? '-4px'
+                    })()})`
+                  : 'none',
+              transformOrigin: 'center center',
+            }}
             alt={label}
           />
         </div>
@@ -1096,6 +1136,28 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const floorSections = getFloorSections()
   const wallSections = getWallSections()
   const charSections = getCharSections()
+  const MEDIUM_PIECE_CATEGORIES = new Set([
+    'hair',
+    'bangs',
+    'top',
+    'bottom',
+    'dress',
+    'jaqueta',
+    'saia_costas',
+    'saia_top',
+  ])
+  const SMALL_PIECE_CATEGORIES = new Set([
+    'mouth',
+    'eyebrows',
+    'eyelashes',
+    'pupils',
+    'beard',
+    'accessory',
+    'accessory_cima',
+    'accessory_topo',
+    'gloves',
+    'shoes',
+  ])
   const charPieces = getCharacterShopPieces().filter((p) => p.category === charSubTab)
   const COLOR_VARIANTS = FIRST_TIME_COLOR_VARIANTS
 
@@ -2193,6 +2255,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                           canAfford={coins >= (p.cost ?? 0)}
                           available={true}
                           isCharacter
+                          isSmallPiece={SMALL_PIECE_CATEGORIES.has(p.category)}
+                          isMediumPiece={MEDIUM_PIECE_CATEGORIES.has(p.category)}
                           piece={p}
                           selected={cart.some((c) => c.id === p.id)}
                           inCart={clothesCart.some((c) => c.id === p.id)}
