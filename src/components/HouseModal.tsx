@@ -17,9 +17,13 @@ import {
   ChevronRight,
   Sparkles,
   ImageIcon,
+  Lock,
+  ShoppingBag,
 } from 'lucide-react'
 import { ref, onValue, set } from 'firebase/database'
 import { db } from '../lib/firebase'
+import { subscribeHouseInventory } from '../hooks/useShop'
+import { HOUSE_TILE_MAP } from '../shop/shopPrices'
 
 interface HouseConfig {
   floor: { sheet: string; col: number; row: number }
@@ -461,6 +465,8 @@ const WALL_GROUPS: SheetGroup[] = [
   },
 ]
 
+// ─── helpers existentes (sem mudança) ────────────────────────────────────────
+
 function groupToTiles(g: SheetGroup): TileOption[] {
   const tiles: TileOption[] = []
   if (g.sheets) {
@@ -539,6 +545,27 @@ function findSheetDims(groups: SheetGroup[], sheet: string): { sheetW: number; s
   return { sheetW: 1024, sheetH: 768 }
 }
 
+// ─── Converte tile interno → itemId do shopPrices ─────────────────────────────
+// Ex: sheet="base floor/carpet spritesheet.png", col=1, row=3
+//     → busca no HOUSE_TILE_MAP a chave cujo valor bate com { sheet, col, row }
+
+function tileToItemId(sheet: string, col: number, row: number): string | null {
+  for (const [id, ref] of Object.entries(HOUSE_TILE_MAP)) {
+    if (ref.sheet === sheet && ref.col === col && ref.row === row) return id
+  }
+  return null
+}
+
+// ─── Backgrounds: mapeia bg id → itemId da loja ───────────────────────────────
+// ex: 'sky' → 'bg_sky'
+function bgToItemId(bgId: string): string {
+  return `bg_${bgId}`
+}
+
+// ─────────────────────────────────────────────
+// CONSTANTES
+// ─────────────────────────────────────────────
+
 const DEFAULT_CONFIG: HouseConfig = {
   floor: { sheet: 'base floor/carpet spritesheet.png', col: 1, row: 3 },
   wall: { sheet: 'base walls/walls_paint_grey_stripes.png', col: 0, row: 0 },
@@ -549,12 +576,13 @@ const DEFAULT_CONFIG: HouseConfig = {
 interface HouseModalProps {
   myUid: string
   onClose: () => void
+  onOpenShop?: () => void
 }
 
 type HouseTab = 'floor' | 'wall' | 'background'
 type WallSide = 'left' | 'right'
 
-export default function HouseModal({ onClose }: HouseModalProps) {
+export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalProps) {
   const [config, setConfig] = useState<HouseConfig>(DEFAULT_CONFIG)
   const [tab, setTab] = useState<HouseTab>('floor')
   const [wallSide, setWallSide] = useState<WallSide>('left')
@@ -564,11 +592,15 @@ export default function HouseModal({ onClose }: HouseModalProps) {
   const [activeWallRightGroup, setActiveWallRightGroup] = useState(0)
   const [panelOpen, setPanelOpen] = useState(true)
 
+  // ── NOVO: inventário desbloqueado ──
+  const [houseOwned, setHouseOwned] = useState<Set<string>>(new Set())
+
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
   const lastPos = useRef({ x: 0, y: 0 })
 
+  // Carrega config do Firebase
   useEffect(() => {
     const r = ref(db, 'house/config')
     return onValue(r, (snap) => {
@@ -583,6 +615,23 @@ export default function HouseModal({ onClose }: HouseModalProps) {
       }
     })
   }, [])
+
+  // ── NOVO: subscribe no inventário da casinha ──
+  useEffect(() => {
+    const unsub = subscribeHouseInventory(setHouseOwned)
+    return unsub
+  }, [])
+
+  // ── NOVO: verifica se um tile está desbloqueado ──
+  function isTileOwned(sheet: string, col: number, row: number): boolean {
+    const itemId = tileToItemId(sheet, col, row)
+    if (!itemId) return true // tile não mapeado na loja = sempre disponível
+    return houseOwned.has(itemId)
+  }
+
+  function isBgOwned(bgId: string): boolean {
+    return houseOwned.has(bgToItemId(bgId))
+  }
 
   const handleSave = async () => {
     await set(ref(db, 'house/config'), config)
@@ -679,7 +728,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
-      {/* HEADER */}
+      {/* HEADER — sem mudança */}
       <div
         style={{
           height: 56,
@@ -721,41 +770,66 @@ export default function HouseModal({ onClose }: HouseModalProps) {
           </span>
         </div>
 
-        <button
-          onClick={handleSave}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '6px 18px',
-            borderRadius: 10,
-            border: 'none',
-            background: savedFeedback ? 'var(--color-leaf-400)' : 'var(--color-leaf-600)',
-            color: '#fff',
-            fontSize: 13,
-            fontWeight: 600,
-            fontFamily: 'Baloo 2, sans-serif',
-            cursor: 'pointer',
-            transition: 'background 0.2s',
-            minWidth: 100,
-            justifyContent: 'center',
-          }}
-        >
-          {savedFeedback ? (
-            <>
-              <Check size={14} /> Salvo!
-            </>
-          ) : (
-            <>
-              <Save size={14} /> Salvar
-            </>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Botão loja */}
+          {onOpenShop && (
+            <button
+              onClick={onOpenShop}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 14px',
+                borderRadius: 10,
+                border: '1.5px solid var(--color-wood-300)',
+                background: 'transparent',
+                color: 'var(--color-leaf-600)',
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: 'Baloo 2, sans-serif',
+                cursor: 'pointer',
+              }}
+            >
+              <ShoppingBag size={14} /> Loja
+            </button>
           )}
-        </button>
+
+          <button
+            onClick={handleSave}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 18px',
+              borderRadius: 10,
+              border: 'none',
+              background: savedFeedback ? 'var(--color-leaf-400)' : 'var(--color-leaf-600)',
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: 'Baloo 2, sans-serif',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+              minWidth: 100,
+              justifyContent: 'center',
+            }}
+          >
+            {savedFeedback ? (
+              <>
+                <Check size={14} /> Salvo!
+              </>
+            ) : (
+              <>
+                <Save size={14} /> Salvar
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* BODY */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {/* CENA */}
+        {/* CENA — sem mudança */}
         <div
           style={{
             position: 'absolute',
@@ -872,7 +946,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                 ))}
               </div>
 
-              {/* Sub-tabs Esquerda / Direita — só na aba parede */}
+              {/* Sub-tabs Esquerda / Direita */}
               {tab === 'wall' && (
                 <div
                   style={{
@@ -914,10 +988,9 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                 </div>
               )}
 
-              {/* Lista de grupos + grid de tiles — só chão e parede */}
+              {/* Lista de grupos + grid de tiles */}
               {tab !== 'background' && (
                 <>
-                  {/* Lista de grupos */}
                   <div
                     className="char-scroll"
                     style={{
@@ -982,7 +1055,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                     })}
                   </div>
 
-                  {/* Grid de tiles */}
+                  {/* Grid de tiles — ALTERADO: mostra cadeado nos bloqueados */}
                   <div
                     className="char-scroll"
                     style={{
@@ -997,6 +1070,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                   >
                     {tiles.map((tile) => {
                       const isFloor = tab === 'floor'
+                      const owned = isTileOwned(tile.sheet, tile.col, tile.row)
                       const isSelected = isFloor
                         ? config.floor.sheet === tile.sheet &&
                           config.floor.col === tile.col &&
@@ -1010,8 +1084,9 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                       return (
                         <button
                           key={tile.id}
-                          title={tile.label}
+                          title={owned ? tile.label : `🔒 ${tile.label} — compre na loja`}
                           onClick={() => {
+                            if (!owned) return // bloqueado — não faz nada
                             if (isFloor)
                               setConfig((c) => ({
                                 ...c,
@@ -1026,19 +1101,23 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                           }}
                           style={{
                             padding: 0,
+                            position: 'relative',
                             border: isSelected
                               ? '2.5px solid var(--color-petal-400)'
-                              : '2px solid var(--color-wood-300)',
+                              : owned
+                                ? '2px solid var(--color-wood-300)'
+                                : '2px solid #e5e7eb',
                             borderRadius: 8,
                             background: isSelected
                               ? 'var(--color-petal-200)'
                               : 'repeating-linear-gradient(45deg,#d0cdc8 0px,#d0cdc8 3px,#f0ede8 3px,#f0ede8 9px)',
-                            cursor: 'pointer',
+                            cursor: owned ? 'pointer' : 'not-allowed',
                             overflow: 'hidden',
                             transition: 'all 0.15s',
                             outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
                             outlineOffset: 2,
                             boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
+                            opacity: owned ? 1 : 0.55,
                           }}
                         >
                           <div style={{ overflow: 'hidden', width: displayW, height: displayH }}>
@@ -1050,14 +1129,79 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                               }}
                             />
                           </div>
+
+                          {/* Overlay cadeado nos bloqueados */}
+                          {!owned && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                inset: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: 'rgba(255,255,255,0.45)',
+                                borderRadius: 6,
+                              }}
+                            >
+                              <Lock size={12} color="#6b7280" />
+                            </div>
+                          )}
                         </button>
                       )
                     })}
+
+                    {/* Dica de loja se houver tiles bloqueados no grupo */}
+                    {tiles.some((t) => !isTileOwned(t.sheet, t.col, t.row)) && onOpenShop && (
+                      <div
+                        style={{
+                          width: '100%',
+                          marginTop: 4,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '6px 8px',
+                          borderRadius: 8,
+                          background: 'var(--color-petal-200)',
+                          border: '1.5px solid var(--color-petal-400)',
+                        }}
+                      >
+                        <Lock size={11} color="var(--color-soil-900)" />
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: 'var(--color-soil-900)',
+                            fontFamily: 'Baloo 2, sans-serif',
+                            flex: 1,
+                          }}
+                        >
+                          Tiles bloqueados
+                        </span>
+                        <button
+                          onClick={onOpenShop}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: 'var(--color-leaf-600)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            padding: '3px 8px',
+                            fontSize: 10,
+                            fontWeight: 700,
+                            fontFamily: 'Baloo 2, sans-serif',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <ShoppingBag size={10} /> Loja
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
 
-              {/* Grid de fundos */}
+              {/* Grid de fundos — ALTERADO: mostra cadeado nos bloqueados */}
               {tab === 'background' && (
                 <div
                   className="char-scroll"
@@ -1073,10 +1217,14 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                 >
                   {BACKGROUNDS.map((bg) => {
                     const isSelected = (config.background ?? DEFAULT_BACKGROUND) === bg.id
+                    const owned = isBgOwned(bg.id)
                     return (
                       <button
                         key={bg.id}
-                        onClick={() => setConfig((c) => ({ ...c, background: bg.id }))}
+                        onClick={() => {
+                          if (!owned) return
+                          setConfig((c) => ({ ...c, background: bg.id }))
+                        }}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -1089,14 +1237,15 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                           background: isSelected
                             ? 'var(--color-petal-200)'
                             : 'var(--color-bark-50)',
-                          cursor: 'pointer',
+                          cursor: owned ? 'pointer' : 'not-allowed',
+                          opacity: owned ? 1 : 0.6,
                           transition: 'all 0.15s',
                           outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
                           outlineOffset: 2,
                           boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
+                          position: 'relative',
                         }}
                       >
-                        {/* Preview do fundo */}
                         <div
                           style={{
                             width: 64,
@@ -1116,10 +1265,12 @@ export default function HouseModal({ onClose }: HouseModalProps) {
                             fontWeight: isSelected ? 700 : 500,
                             color: isSelected ? 'var(--color-soil-900)' : 'var(--color-leaf-700)',
                             fontFamily: 'Baloo 2, sans-serif',
+                            flex: 1,
                           }}
                         >
                           {bg.label}
                         </span>
+                        {!owned && <Lock size={13} color="#9ca3af" />}
                       </button>
                     )
                   })}
@@ -1156,7 +1307,7 @@ export default function HouseModal({ onClose }: HouseModalProps) {
   )
 }
 
-// ─── Cena isométrica ─────────────────────────────────────────────────────────
+// ─── Cena isométrica — sem mudança ───────────────────────────────────────────
 
 function HouseScene({
   floorTile,
@@ -1216,20 +1367,12 @@ function HouseScene({
   const sceneH = maxFloorY - minWallY
   const wallOffsetY = -minWallY
 
-  // FIX 3: linha divisória sutil no canto entre parede esq e dir
-  // O canto fica na aresta onde a última coluna da parede esq encontra a primeira da dir.
-  // Usamos o tile wallLeft[0] (mais à direita da parede esq) como referência.
   const cornerTile = wallLeftTiles[0]
-  // A aresta do canto fica na borda direita do tile esquerdo mais próximo ao canto.
-  // Na cena isométrica o "canto" é uma linha vertical de ~WH pixels.
-  // Posição X: borda direita do tile de parede esquerda mais à direita (col=0, pois row=0→col 0 é o mais à direita).
-  // cornerX é o right edge do wallLeft tile de z=0: pos.x + WW
   const cornerX = cornerTile.x + WW
   const cornerY = cornerTile.y + wallOffsetY
 
   return (
     <div style={{ position: 'relative', width: sceneW, height: sceneH, marginTop: 40 }}>
-      {/* Parede esquerda */}
       {wallLeftTiles.map((pos, i) => (
         <div
           key={`wl${i}`}
@@ -1243,7 +1386,6 @@ function HouseScene({
         />
       ))}
 
-      {/* Parede direita */}
       {wallRightTiles.map((pos, i) => (
         <div
           key={`wr${i}`}
@@ -1259,7 +1401,6 @@ function HouseScene({
         />
       ))}
 
-      {/* FIX 3: Linha divisória sutil no canto */}
       <div
         style={{
           position: 'absolute',
@@ -1268,14 +1409,12 @@ function HouseScene({
           width: 2,
           height: WH - 130,
           zIndex: 50,
-          // gradiente que vai de escuro no centro para transparente nas pontas
           background:
             'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 20%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0.18) 80%, transparent 100%)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* Chão */}
       {floorNorm.map((pos, i) => (
         <div
           key={`f${i}`}

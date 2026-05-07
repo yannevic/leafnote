@@ -51,6 +51,7 @@ import CyclePinItem from '../components/CyclePinItem'
 import CycleModal from '../components/CycleModal'
 import CharacterModal from '../components/CharacterModal'
 import { useCharacter } from '../hooks/useCharacter'
+import { ShopModal } from '../components/ShopModal'
 import type { CyclePinItem as CyclePinItemType } from '../types/board'
 
 function makeId() {
@@ -144,7 +145,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showCycleModal, setShowCycleModal] = useState(false)
   const [showCharacter, setShowCharacter] = useState(false)
   const [showHouse, setShowHouse] = useState(false)
-  const [_showShop, setShowShop] = useState(false) // loja — pra depois
+  const [showShop, setShowShop] = useState(false) // loja — pra depois
   const [expandedMenu, setExpandedMenu] = useState(false)
   const {
     config: characterConfig,
@@ -532,7 +533,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             }}
           />
         )}
-
         {/* Textura de madeira */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -604,7 +604,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           </radialGradient>
           <rect width="100%" height="100%" fill="url(#vignette)" />
         </svg>
-
         {/* Itens do mural */}
         <div>
           {sortedItems.map((item) => {
@@ -722,7 +721,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             return null
           })}
         </div>
-
         {/* Dica inicial */}
         {!editMode && items.length === 0 && (
           <div
@@ -744,10 +742,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             </p>
           </div>
         )}
-
         <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
         <MoodWidget uid={uid} partnerUid={partnerUid} />
-
         {/* Botão jardim */}
         <div
           onClick={() => setShowGarden(true)}
@@ -774,11 +770,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         >
           <Sprout size={22} strokeWidth={2} />
         </div>
-
         {/* Grupo expansível — guarda-roupa / casinha / loja */}
         <div
           style={{
-            position: 'fixed',
+            position: 'fixed', // ← faltava isso
             bottom: 344,
             right: 20,
             zIndex: 48,
@@ -869,7 +864,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             <User size={22} strokeWidth={2} />
           </div>
         </div>
-
         {/* Botão calendário */}
         <div
           onClick={() => setShowCalendar(true)}
@@ -896,7 +890,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         >
           <CalendarDays size={22} strokeWidth={2} />
         </div>
-
         {/* Botão filmes */}
         <div
           onClick={() => setShowMovies(true)}
@@ -923,7 +916,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         >
           <Film size={22} strokeWidth={2} />
         </div>
-
         {/* Botão carta especial */}
         <div
           style={{
@@ -959,7 +951,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             <Mail size={22} strokeWidth={2} />
           </div>
         </div>
-
         {/* Botão widgets */}
         <div
           onClick={() => setShowWidgets(true)}
@@ -986,7 +977,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         >
           <LayoutGrid size={22} strokeWidth={2} />
         </div>
-
         {/* Painel de widgets */}
         {showWidgets && (
           <div
@@ -1117,9 +1107,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             </div>
           </div>
         )}
-
         <ActivityFeed />
-
         {/* Modais postit e checklist dentro do board (sem modal próprio de carta) */}
         {openModalItem?.type === 'postit' && (
           <PostItModal
@@ -1135,7 +1123,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onClose={() => setOpenModalItem(null)}
           />
         )}
-
         {showMovies && (
           <MovieList
             uid={uid}
@@ -1145,9 +1132,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onClose={() => setShowMovies(false)}
           />
         )}
-
         {showHouse && <HouseModal myUid={uid} onClose={() => setShowHouse(false)} />}
-
+        {showShop && <ShopModal uid={uid} onClose={() => setShowShop(false)} />}
         {showGarden && (
           <GardenView
             uid={uid}
@@ -1156,7 +1142,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onClose={() => setShowGarden(false)}
           />
         )}
-
         {showSpecialLetter && (
           <SpecialLetterModal
             specialDates={specialDates}
@@ -1188,7 +1173,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onSaveDates={saveSpecialDates}
           />
         )}
-
         {/* Menu de contexto — mover itens entre murais */}
         {contextMenu && (
           <div
@@ -1315,7 +1299,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             </div>
           </div>
         )}
-
         {/* Toolbar */}
         <Toolbar
           selected={selectedTool}
