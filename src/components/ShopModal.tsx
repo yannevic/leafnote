@@ -1896,6 +1896,27 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                       }}
                     >
                       <Mannequin cart={cart} variants={tryOnVariants} />
+                      {cart.length > 0 && (
+                        <button
+                          onClick={() => setCart([])}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: 'none',
+                            border: '1.5px solid #e0d8d0',
+                            borderRadius: 20,
+                            padding: '3px 10px',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            fontFamily: 'Baloo 2, sans-serif',
+                            color: '#a0998f',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <X size={11} /> Tirar tudo
+                        </button>
+                      )}
                     </div>
 
                     {/* Carrinho de roupas */}
