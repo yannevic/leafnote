@@ -7,6 +7,15 @@ import { useState } from 'react'
 import { ShoppingBag, ChevronLeft, Home, Shirt, X } from 'lucide-react'
 import { useShop, getCharacterShopPieces, type BuyResult } from '../hooks/useShop'
 import {
+  HouseScene,
+  FLOOR_GROUPS,
+  WALL_GROUPS,
+  BACKGROUNDS,
+  DEFAULT_BACKGROUND,
+  findSheetDims,
+  type TileOption,
+} from './HouseSceneShared'
+import {
   SHOP_HOUSE_ITEMS,
   HOUSE_TILE_MAP,
   getDiscountedCost,
@@ -1032,6 +1041,49 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const removeFromCart = (pieceId: string) => {
     setCart((prev) => prev.filter((p) => p.id !== pieceId))
   }
+  // ── Preview da casinha ──
+  const DEFAULT_FLOOR: TileOption = {
+    id: 'preview-floor',
+    label: '',
+    sheet: 'base floor/carpet spritesheet.png',
+    col: 0,
+    row: 3,
+    tileW: 256,
+    tileH: 128,
+    sheetW: 1024,
+    sheetH: 512,
+  }
+  const DEFAULT_WALL: TileOption = {
+    id: 'preview-wall',
+    label: '',
+    sheet: 'base walls/walls_paint_grey_stripes.png',
+    col: 0,
+    row: 0,
+    tileW: 256,
+    tileH: 384,
+    sheetW: 1024,
+    sheetH: 768,
+  }
+  const [previewFloor, setPreviewFloor] = useState<TileOption>(DEFAULT_FLOOR)
+  const [previewWall, setPreviewWall] = useState<TileOption>(DEFAULT_WALL)
+  const [previewBg, setPreviewBg] = useState<string>('sky')
+
+  function tileOptionFromId(itemId: string, isFloor: boolean): TileOption | null {
+    const ref = HOUSE_TILE_MAP[itemId]
+    if (!ref) return null
+    const groups = isFloor ? FLOOR_GROUPS : WALL_GROUPS
+    const dims = findSheetDims(groups, ref.sheet)
+    return {
+      id: itemId,
+      label: '',
+      sheet: ref.sheet,
+      col: ref.col,
+      row: ref.row,
+      tileW: isFloor ? 256 : 256,
+      tileH: isFloor ? 128 : 384,
+      ...dims,
+    }
+  }
 
   // ── Seções da aba ativa ──
   const floorSections = getFloorSections()
@@ -1242,126 +1294,224 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {/* ───── ABA CASINHA ───── */}
         {mainTab === 'casa' && (
-          <>
-            {/* Sub-tabs */}
-            <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0', flexShrink: 0 }}>
-              {(
-                [
-                  { key: 'floor', label: 'Pisos' },
-                  { key: 'wall', label: 'Paredes' },
-                  { key: 'background', label: 'Fundos' },
-                ] as { key: HouseSubTab; label: string }[]
-              ).map((sub) => (
-                <button
-                  key={sub.key}
-                  onClick={() => setHouseSubTab(sub.key)}
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+            {/* Preview lateral */}
+            <div
+              style={{
+                width: 220,
+                flexShrink: 0,
+                borderRight: '2px solid var(--color-wood-300)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '12px 8px',
+                gap: 8,
+                background: 'var(--color-bark-100)',
+                overflowY: 'auto',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: '#8b6914',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                Preview
+              </div>
+              {/* Cena em miniatura */}
+              <div
+                style={{
+                  width: '100%',
+                  height: 160,
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  border: '1.5px solid var(--color-wood-300)',
+                  background:
+                    BACKGROUNDS.find((b) => b.id === previewBg)?.css ?? BACKGROUNDS[0].css,
+                  backgroundSize: '10px 10px',
+                  position: 'relative',
+                }}
+              >
+                <div
                   style={{
-                    padding: '6px 14px',
-                    borderRadius: 20,
-                    border: '2px solid',
-                    borderColor:
-                      houseSubTab === sub.key ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5',
-                    background:
-                      houseSubTab === sub.key ? 'var(--color-leaf-600, #5a9a5a)' : 'white',
-                    color: houseSubTab === sub.key ? 'white' : '#3d2408',
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
                   }}
                 >
-                  {sub.label}
-                </button>
-              ))}
+                  <div style={{ transform: 'scale(0.28)', transformOrigin: 'center center' }}>
+                    <HouseScene
+                      floorTile={previewFloor}
+                      wallTile={previewWall}
+                      wallRightTile={previewWall}
+                      overlap={0}
+                    />
+                  </div>
+                </div>
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 10,
+                  color: '#9ca3af',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  textAlign: 'center',
+                  lineHeight: 1.4,
+                }}
+              >
+                Clique num item para visualizar
+              </p>
             </div>
 
-            {/* Grid com seções */}
-            <div
-              className="char-scroll"
-              style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 24px' }}
-            >
-              {houseSubTab === 'floor' &&
-                floorSections.map((sec) => (
-                  <Section key={sec.label} label={sec.label} cute={sec.cute}>
-                    {sec.ids.map((id) => {
-                      const item = itemById[id]
-                      if (!item) return null
-                      const owned = isOwned(id, 'floor')
-                      if (owned) return null
-                      const available = isAvailableToday(item)
+            {/* Grid + sub-tabs */}
+            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              {/* Sub-tabs */}
+              <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0', flexShrink: 0 }}>
+                {(
+                  [
+                    { key: 'floor', label: 'Pisos' },
+                    { key: 'wall', label: 'Paredes' },
+                    { key: 'background', label: 'Fundos' },
+                  ] as { key: HouseSubTab; label: string }[]
+                ).map((sub) => (
+                  <button
+                    key={sub.key}
+                    onClick={() => setHouseSubTab(sub.key)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 20,
+                      border: '2px solid',
+                      borderColor:
+                        houseSubTab === sub.key ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5',
+                      background:
+                        houseSubTab === sub.key ? 'var(--color-leaf-600, #5a9a5a)' : 'white',
+                      color: houseSubTab === sub.key ? 'white' : '#3d2408',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Grid com seções */}
+              <div
+                className="char-scroll"
+                style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 24px' }}
+              >
+                {houseSubTab === 'floor' &&
+                  floorSections.map((sec) => (
+                    <Section key={sec.label} label={sec.label} cute={sec.cute}>
+                      {sec.ids.map((id) => {
+                        const item = itemById[id]
+                        if (!item) return null
+                        const owned = isOwned(id, 'floor')
+
+                        const available = isAvailableToday(item)
+                        return (
+                          <ItemCard
+                            key={id}
+                            id={id}
+                            label={item.label}
+                            cost={item.cost}
+                            discount={item.discount}
+                            owned={owned}
+                            canAfford={coins >= getDiscountedCost(item)}
+                            available={available}
+                            isCute={sec.cute}
+                            isFloor
+                            selected={
+                              previewFloor.sheet === HOUSE_TILE_MAP[id]?.sheet &&
+                              previewFloor.col === HOUSE_TILE_MAP[id]?.col &&
+                              previewFloor.row === HOUSE_TILE_MAP[id]?.row
+                            }
+                            onPreview={() => {
+                              const t = tileOptionFromId(id, true)
+                              if (t) setPreviewFloor(t)
+                            }}
+                            onBuy={() => handleBuyHouse(item)}
+                          />
+                        )
+                      })}
+                    </Section>
+                  ))}
+
+                {houseSubTab === 'wall' &&
+                  wallSections.map((sec) => (
+                    <Section key={sec.label} label={sec.label} cute={sec.cute}>
+                      {sec.ids.map((id) => {
+                        const item = itemById[id]
+                        if (!item) return null
+                        const owned = isOwned(id, 'wall')
+
+                        const available = isAvailableToday(item)
+                        return (
+                          <ItemCard
+                            key={id}
+                            id={id}
+                            label={item.label}
+                            cost={item.cost}
+                            discount={item.discount}
+                            owned={owned}
+                            canAfford={coins >= getDiscountedCost(item)}
+                            available={available}
+                            isCute={sec.cute}
+                            isFloor={false}
+                            selected={
+                              previewWall.sheet === HOUSE_TILE_MAP[id]?.sheet &&
+                              previewWall.col === HOUSE_TILE_MAP[id]?.col &&
+                              previewWall.row === HOUSE_TILE_MAP[id]?.row
+                            }
+                            onPreview={() => {
+                              const t = tileOptionFromId(id, false)
+                              if (t) setPreviewWall(t)
+                            }}
+                            onBuy={() => handleBuyHouse(item)}
+                          />
+                        )
+                      })}
+                    </Section>
+                  ))}
+
+                {houseSubTab === 'background' && (
+                  <Section label="Fundos">
+                    {SHOP_HOUSE_ITEMS.filter((i) => i.category === 'background').map((item) => {
+                      const owned = isOwned(item.id, 'background')
                       return (
                         <ItemCard
-                          key={id}
-                          id={id}
+                          key={item.id}
+                          id={item.id}
                           label={item.label}
                           cost={item.cost}
                           discount={item.discount}
                           owned={owned}
                           canAfford={coins >= getDiscountedCost(item)}
-                          available={available}
-                          isCute={sec.cute}
+                          available={isAvailableToday(item)}
                           isFloor
+                          selected={previewBg === item.id.replace('bg_', '')}
+                          onPreview={() => {
+                            const bgId = item.id.replace('bg_', '')
+                            setPreviewBg(bgId)
+                          }}
                           onBuy={() => handleBuyHouse(item)}
                         />
                       )
                     })}
                   </Section>
-                ))}
-
-              {houseSubTab === 'wall' &&
-                wallSections.map((sec) => (
-                  <Section key={sec.label} label={sec.label} cute={sec.cute}>
-                    {sec.ids.map((id) => {
-                      const item = itemById[id]
-                      if (!item) return null
-                      const owned = isOwned(id, 'wall')
-                      if (owned) return null
-                      const available = isAvailableToday(item)
-                      return (
-                        <ItemCard
-                          key={id}
-                          id={id}
-                          label={item.label}
-                          cost={item.cost}
-                          discount={item.discount}
-                          owned={owned}
-                          canAfford={coins >= getDiscountedCost(item)}
-                          available={available}
-                          isCute={sec.cute}
-                          isFloor={false}
-                          onBuy={() => handleBuyHouse(item)}
-                        />
-                      )
-                    })}
-                  </Section>
-                ))}
-
-              {houseSubTab === 'background' && (
-                <Section label="Fundos">
-                  {SHOP_HOUSE_ITEMS.filter(
-                    (i) => i.category === 'background' && !isOwned(i.id, 'background')
-                  ).map((item) => {
-                    const owned = false
-                    return (
-                      <ItemCard
-                        key={item.id}
-                        id={item.id}
-                        label={item.label}
-                        cost={item.cost}
-                        discount={item.discount}
-                        owned={owned}
-                        canAfford={coins >= getDiscountedCost(item)}
-                        available={isAvailableToday(item)}
-                        isFloor
-                        onBuy={() => handleBuyHouse(item)}
-                      />
-                    )
-                  })}
-                </Section>
-              )}
+                )}
+              </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* ───── ABA ROUPAS ───── */}
@@ -1629,25 +1779,22 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                   >
                     {charPieces
                       .filter((p) => !characterOwned.has(p.id))
-                      .map((p) => {
-                        const owned = false
-                        return (
-                          <ItemCard
-                            key={p.id}
-                            id={p.id}
-                            label={p.label}
-                            cost={p.cost ?? 0}
-                            owned={owned}
-                            canAfford={coins >= (p.cost ?? 0)}
-                            available={true}
-                            isCharacter
-                            piece={p}
-                            selected={!!cart.find((c) => c.id === p.id)}
-                            onPreview={() => toggleCartPiece(p)}
-                            onBuy={() => handleBuyPiece(p)}
-                          />
-                        )
-                      })}
+                      .map((p) => (
+                        <ItemCard
+                          key={p.id}
+                          id={p.id}
+                          label={p.label}
+                          cost={p.cost ?? 0}
+                          owned={false}
+                          canAfford={coins >= (p.cost ?? 0)}
+                          available={true}
+                          isCharacter
+                          piece={p}
+                          selected={cart.some((c) => c.id === p.id)}
+                          onPreview={() => toggleCartPiece(p)}
+                          onBuy={() => handleBuyPiece(p)}
+                        />
+                      ))}
                   </div>
                 )}
               </div>
