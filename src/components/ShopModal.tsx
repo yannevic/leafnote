@@ -95,25 +95,29 @@ function getFloorSections(): ShopSection[] {
       label: 'Carpete',
       ids: SHOP_HOUSE_ITEMS.filter(
         (i) => i.category === 'floor' && i.id.startsWith('floor_carpet_')
-      ).map((i) => i.id),
+      )
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Xadrez',
       ids: SHOP_HOUSE_ITEMS.filter(
         (i) => i.category === 'floor' && i.id.startsWith('floor_checker_')
-      ).map((i) => i.id),
+      )
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Preto & Branco',
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'floor' && i.id.startsWith('floor_bw_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'floor' && i.id.startsWith('floor_bw_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Madeira',
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'floor' && i.id.startsWith('floor_wood_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'floor' && i.id.startsWith('floor_wood_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Pedra',
@@ -123,14 +127,16 @@ function getFloorSections(): ShopSection[] {
           (i.id.startsWith('floor_stone_') ||
             i.id.startsWith('floor_cobble_') ||
             i.id.startsWith('floor_pebble_'))
-      ).map((i) => i.id),
+      )
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Cute Decor ✦',
       cute: true,
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'floor' && i.id.startsWith('floor_cute_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'floor' && i.id.startsWith('floor_cute_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
   ].filter((s) => s.ids.length > 0)
 }
@@ -139,52 +145,58 @@ function getWallSections(): ShopSection[] {
   return [
     {
       label: 'Tinta lisa',
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'wall' && i.id.startsWith('wall_paint_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'wall' && i.id.startsWith('wall_paint_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Tinta listrada',
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'wall' && i.id.startsWith('wall_stripes_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'wall' && i.id.startsWith('wall_stripes_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Tijolo',
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'wall' && i.id.startsWith('wall_brick_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'wall' && i.id.startsWith('wall_brick_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Azulejo xadrez',
       ids: SHOP_HOUSE_ITEMS.filter(
         (i) => i.category === 'wall' && i.id.startsWith('wall_tile_checker_')
-      ).map((i) => i.id),
+      )
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Pedra',
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'wall' && i.id.startsWith('wall_stone_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'wall' && i.id.startsWith('wall_stone_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Madeira ornada',
       ids: SHOP_HOUSE_ITEMS.filter(
         (i) => i.category === 'wall' && i.id.startsWith('wall_wood_ornate_')
-      ).map((i) => i.id),
+      )
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Madeira simples',
       ids: SHOP_HOUSE_ITEMS.filter(
         (i) => i.category === 'wall' && i.id.startsWith('wall_wood_simple_')
-      ).map((i) => i.id),
+      )
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
     {
       label: 'Cute Decor ✦',
       cute: true,
-      ids: SHOP_HOUSE_ITEMS.filter(
-        (i) => i.category === 'wall' && i.id.startsWith('wall_cute_')
-      ).map((i) => i.id),
+      ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'wall' && i.id.startsWith('wall_cute_'))
+        .sort((a, b) => a.cost - b.cost)
+        .map((i) => i.id),
     },
   ].filter((s) => s.ids.length > 0)
 }
@@ -1752,27 +1764,29 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
 
                 {houseSubTab === 'background' && (
                   <Section label="Fundos">
-                    {SHOP_HOUSE_ITEMS.filter((i) => i.category === 'background').map((item) => {
-                      const owned = isOwned(item.id, 'background')
-                      return (
-                        <ItemCard
-                          key={item.id}
-                          id={item.id}
-                          label={item.label}
-                          cost={item.cost}
-                          discount={item.discount}
-                          owned={owned}
-                          canAfford={coins >= getDiscountedCost(item)}
-                          available={isAvailableToday(item)}
-                          isFloor
-                          selected={previewBg === item.id.replace('bg_', '')}
-                          onPreview={() => setPreviewBg(item.id.replace('bg_', ''))}
-                          onAddCart={() => toggleHouseCart(item)}
-                          inCart={houseCart.some((i) => i.id === item.id)}
-                          onBuy={() => handleBuyHouse(item)}
-                        />
-                      )
-                    })}
+                    {SHOP_HOUSE_ITEMS.filter((i) => i.category === 'background')
+                      .sort((a, b) => a.cost - b.cost)
+                      .map((item) => {
+                        const owned = isOwned(item.id, 'background')
+                        return (
+                          <ItemCard
+                            key={item.id}
+                            id={item.id}
+                            label={item.label}
+                            cost={item.cost}
+                            discount={item.discount}
+                            owned={owned}
+                            canAfford={coins >= getDiscountedCost(item)}
+                            available={isAvailableToday(item)}
+                            isFloor
+                            selected={previewBg === item.id.replace('bg_', '')}
+                            onPreview={() => setPreviewBg(item.id.replace('bg_', ''))}
+                            onAddCart={() => toggleHouseCart(item)}
+                            inCart={houseCart.some((i) => i.id === item.id)}
+                            onBuy={() => handleBuyHouse(item)}
+                          />
+                        )
+                      })}
                   </Section>
                 )}
               </div>
