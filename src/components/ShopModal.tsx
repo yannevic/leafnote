@@ -1775,7 +1775,10 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             }
                             onPreview={() => {
                               const t = tileOptionFromId(id, true)
-                              if (t) setPreviewFloor(t)
+                              if (t) {
+                                setPreviewFloor(t)
+                                setPreviewOpen(true)
+                              }
                             }}
                             onAddCart={() => toggleHouseCart(item)}
                             inCart={houseCart.some((i) => i.id === id)}
@@ -1813,7 +1816,10 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             }
                             onPreview={() => {
                               const t = tileOptionFromId(id, false)
-                              if (t) setPreviewWall(t)
+                              if (t) {
+                                setPreviewWall(t)
+                                setPreviewOpen(true)
+                              }
                             }}
                             onAddCart={() => toggleHouseCart(item)}
                             inCart={houseCart.some((i) => i.id === id)}
@@ -1842,7 +1848,10 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             available={isAvailableToday(item)}
                             isFloor
                             selected={previewBg === item.id.replace('bg_', '')}
-                            onPreview={() => setPreviewBg(item.id.replace('bg_', ''))}
+                            onPreview={() => {
+                              setPreviewBg(item.id.replace('bg_', ''))
+                              setPreviewOpen(true)
+                            }}
                             onAddCart={() => toggleHouseCart(item)}
                             inCart={houseCart.some((i) => i.id === item.id)}
                             onBuy={() => handleBuyHouse(item)}
@@ -2282,7 +2291,10 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                           selected={cart.some((c) => c.id === p.id)}
                           inCart={clothesCart.some((c) => c.id === p.id)}
                           tryOnVariants={tryOnVariants}
-                          onPreview={() => setCart((prev) => applyExclusion(prev, p))}
+                          onPreview={() => {
+                            setCart((prev) => applyExclusion(prev, p))
+                            setClothesPreviewOpen(true)
+                          }}
                           onAddCart={() => addToClothesCart(p)}
                           onBuy={() => handleBuyPiece(p)}
                         />
