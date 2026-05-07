@@ -640,64 +640,49 @@ function ItemCard({
             alignItems: 'center',
           }}
         >
-          {onAddCart && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onAddCart()
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 3,
-                background: inCart ? '#e8f0e8' : 'transparent',
-                color: inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#9ca3af',
-                border: `1.5px solid ${inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5'}`,
-                borderRadius: 20,
-                padding: '2px 8px',
-                fontSize: 10,
-                fontWeight: 700,
-                fontFamily: 'Baloo 2, sans-serif',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              <ShoppingCart size={10} />
-              {inCart ? 'No carrinho' : 'Carrinho'}
-            </button>
-          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onBuy()
+              onAddCart?.()
             }}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 3,
-              background: isCute ? '#9b5fd4' : 'var(--color-leaf-600, #5a9a5a)',
-              color: 'white',
-              border: 'none',
+              justifyContent: 'center',
+              gap: 5,
+              background: inCart ? '#e8f4e8' : '#f9f5f0',
+              border: `2px solid ${inCart ? 'var(--color-leaf-500, #6aaa6a)' : '#e0d8d0'}`,
               borderRadius: 20,
-              padding: '3px 10px',
-              fontSize: 11,
-              fontWeight: 700,
-              fontFamily: 'Baloo 2, sans-serif',
+              padding: '5px 12px',
+              width: '100%',
               cursor: 'pointer',
-              transition: 'background 0.15s',
+              transition: 'all 0.15s',
             }}
           >
-            <img src={coinIcon} style={{ width: 12, height: 12, imageRendering: 'pixelated' }} />{' '}
-            {discount ? (
-              <>
-                <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 9 }}>
-                  {cost}
-                </span>{' '}
-                {finalCost}
-              </>
-            ) : (
-              finalCost
-            )}
+            <ShoppingCart size={13} color={inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#a0998f'} />
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3,
+                fontSize: 12,
+                fontWeight: 700,
+                fontFamily: 'Baloo 2, sans-serif',
+                color: inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#7a7068',
+              }}
+            >
+              <img src={coinIcon} style={{ width: 12, height: 12, imageRendering: 'pixelated' }} />
+              {discount ? (
+                <>
+                  <span style={{ textDecoration: 'line-through', opacity: 0.45, fontSize: 10 }}>
+                    {cost}
+                  </span>{' '}
+                  {finalCost}
+                </>
+              ) : (
+                finalCost
+              )}
+            </span>
           </button>
         </div>
       )}
@@ -1333,10 +1318,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                   <div
                     style={{
                       width: 300,
-                      background: (BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0])
-                        .css,
                       position: 'relative',
-                      backgroundSize: '10px 10px',
                       border: '2px solid var(--color-wood-300)',
                       borderRadius: '0 0 12px 0',
                       display: 'flex',
@@ -1344,6 +1326,15 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                       overflow: 'hidden',
                     }}
                   >
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: (BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0])
+                          .css,
+                        zIndex: 0,
+                      }}
+                    />
                     {(() => {
                       const activeBg = BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0]
                       return activeBg.svg ? (
@@ -1479,7 +1470,12 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                                   fontFamily: 'Baloo 2, sans-serif',
                                 }}
                               >
-                                {i.label}
+                                {i.category === 'floor'
+                                  ? 'Pisos'
+                                  : i.category === 'wall'
+                                    ? 'Paredes'
+                                    : 'Fundos'}{' '}
+                                — {i.label}
                               </span>
                               <span
                                 style={{
@@ -1851,7 +1847,11 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             fontFamily: 'Baloo 2, sans-serif',
                           }}
                         >
-                          🧾 carrinho
+                          <ShoppingCart
+                            size={11}
+                            style={{ marginRight: 4, verticalAlign: 'middle' }}
+                          />{' '}
+                          carrinho
                         </div>
                         <div
                           style={{
@@ -1887,7 +1887,9 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                                     fontFamily: 'Baloo 2, sans-serif',
                                   }}
                                 >
-                                  {p.label}
+                                  {getCharSections().find((s) => s.key === p.category)?.label ??
+                                    p.category}{' '}
+                                  — {p.label}
                                 </span>
                                 <span
                                   style={{
