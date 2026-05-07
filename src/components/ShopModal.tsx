@@ -1036,10 +1036,11 @@ function ConfirmModal({
 
 interface ShopModalProps {
   uid: string
+  initialItemId?: string
   onClose: () => void
 }
 
-export function ShopModal({ uid, onClose }: ShopModalProps) {
+export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
   const { coins, characterOwned, wishlist, buy, isOwned, toggleWishlist } = useShop(uid)
 
   const [mainTab, setMainTab] = useState<MainTab>('casa')
@@ -1047,6 +1048,27 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const [charSubTab, setCharSubTab] = useState<string>('top')
   const [confirm, setConfirm] = useState<ConfirmState>({ item: null, piece: null, open: false })
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
+
+  useEffect(() => {
+    if (!initialItemId) return
+    const houseItem = SHOP_HOUSE_ITEMS.find((i) => i.id === initialItemId)
+    if (houseItem) {
+      setMainTab('casa')
+      if (houseItem.category === 'floor') setHouseSubTab('floor')
+      else if (houseItem.category === 'wall') setHouseSubTab('wall')
+      else if (houseItem.category === 'background') setHouseSubTab('background')
+      setHouseCart([houseItem])
+      setPreviewOpen(true)
+      return
+    }
+    const piece = getCharacterShopPieces().find((p) => p.id === initialItemId)
+    if (piece) {
+      setMainTab('roupas')
+      setCharSubTab(piece.category)
+      setClothesCart([piece])
+      setClothesPreviewOpen(true)
+    }
+  }, [initialItemId])
 
   // cart = preview do manequim (o que está sendo experimentado)
   const [cart, setCart] = useState<CharacterPiece[]>([])

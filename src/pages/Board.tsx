@@ -154,7 +154,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showCycleModal, setShowCycleModal] = useState(false)
   const [showCharacter, setShowCharacter] = useState(false)
   const [showHouse, setShowHouse] = useState(false)
-  const [showShop, setShowShop] = useState(false) // loja — pra depois
+  const [showShop, setShowShop] = useState(false)
+  const [shopInitialItem, setShopInitialItem] = useState<string | undefined>()
   const [expandedMenu, setExpandedMenu] = useState(false)
   const {
     config: characterConfig,
@@ -1175,8 +1176,30 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onClose={() => setShowMovies(false)}
           />
         )}
-        {showHouse && <HouseModal myUid={uid} onClose={() => setShowHouse(false)} />}
-        {showShop && <ShopModal uid={uid} onClose={() => setShowShop(false)} />}
+        {showHouse && (
+          <HouseModal
+            myUid={uid}
+            partnerUid={partnerUid}
+            myName={displayName}
+            partnerName={otherName}
+            onClose={() => setShowHouse(false)}
+            onOpenShop={(itemId?: string) => {
+              setShowHouse(false)
+              setShopInitialItem(itemId)
+              setShowShop(true)
+            }}
+          />
+        )}
+        {showShop && (
+          <ShopModal
+            uid={uid}
+            initialItemId={shopInitialItem}
+            onClose={() => {
+              setShowShop(false)
+              setShopInitialItem(undefined)
+            }}
+          />
+        )}
         {showGarden && (
           <GardenView
             uid={uid}

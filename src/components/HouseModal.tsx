@@ -10,11 +10,14 @@ import {
   ImageIcon,
   Lock,
   ShoppingBag,
+  Heart,
+  X,
 } from 'lucide-react'
 import { ref, onValue, set } from 'firebase/database'
 import { db } from '../lib/firebase'
-import { subscribeHouseInventory } from '../hooks/useShop'
-import { HOUSE_TILE_MAP } from '../shop/shopPrices'
+import { subscribeHouseInventory, subscribeWishlist } from '../hooks/useShop'
+import { HOUSE_TILE_MAP, SHOP_HOUSE_ITEMS } from '../shop/shopPrices'
+import { ALL_PIECES } from '../assets/character/index'
 import {
   HouseScene,
   FLOOR_GROUPS,
@@ -60,14 +63,24 @@ const DEFAULT_CONFIG: HouseConfig = {
 
 interface HouseModalProps {
   myUid: string
+  partnerUid?: string
+  myName?: string
+  partnerName?: string
   onClose: () => void
-  onOpenShop?: () => void
+  onOpenShop?: (itemId?: string) => void
 }
 
 type HouseTab = 'floor' | 'wall' | 'background'
 type WallSide = 'left' | 'right'
 
-export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalProps) {
+export default function HouseModal({
+  myUid,
+  partnerUid,
+  myName,
+  partnerName,
+  onClose,
+  onOpenShop,
+}: HouseModalProps) {
   const [config, setConfig] = useState<HouseConfig>(DEFAULT_CONFIG)
   const [tab, setTab] = useState<HouseTab>('floor')
   const [wallSide, setWallSide] = useState<WallSide>('left')
@@ -76,9 +89,13 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
   const [activeWallGroup, setActiveWallGroup] = useState(0)
   const [activeWallRightGroup, setActiveWallRightGroup] = useState(0)
   const [panelOpen, setPanelOpen] = useState(true)
+  const [houseOwned, setHouseOwned] = useState<Set<string>>(new Set())
 
   // ── NOVO: inventário desbloqueado ──
-  const [houseOwned, setHouseOwned] = useState<Set<string>>(new Set())
+  const [myWishlist, setMyWishlist] = useState<Set<string>>(new Set())
+  const [partnerWishlist, setPartnerWishlist] = useState<Set<string>>(new Set())
+  const [wishlistOpen, setWishlistOpen] = useState(false)
+  const [goToShopConfirm, setGoToShopConfirm] = useState<string | null>(null)
 
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -106,6 +123,17 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
     const unsub = subscribeHouseInventory(setHouseOwned)
     return unsub
   }, [])
+
+  useEffect(() => {
+    const unsub = subscribeWishlist(myUid, setMyWishlist)
+    return unsub
+  }, [myUid])
+
+  useEffect(() => {
+    if (!partnerUid) return
+    const unsub = subscribeWishlist(partnerUid, setPartnerWishlist)
+    return unsub
+  }, [partnerUid])
 
   // ── NOVO: verifica se um tile está desbloqueado ──
   function isTileOwned(sheet: string, col: number, row: number): boolean {
@@ -267,7 +295,7 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
           {/* Botão loja */}
           {onOpenShop && (
             <button
-              onClick={onOpenShop}
+              onClick={() => onOpenShop?.()}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -286,6 +314,30 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
               <ShoppingBag size={14} /> Loja
             </button>
           )}
+
+          <button
+            onClick={() => setWishlistOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              borderRadius: 10,
+              border: '1.5px solid #e85d8a',
+              background: wishlistOpen ? '#fce8f0' : 'transparent',
+              color: '#e85d8a',
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: 'Baloo 2, sans-serif',
+              cursor: 'pointer',
+            }}
+          >
+            <Heart
+              size={14}
+              fill={myWishlist.size > 0 || partnerWishlist.size > 0 ? '#e85d8a' : 'none'}
+            />
+            Desejos
+          </button>
 
           <button
             onClick={handleSave}
@@ -677,7 +729,7 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
                           Tiles bloqueados
                         </span>
                         <button
-                          onClick={onOpenShop}
+                          onClick={() => onOpenShop?.()}
                           style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -823,6 +875,260 @@ export default function HouseModal({ myUid, onClose, onOpenShop }: HouseModalPro
           </button>
         </div>
       </div>
+
+      {wishlistOpen && (
+        <div
+          onClick={() => setWishlistOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 300,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fdf6f0',
+              borderRadius: 20,
+              width: 480,
+              maxWidth: '95vw',
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: '0 16px 48px rgba(0,0,0,0.25)',
+              border: '2px solid var(--color-wood-300)',
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderBottom: '1.5px solid var(--color-wood-300)',
+                background: 'var(--color-bark-100)',
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Heart size={16} color="#e85d8a" fill="#e85d8a" />
+                <span
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: '#3d2408',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  Lista de desejos
+                </span>
+              </div>
+              <button
+                onClick={() => setWishlistOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#a0998f',
+                  display: 'flex',
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Colunas */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+              {[
+                { label: myName || 'Você', wishlist: myWishlist },
+                { label: partnerName || 'Parceiro(a)', wishlist: partnerWishlist },
+              ].map((col) => (
+                <div
+                  key={col.label}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRight: '1.5px solid var(--color-wood-300)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '8px 14px',
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: '#e85d8a',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      borderBottom: '1px solid var(--color-wood-300)',
+                      background: '#fff5f8',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {col.label}
+                  </div>
+                  <div
+                    style={{
+                      overflowY: 'auto',
+                      flex: 1,
+                      padding: '8px 0',
+                    }}
+                  >
+                    {col.wishlist.size === 0 ? (
+                      <div
+                        style={{
+                          padding: '24px 16px',
+                          textAlign: 'center',
+                          color: '#c4b8a8',
+                          fontSize: 12,
+                          fontFamily: 'Baloo 2, sans-serif',
+                        }}
+                      >
+                        nenhum item ainda
+                      </div>
+                    ) : (
+                      [...col.wishlist].map((itemId) => {
+                        const isShopItem =
+                          itemId.startsWith('bg_') ||
+                          itemId.startsWith('floor_') ||
+                          itemId.startsWith('wall_')
+                        return (
+                          <button
+                            key={itemId}
+                            onClick={() => onOpenShop && setGoToShopConfirm(itemId)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              width: '100%',
+                              padding: '7px 14px',
+                              background: 'none',
+                              border: 'none',
+                              borderBottom: '1px dashed #e5ddd5',
+                              cursor: onOpenShop ? 'pointer' : 'default',
+                              textAlign: 'left',
+                              fontFamily: 'Baloo 2, sans-serif',
+                            }}
+                          >
+                            <Heart
+                              size={11}
+                              color="#e85d8a"
+                              fill="#e85d8a"
+                              style={{ flexShrink: 0 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 12,
+                                color: '#3d2408',
+                                flex: 1,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {SHOP_HOUSE_ITEMS.find((i) => i.id === itemId)?.label ??
+                                ALL_PIECES.find((p) => p.id === itemId)?.label ??
+                                itemId}
+                            </span>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {goToShopConfirm && (
+        <div
+          onClick={() => setGoToShopConfirm(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 400,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: 20,
+              padding: '28px 28px 24px',
+              maxWidth: 300,
+              width: '90%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 16,
+              boxShadow: '0 16px 48px rgba(0,0,0,0.25)',
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+          >
+            <Heart size={32} color="#e85d8a" fill="#e85d8a" />
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#3d2408', textAlign: 'center' }}>
+              Ir para a loja?
+            </div>
+            <div style={{ fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
+              Você será redirecionada para a loja para comprar este item.
+            </div>
+            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+              <button
+                onClick={() => setGoToShopConfirm(null)}
+                style={{
+                  flex: 1,
+                  padding: '10px 0',
+                  borderRadius: 12,
+                  border: '2px solid #e5ddd5',
+                  background: 'white',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  color: '#3d2408',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setGoToShopConfirm(null)
+                  setWishlistOpen(false)
+                  onOpenShop?.(goToShopConfirm ?? undefined)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px 0',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: '#e85d8a',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  color: 'white',
+                }}
+              >
+                Ir à loja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
