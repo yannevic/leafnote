@@ -24,6 +24,7 @@ import {
   LAYER_ORDER,
   COLOR_VARIANT_LABELS,
 } from '../assets/character/index'
+import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
 import coinIcon from '../assets/coin.png'
 
 // ─────────────────────────────────────────────
@@ -222,24 +223,29 @@ function getCharSections(): { label: string; key: string }[] {
 function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean }) {
   const tile = HOUSE_TILE_MAP[itemId]
 
-  if (!tile || tile.sheet.startsWith('bg_')) {
-    const bgColors: Record<string, string> = {
-      bg_sky: 'linear-gradient(160deg,#b8dff7 0%,#e8f4fd 100%)',
-      bg_forest: 'linear-gradient(160deg,#7fb87f 0%,#c8e6c8 100%)',
-      bg_night: 'linear-gradient(160deg,#1a1a3e 0%,#2d2d6b 100%)',
-      bg_sunset: 'linear-gradient(160deg,#f97316 0%,#fde68a 100%)',
-      bg_indoor: 'linear-gradient(160deg,#d4a574 0%,#f5e6d3 100%)',
-    }
+  if (!tile || tile?.sheet?.startsWith('bg_')) {
+    const bgId = itemId.replace('bg_', '')
+    const bgOption = BACKGROUNDS.find((b) => b.id === bgId)
+
     return (
       <div
         style={{
           width: 56,
           height: 56,
           borderRadius: 8,
-          background: bgColors[itemId] ?? '#e5e7eb',
+          background: bgOption?.css ?? '#e5e7eb',
           flexShrink: 0,
+          position: 'relative',
+          overflow: 'hidden',
         }}
-      />
+      >
+        {bgOption?.svg && (
+          <div
+            dangerouslySetInnerHTML={{ __html: bgOption.svg }}
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+          />
+        )}
+      </div>
     )
   }
 
@@ -361,7 +367,13 @@ function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): Chara
 // MANEQUIM
 // ─────────────────────────────────────────────
 
-function Mannequin({ cart, variant }: { cart: CharacterPiece[]; variant: string }) {
+function Mannequin({
+  cart,
+  variants,
+}: {
+  cart: CharacterPiece[]
+  variants: Record<string, string>
+}) {
   const bodyPiece = ALL_PIECES.find((p) => p.id === 'body-b-1')
   const sorted = [...cart].sort(
     (a, b) => LAYER_ORDER.indexOf(a.category) - LAYER_ORDER.indexOf(b.category)
@@ -399,7 +411,7 @@ function Mannequin({ cart, variant }: { cart: CharacterPiece[]; variant: string 
           key={p.id}
           src={
             p.hasColor
-              ? `./character/${p.src.replace(/(\d+)(\.png)$/, `$1${variant}$2`)}`
+              ? `./character/${p.src.replace(/(\d+)(\.png)$/, `$1${variants[p.category] ?? 'b'}$2`)}`
               : `./character/${p.src}`
           }
           style={{
@@ -456,6 +468,7 @@ interface ItemCardProps {
   piece?: CharacterPiece
   selected?: boolean
   inCart?: boolean
+  tryOnVariants?: Record<string, string>
   onBuy: () => void
   onPreview?: () => void
   onAddCart?: () => void
@@ -475,6 +488,7 @@ function ItemCard({
   piece,
   selected,
   inCart,
+  tryOnVariants = {},
   onBuy,
   onPreview,
   onAddCart,
@@ -571,7 +585,11 @@ function ItemCard({
           }}
         >
           <img
-            src={`./character/${piece.src}`}
+            src={
+              piece.hasColor
+                ? `./character/${piece.src.replace(/(\d+)(\.png)$/, `$1${tryOnVariants[piece.category] ?? 'b'}$2`)}`
+                : `./character/${piece.src}`
+            }
             style={{ width: 56, height: 72, imageRendering: 'pixelated', objectFit: 'contain' }}
             alt={label}
           />
@@ -969,8 +987,9 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const [clothesCart, setClothesCart] = useState<CharacterPiece[]>([])
   // houseCart = carrinho de compra de itens da casinha
   const [houseCart, setHouseCart] = useState<ShopItem[]>([])
-
-  const [tryOnVariant, setTryOnVariant] = useState<string>('b')
+  const [tryOnVariants, setTryOnVariants] = useState<Record<string, string>>({})
+  const tryOnVariant = tryOnVariants[charSubTab] ?? 'b'
+  const setTryOnVariant = (v: string) => setTryOnVariants((prev) => ({ ...prev, [charSubTab]: v }))
 
   // Painel preview casinha
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -1081,6 +1100,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const wallSections = getWallSections()
   const charSections = getCharSections()
   const charPieces = getCharacterShopPieces().filter((p) => p.category === charSubTab)
+  const COLOR_VARIANTS = FIRST_TIME_COLOR_VARIANTS
 
   const itemById: Record<string, ShopItem> = {}
   SHOP_HOUSE_ITEMS.forEach((i) => {
@@ -1338,65 +1358,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         />
                       ) : null
                     })()}
-                    {/* Controles de zoom */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'flex-end',
-                        padding: '4px 8px',
-                        background: 'rgba(255,255,255,0.7)',
-                        position: 'relative',
-                        zIndex: 1,
-                        borderBottom: '1px solid var(--color-wood-300)',
-                        flexShrink: 0,
-                        gap: 4,
-                      }}
-                    >
-                      <button
-                        onClick={() => setPreviewScale((s) => Math.min(1.5, s + 0.1))}
-                        style={{
-                          background: 'none',
-                          border: '1px solid #e5ddd5',
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                          padding: '1px 6px',
-                          fontSize: 13,
-                        }}
-                      >
-                        +
-                      </button>
-                      <button
-                        onClick={() => setPreviewScale((s) => Math.max(0.2, s - 0.1))}
-                        style={{
-                          background: 'none',
-                          border: '1px solid #e5ddd5',
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                          padding: '1px 6px',
-                          fontSize: 13,
-                        }}
-                      >
-                        −
-                      </button>
-                      <button
-                        onClick={() => {
-                          setPreviewScale(0.4)
-                          setPreviewOffset({ x: 0, y: 0 })
-                        }}
-                        style={{
-                          background: 'none',
-                          border: '1px solid #e5ddd5',
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                          padding: '1px 6px',
-                          fontSize: 9,
-                          fontFamily: 'Baloo 2, sans-serif',
-                        }}
-                      >
-                        reset
-                      </button>
-                    </div>
+
                     {/* Cena */}
                     <div
                       style={{
@@ -1861,48 +1823,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         flexShrink: 0,
                       }}
                     >
-                      <Mannequin cart={cart} variant={tryOnVariant} />
-                      {cart.some((p) => p.hasColor) && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: 3,
-                            justifyContent: 'center',
-                            padding: '3px 6px',
-                            background: 'white',
-                            border: '1.5px solid var(--color-wood-300)',
-                            borderRadius: 10,
-                            width: '100%',
-                          }}
-                        >
-                          {Object.entries(COLOR_VARIANT_LABELS).map(([key, label]) => (
-                            <button
-                              key={key}
-                              onClick={() => setTryOnVariant(key)}
-                              style={{
-                                padding: '1px 6px',
-                                borderRadius: 8,
-                                border:
-                                  tryOnVariant === key
-                                    ? '2px solid var(--color-petal-400)'
-                                    : '2px solid transparent',
-                                background:
-                                  tryOnVariant === key
-                                    ? 'var(--color-petal-200)'
-                                    : 'var(--color-wood-300)',
-                                color: 'var(--color-soil-900)',
-                                fontSize: 9,
-                                fontFamily: 'Baloo 2, sans-serif',
-                                fontWeight: tryOnVariant === key ? 700 : 400,
-                                cursor: 'pointer',
-                              }}
-                            >
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <Mannequin cart={cart} variants={tryOnVariants} />
                     </div>
 
                     {/* Carrinho de roupas */}
@@ -2143,42 +2064,83 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
 
             {/* Área direita: sub-tabs + grid */}
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div
-                className="char-scroll"
-                style={{
-                  display: 'flex',
-                  gap: 8,
-                  padding: '10px 16px 0',
-                  overflowX: 'auto',
-                  flexShrink: 0,
-                }}
-              >
-                {charSections.map((cat) => (
-                  <button
-                    key={cat.key}
-                    onClick={() => setCharSubTab(cat.key)}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flexShrink: 0 }}>
+                {/* Seletor de cor — aparece só quando a categoria tem hasColor */}
+                {charPieces.some((p) => p.hasColor) && (
+                  <div
                     style={{
-                      padding: '6px 14px',
-                      borderRadius: 20,
-                      whiteSpace: 'nowrap',
-                      border: '2px solid',
-                      borderColor:
-                        charSubTab === cat.key ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5',
-                      background:
-                        charSubTab === cat.key ? 'var(--color-leaf-600, #5a9a5a)' : 'white',
-                      color: charSubTab === cat.key ? 'white' : '#3d2408',
-                      fontFamily: 'Baloo 2, sans-serif',
-                      fontWeight: 700,
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      transition: 'all 0.15s',
+                      display: 'flex',
+                      gap: 4,
+                      flexWrap: 'wrap',
+                      padding: '6px 16px',
+                      background: 'rgba(255,255,255,0.5)',
+                      borderBottom: '1px solid var(--color-wood-300)',
                     }}
                   >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
+                    {COLOR_VARIANTS.map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setTryOnVariant(v)}
+                        style={{
+                          padding: '2px 10px',
+                          borderRadius: 8,
+                          border:
+                            tryOnVariant === v
+                              ? '2px solid var(--color-petal-400)'
+                              : '2px solid transparent',
+                          background:
+                            tryOnVariant === v ? 'var(--color-petal-200)' : 'var(--color-wood-300)',
+                          color: 'var(--color-soil-900)',
+                          fontSize: 11,
+                          fontFamily: 'Baloo 2, sans-serif',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          fontWeight: tryOnVariant === v ? 700 : 400,
+                        }}
+                      >
+                        {COLOR_VARIANT_LABELS[v]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div
+                  className="char-scroll"
+                  style={{
+                    display: 'flex',
+                    gap: 8,
+                    padding: '10px 16px 0',
+                    overflowX: 'auto',
+                    flexShrink: 0,
+                  }}
+                >
+                  {charSections.map((cat) => (
+                    <button
+                      key={cat.key}
+                      onClick={() => setCharSubTab(cat.key)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 20,
+                        whiteSpace: 'nowrap',
+                        border: '2px solid',
+                        borderColor:
+                          charSubTab === cat.key ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5',
+                        background:
+                          charSubTab === cat.key ? 'var(--color-leaf-600, #5a9a5a)' : 'white',
+                        color: charSubTab === cat.key ? 'white' : '#3d2408',
+                        fontFamily: 'Baloo 2, sans-serif',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>{' '}
+              {/* fecha div externo seletor de cor + sub-tabs */}
               <div
                 className="char-scroll"
                 style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 24px' }}
@@ -2218,6 +2180,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                           piece={p}
                           selected={cart.some((c) => c.id === p.id)}
                           inCart={clothesCart.some((c) => c.id === p.id)}
+                          tryOnVariants={tryOnVariants}
                           onPreview={() => setCart((prev) => applyExclusion(prev, p))}
                           onAddCart={() => addToClothesCart(p)}
                           onBuy={() => handleBuyPiece(p)}
