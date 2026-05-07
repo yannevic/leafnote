@@ -1,9 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// ShopModal.tsx — v2
-// Fixes: sem cadeado, imagens corretas, seções agrupadas, manequim de roupas
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ShoppingBag, ChevronLeft, Home, Shirt, X } from 'lucide-react'
 import { useShop, getCharacterShopPieces, type BuyResult } from '../hooks/useShop'
 import {
@@ -1020,6 +1015,31 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const [confirm, setConfirm] = useState<ConfirmState>({ item: null, piece: null, open: false })
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
   const [cart, setCart] = useState<CharacterPiece[]>([])
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewScale, setPreviewScale] = useState(0.4)
+  const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 })
+  const previewDragging = useRef(false)
+  const previewLastPos = useRef({ x: 0, y: 0 })
+  const [previewBtnY, setPreviewBtnY] = useState(100)
+  const btnDragging = useRef(false)
+  const btnLastY = useRef(0)
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!btnDragging.current) return
+      const dy = e.clientY - btnLastY.current
+      btnLastY.current = e.clientY
+      setPreviewBtnY((y) => Math.max(0, y + dy))
+    }
+    const onUp = () => {
+      btnDragging.current = false
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [])
 
   const cartTotal = cart
     .filter((p) => !characterOwned.has(p.id))
@@ -1288,78 +1308,186 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
         {/* ───── ABA CASINHA ───── */}
         {mainTab === 'casa' && (
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-            {/* Preview lateral */}
-            <div
-              style={{
-                width: 220,
-                flexShrink: 0,
-                borderRight: '2px solid var(--color-wood-300)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '12px 8px',
-                gap: 8,
-                background: 'var(--color-bark-100)',
-                overflowY: 'auto',
-              }}
-            >
+            {/* Botão de preview arrastável */}
+            <div style={{ position: 'relative', flexShrink: 0, zIndex: 51 }}>
               <div
                 style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: '#8b6914',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  position: 'absolute',
+                  left: 0,
+                  top: previewBtnY,
+                  display: 'flex',
+                  alignItems: 'stretch',
+                  flexDirection: 'row',
                 }}
               >
-                Preview
-              </div>
-              {/* Cena em miniatura */}
-              <div
-                style={{
-                  width: '100%',
-                  height: 160,
-                  borderRadius: 10,
-                  overflow: 'hidden',
-                  border: '1.5px solid var(--color-wood-300)',
-                  background:
-                    BACKGROUNDS.find((b) => b.id === previewBg)?.css ?? BACKGROUNDS[0].css,
-                  backgroundSize: '10px 10px',
-                  position: 'relative',
-                }}
-              >
-                <div
+                {/* Painel quadrado — aparece À ESQUERDA do botão */}
+                {previewOpen && (
+                  <div
+                    style={{
+                      width: 300,
+                      height: 300,
+                      background:
+                        BACKGROUNDS.find((b) => b.id === previewBg)?.css ?? BACKGROUNDS[0].css,
+                      backgroundSize: '10px 10px',
+                      border: '2px solid var(--color-wood-300)',
+                      borderRight: 'none',
+                      borderRadius: '12px 0 0 12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {/* Header */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        padding: '4px 8px',
+                        background: 'rgba(255,255,255,0.7)',
+                        borderBottom: '1px solid var(--color-wood-300)',
+                        flexShrink: 0,
+                        gap: 4,
+                      }}
+                    >
+                      <button
+                        onClick={() => setPreviewScale((s) => Math.min(1.5, s + 0.1))}
+                        style={{
+                          background: 'none',
+                          border: '1px solid #e5ddd5',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          padding: '1px 6px',
+                          fontSize: 13,
+                        }}
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => setPreviewScale((s) => Math.max(0.2, s - 0.1))}
+                        style={{
+                          background: 'none',
+                          border: '1px solid #e5ddd5',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          padding: '1px 6px',
+                          fontSize: 13,
+                        }}
+                      >
+                        −
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPreviewScale(0.4)
+                          setPreviewOffset({ x: 0, y: 0 })
+                        }}
+                        style={{
+                          background: 'none',
+                          border: '1px solid #e5ddd5',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          padding: '1px 6px',
+                          fontSize: 9,
+                          fontFamily: 'Baloo 2, sans-serif',
+                        }}
+                      >
+                        reset
+                      </button>
+                    </div>
+
+                    {/* Cena — arrastar e zoom só aqui */}
+                    <div
+                      style={{
+                        flex: 1,
+                        overflow: 'hidden',
+                        cursor: previewDragging.current ? 'grabbing' : 'grab',
+                        position: 'relative',
+                      }}
+                      onWheel={(e) => {
+                        e.preventDefault()
+                        setPreviewScale((s) => Math.min(1.5, Math.max(0.2, s - e.deltaY * 0.001)))
+                      }}
+                      onMouseDown={(e) => {
+                        previewDragging.current = true
+                        previewLastPos.current = { x: e.clientX, y: e.clientY }
+                        e.stopPropagation()
+                      }}
+                      onMouseMove={(e) => {
+                        if (!previewDragging.current) return
+                        const dx = e.clientX - previewLastPos.current.x
+                        const dy = e.clientY - previewLastPos.current.y
+                        previewLastPos.current = { x: e.clientX, y: e.clientY }
+                        setPreviewOffset((o) => ({ x: o.x + dx, y: o.y + dy }))
+                        e.stopPropagation()
+                      }}
+                      onMouseUp={(e) => {
+                        previewDragging.current = false
+                        e.stopPropagation()
+                      }}
+                      onMouseLeave={(e) => {
+                        previewDragging.current = false
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <div
+                          style={{
+                            transform: `translate(${previewOffset.x}px, ${previewOffset.y}px) scale(${previewScale})`,
+                            transformOrigin: 'center center',
+                          }}
+                        >
+                          <HouseScene
+                            floorTile={previewFloor}
+                            wallTile={previewWall}
+                            wallRightTile={previewWall}
+                            overlap={0}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Botão vertical — arrastar só aqui */}
+                <button
+                  onClick={() => setPreviewOpen((v) => !v)}
+                  onMouseDown={(e) => {
+                    btnDragging.current = true
+                    btnLastY.current = e.clientY
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
                   style={{
-                    position: 'absolute',
-                    inset: 0,
+                    width: 32,
+                    height: 80,
+                    background: 'var(--color-bark-100)',
+                    border: '2px solid var(--color-wood-300)',
+                    borderLeft: 'none',
+                    borderRadius: '0 12px 12px 0',
+                    cursor: 'grab',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    overflow: 'hidden',
+                    color: 'var(--color-leaf-600)',
+                    fontSize: 10,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 800,
+                    writingMode: 'vertical-rl',
+                    letterSpacing: '0.05em',
+                    flexShrink: 0,
+                    userSelect: 'none',
                   }}
                 >
-                  <div style={{ transform: 'scale(0.28)', transformOrigin: 'center center' }}>
-                    <HouseScene
-                      floorTile={previewFloor}
-                      wallTile={previewWall}
-                      wallRightTile={previewWall}
-                      overlap={0}
-                    />
-                  </div>
-                </div>
+                  👁 Preview
+                </button>
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 10,
-                  color: '#9ca3af',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  textAlign: 'center',
-                  lineHeight: 1.4,
-                }}
-              >
-                Clique num item para visualizar
-              </p>
             </div>
 
             {/* Grid + sub-tabs */}
