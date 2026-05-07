@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ShoppingBag, ChevronLeft, Home, Shirt, X } from 'lucide-react'
+import { ShoppingBag, ChevronLeft, Home, Shirt, X, Eye, ShoppingCart } from 'lucide-react'
 import { useShop, getCharacterShopPieces, type BuyResult } from '../hooks/useShop'
 import {
   HouseScene,
@@ -1015,6 +1015,15 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const [confirm, setConfirm] = useState<ConfirmState>({ item: null, piece: null, open: false })
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
   const [cart, setCart] = useState<CharacterPiece[]>([])
+  const [houseCart, setHouseCart] = useState<ShopItem[]>([])
+
+  const toggleHouseCart = (item: ShopItem) => {
+    setHouseCart((prev) =>
+      prev.find((i) => i.id === item.id) ? prev.filter((i) => i.id !== item.id) : [...prev, item]
+    )
+  }
+
+  const houseCartTotal = houseCart.reduce((sum, i) => sum + getDiscountedCost(i), 0)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewScale, setPreviewScale] = useState(0.4)
   const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 })
@@ -1124,20 +1133,23 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
     setConfirm({ item: null, piece: null, open: false })
 
     if (isCart) {
-      // Compra todas as peças do carrinho que não foram compradas ainda
+      const isHouseCart = houseCart.length > 0 && confirm.item?.id === houseCart[0]?.id
+      const itemsToBuy = isHouseCart
+        ? houseCart
+        : cartUnowned.map((p) => ({
+            id: p.id,
+            label: p.label,
+            category: 'character' as const,
+            tier: 'common' as const,
+            cost: p.cost ?? 0,
+          }))
       let successCount = 0
-      for (const p of cartUnowned) {
-        const tempItem: ShopItem = {
-          id: p.id,
-          label: p.label,
-          category: 'character',
-          tier: 'common',
-          cost: p.cost ?? 0,
-        }
-        const result = await buy(tempItem)
+      for (const i of itemsToBuy) {
+        const result = await buy(i as ShopItem)
         if (result.success) successCount++
       }
       if (successCount > 0) {
+        if (isHouseCart) setHouseCart([])
         setFeedback({
           msg: `✓ ${successCount} ${successCount === 1 ? 'item comprado' : 'itens comprados'}!`,
         })
@@ -1325,13 +1337,12 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                   <div
                     style={{
                       width: 300,
-                      height: 300,
                       background:
                         BACKGROUNDS.find((b) => b.id === previewBg)?.css ?? BACKGROUNDS[0].css,
                       backgroundSize: '10px 10px',
                       border: '2px solid var(--color-wood-300)',
-                      borderRight: 'none',
-                      borderRadius: '12px 0 0 12px',
+                      borderLeft: 'none',
+                      borderRadius: '0 0 12px 0',
                       display: 'flex',
                       flexDirection: 'column',
                       overflow: 'hidden',
@@ -1398,7 +1409,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                     {/* Cena — arrastar e zoom só aqui */}
                     <div
                       style={{
-                        flex: 1,
+                        height: 300,
+                        flexShrink: 0,
                         overflow: 'hidden',
                         cursor: previewDragging.current ? 'grabbing' : 'grab',
                         position: 'relative',
@@ -1452,6 +1464,188 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         </div>
                       </div>
                     </div>
+                    {/* Carrinho de casinha */}
+                    {houseCart.length > 0 && (
+                      <div
+                        style={{
+                          background: 'rgba(255,255,255,0.92)',
+                          borderTop: '1.5px solid var(--color-wood-300)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          maxHeight: 280,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: 'var(--color-wood-300)',
+                            padding: '3px 8px',
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: '#3d2408',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            textAlign: 'center',
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          🛒 carrinho
+                        </div>
+                        <div
+                          style={{
+                            overflowY: 'auto',
+                            padding: '4px 8px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 3,
+                          }}
+                        >
+                          {houseCart.map((i) => (
+                            <div
+                              key={i.id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 4,
+                                padding: '2px 0',
+                                borderBottom: '1px dashed #e5ddd5',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  color: '#3d2408',
+                                  flex: 1,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  fontFamily: 'Baloo 2, sans-serif',
+                                }}
+                              >
+                                {i.label}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: '#3d2408',
+                                  flexShrink: 0,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 2,
+                                  fontFamily: 'Baloo 2, sans-serif',
+                                }}
+                              >
+                                <img
+                                  src={coinIcon}
+                                  style={{ width: 10, height: 10, imageRendering: 'pixelated' }}
+                                />
+                                {getDiscountedCost(i)}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  setHouseCart((prev) => prev.filter((x) => x.id !== i.id))
+                                }
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: '#c4b8a8',
+                                  padding: 0,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <X size={11} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div
+                          style={{
+                            padding: '4px 8px',
+                            borderTop: '1.5px solid var(--color-wood-300)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 800,
+                              color: '#3d2408',
+                              fontFamily: 'Baloo 2, sans-serif',
+                            }}
+                          >
+                            Total
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 800,
+                              color: '#3d2408',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 3,
+                              fontFamily: 'Baloo 2, sans-serif',
+                            }}
+                          >
+                            <img
+                              src={coinIcon}
+                              style={{ width: 12, height: 12, imageRendering: 'pixelated' }}
+                            />
+                            {houseCartTotal}
+                          </span>
+                        </div>
+                        <div style={{ padding: '4px 8px 6px' }}>
+                          <button
+                            onClick={() =>
+                              setConfirm({
+                                item: houseCart[0],
+                                piece: null,
+                                open: true,
+                                isCart: true,
+                              })
+                            }
+                            style={{
+                              width: '100%',
+                              padding: '5px 0',
+                              borderRadius: 8,
+                              border: 'none',
+                              background:
+                                coins >= houseCartTotal
+                                  ? 'var(--color-leaf-600, #5a9a5a)'
+                                  : '#d1d5db',
+                              color: 'white',
+                              fontFamily: 'Baloo 2, sans-serif',
+                              fontWeight: 700,
+                              fontSize: 11,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Comprar tudo
+                          </button>
+                        </div>
+                        <div style={{ padding: '0 8px 6px', textAlign: 'center' }}>
+                          <button
+                            onClick={() => setHouseCart([])}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: 10,
+                              color: '#9ca3af',
+                              fontFamily: 'Baloo 2, sans-serif',
+                              textDecoration: 'underline',
+                            }}
+                          >
+                            limpar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1485,7 +1679,8 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                     userSelect: 'none',
                   }}
                 >
-                  👁 Preview
+                  {houseCart.length > 0 ? <ShoppingCart size={13} /> : <Eye size={13} />}
+                  {houseCart.length > 0 ? 'Carrinho' : 'Preview'}
                 </button>
               </div>
             </div>
@@ -1559,6 +1754,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             onPreview={() => {
                               const t = tileOptionFromId(id, true)
                               if (t) setPreviewFloor(t)
+                              toggleHouseCart(item)
                             }}
                             onBuy={() => handleBuyHouse(item)}
                           />
@@ -1596,6 +1792,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             onPreview={() => {
                               const t = tileOptionFromId(id, false)
                               if (t) setPreviewWall(t)
+                              toggleHouseCart(item)
                             }}
                             onBuy={() => handleBuyHouse(item)}
                           />
@@ -1623,6 +1820,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                           onPreview={() => {
                             const bgId = item.id.replace('bg_', '')
                             setPreviewBg(bgId)
+                            toggleHouseCart(item)
                           }}
                           onBuy={() => handleBuyHouse(item)}
                         />
