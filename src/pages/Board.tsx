@@ -1194,6 +1194,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           <ShopModal
             uid={uid}
             initialItemId={shopInitialItem}
+            partnerUid={partnerUid}
+            myName={displayName}
             onClose={() => {
               setShowShop(false)
               setShopInitialItem(undefined)

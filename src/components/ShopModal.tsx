@@ -1,13 +1,21 @@
 import { useState, useRef, useEffect } from 'react'
-import { ShoppingBag, ChevronLeft, Layers, Shirt, X, Eye, ShoppingCart, Heart } from 'lucide-react'
-import { useShop, getCharacterShopPieces, type BuyResult } from '../hooks/useShop'
+import {
+  ShoppingBag,
+  ChevronLeft,
+  Layers,
+  Shirt,
+  X,
+  Eye,
+  ShoppingCart,
+  Heart,
+  Gift,
+} from 'lucide-react'
+import { useShop, getCharacterShopPieces, sendGift, type BuyResult } from '../hooks/useShop'
 import {
   HouseScene,
   FLOOR_GROUPS,
   WALL_GROUPS,
   BACKGROUNDS,
-  DEFAULT_BACKGROUND,
-  getBgStyle,
   findSheetDims,
   type TileOption,
 } from './HouseSceneShared'
@@ -38,8 +46,9 @@ interface ConfirmState {
   item: ShopItem | null
   piece: CharacterPiece | null
   open: boolean
-  isCart?: boolean // carrinho de casinha
-  isClothesCart?: boolean // carrinho de roupas
+  isCart?: boolean
+  isClothesCart?: boolean
+  isGift?: boolean
 }
 
 // ─────────────────────────────────────────────
@@ -496,7 +505,6 @@ function ItemCard({
   cost,
   discount,
   owned,
-  canAfford,
   available,
   isCute,
   isFloor,
@@ -509,7 +517,7 @@ function ItemCard({
   tryOnVariants = {},
   isWishlisted,
   onToggleWishlist,
-  onBuy,
+
   onPreview,
   onAddCart,
 }: ItemCardProps) {
@@ -824,6 +832,11 @@ function ConfirmModal({
   cost,
   coins,
   canAfford,
+  hasPartner,
+  giftMode,
+  giftMessage,
+  onGiftModeChange,
+  onGiftMessageChange,
   onConfirm,
   onCancel,
 }: {
@@ -831,6 +844,11 @@ function ConfirmModal({
   cost: number
   coins: number
   canAfford: boolean
+  hasPartner: boolean
+  giftMode: boolean
+  giftMessage: string
+  onGiftModeChange: (v: boolean) => void
+  onGiftMessageChange: (v: string) => void
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -901,7 +919,11 @@ function ConfirmModal({
               textAlign: 'center',
             }}
           >
-            {canAfford ? `Comprar ${label}?` : 'Moedas insuficientes'}
+            {canAfford
+              ? giftMode
+                ? `Presentear ${label}?`
+                : `Comprar ${label}?`
+              : 'Moedas insuficientes'}
           </div>
         </div>
         <div
@@ -986,6 +1008,51 @@ function ConfirmModal({
               </p>
             )}
           </div>
+          {hasPartner && canAfford && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                onClick={() => onGiftModeChange(!giftMode)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: `2px solid ${giftMode ? '#e85d8a' : '#e5ddd5'}`,
+                  background: giftMode ? '#fff0f5' : 'white',
+                  cursor: 'pointer',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: giftMode ? '#e85d8a' : '#6b7280',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Gift size={15} color={giftMode ? '#e85d8a' : '#6b7280'} />
+                Dar de presente
+              </button>
+              {giftMode && (
+                <textarea
+                  placeholder="escreva um bilhete..."
+                  value={giftMessage}
+                  onChange={(e) => onGiftMessageChange(e.target.value)}
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    border: '1.5px solid #e5ddd5',
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontSize: 12,
+                    color: '#3d2408',
+                    resize: 'none',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={onCancel}
@@ -1020,7 +1087,7 @@ function ConfirmModal({
                   color: 'white',
                 }}
               >
-                Comprar ✓
+                {giftMode ? 'Presentear' : 'Comprar ✓'}
               </button>
             )}
           </div>
@@ -1037,10 +1104,13 @@ function ConfirmModal({
 interface ShopModalProps {
   uid: string
   initialItemId?: string
+  partnerUid?: string
+  partnerName?: string
+  myName?: string
   onClose: () => void
 }
 
-export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
+export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: ShopModalProps) {
   const { coins, characterOwned, wishlist, buy, isOwned, toggleWishlist } = useShop(uid)
 
   const [mainTab, setMainTab] = useState<MainTab>('casa')
@@ -1048,6 +1118,8 @@ export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
   const [charSubTab, setCharSubTab] = useState<string>('top')
   const [confirm, setConfirm] = useState<ConfirmState>({ item: null, piece: null, open: false })
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
+  const [giftMode, setGiftMode] = useState(false)
+  const [giftMessage, setGiftMessage] = useState('')
 
   useEffect(() => {
     if (!initialItemId) return
@@ -1225,6 +1297,44 @@ export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
   const handleConfirm = async () => {
     const { item, piece, isCart, isClothesCart } = confirm
     setConfirm({ item: null, piece: null, open: false })
+
+    if (giftMode && partnerUid) {
+      const itemsToGift: ShopItem[] = confirm.isCart
+        ? houseCart
+        : confirm.isClothesCart
+          ? clothesCartUnowned.map((p) => ({
+              id: p.id,
+              label: p.label,
+              category: 'character' as const,
+              tier: 'common' as const,
+              cost: p.cost ?? 0,
+            }))
+          : item
+            ? [item]
+            : piece
+              ? [
+                  {
+                    id: piece.id,
+                    label: piece.label,
+                    category: 'character' as const,
+                    tier: 'common' as const,
+                    cost: piece.cost ?? 0,
+                  },
+                ]
+              : []
+
+      if (itemsToGift.length === 0) return
+      const result = await sendGift(uid, myName ?? '', partnerUid, itemsToGift, giftMessage)
+      setGiftMode(false)
+      setGiftMessage('')
+      if (result.success) {
+        if (confirm.isCart) setHouseCart([])
+        if (confirm.isClothesCart) setClothesCart([])
+        setFeedback({ msg: 'presente enviado!' })
+        setTimeout(() => setFeedback(null), 2500)
+      }
+      return
+    }
 
     if (isCart) {
       // Carrinho de casinha
@@ -1678,7 +1788,14 @@ export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
                             {houseCartTotal}
                           </span>
                         </div>
-                        <div style={{ padding: '4px 8px 6px' }}>
+                        <div
+                          style={{
+                            padding: '4px 8px 6px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 4,
+                          }}
+                        >
                           <button
                             onClick={() =>
                               setConfirm({
@@ -1706,6 +1823,37 @@ export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
                           >
                             Comprar tudo
                           </button>
+                          {partnerUid && (
+                            <button
+                              onClick={() => {
+                                setGiftMode(true)
+                                setConfirm({
+                                  item: houseCart[0],
+                                  piece: null,
+                                  open: true,
+                                  isCart: true,
+                                })
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '5px 0',
+                                borderRadius: 8,
+                                border: '1.5px solid #e85d8a',
+                                background: coins >= houseCartTotal ? '#fff0f5' : '#f5f5f5',
+                                color: coins >= houseCartTotal ? '#e85d8a' : '#9ca3af',
+                                fontFamily: 'Baloo 2, sans-serif',
+                                fontWeight: 700,
+                                fontSize: 11,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              <Gift size={11} /> Presentear
+                            </button>
+                          )}
                         </div>
                         <div style={{ padding: '0 8px 6px', textAlign: 'center' }}>
                           <button
@@ -2137,7 +2285,14 @@ export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
                                 {clothesCartTotal}
                               </span>
                             </div>
-                            <div style={{ padding: '4px 8px 6px' }}>
+                            <div
+                              style={{
+                                padding: '4px 8px 6px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 4,
+                              }}
+                            >
                               <button
                                 onClick={() =>
                                   setConfirm({
@@ -2165,6 +2320,37 @@ export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
                               >
                                 Comprar tudo
                               </button>
+                              {partnerUid && (
+                                <button
+                                  onClick={() => {
+                                    setGiftMode(true)
+                                    setConfirm({
+                                      item: null,
+                                      piece: clothesCartUnowned[0],
+                                      open: true,
+                                      isClothesCart: true,
+                                    })
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '5px 0',
+                                    borderRadius: 8,
+                                    border: '1.5px solid #e85d8a',
+                                    background: coins >= clothesCartTotal ? '#fff0f5' : '#f5f5f5',
+                                    color: coins >= clothesCartTotal ? '#e85d8a' : '#9ca3af',
+                                    fontFamily: 'Baloo 2, sans-serif',
+                                    fontWeight: 700,
+                                    fontSize: 11,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 4,
+                                  }}
+                                >
+                                  <Gift size={11} /> Presentear
+                                </button>
+                              )}
                             </div>
                           </>
                         )}
@@ -2396,8 +2582,17 @@ export function ShopModal({ uid, initialItemId, onClose }: ShopModalProps) {
           cost={confirmCost}
           coins={coins}
           canAfford={confirmCanAfford}
+          hasPartner={!!partnerUid}
+          giftMode={giftMode}
+          giftMessage={giftMessage}
+          onGiftModeChange={setGiftMode}
+          onGiftMessageChange={setGiftMessage}
           onConfirm={handleConfirm}
-          onCancel={() => setConfirm({ item: null, piece: null, open: false })}
+          onCancel={() => {
+            setConfirm({ item: null, piece: null, open: false })
+            setGiftMode(false)
+            setGiftMessage('')
+          }}
         />
       )}
 

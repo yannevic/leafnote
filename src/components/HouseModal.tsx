@@ -28,8 +28,6 @@ import {
   tileStyle,
   findSheetDims,
   type TileOption,
-  type SheetGroup,
-  getBgStyle,
 } from './HouseSceneShared'
 
 // ─────────────────────────────────────────────
@@ -996,10 +994,6 @@ export default function HouseModal({
                       </div>
                     ) : (
                       [...col.wishlist].map((itemId) => {
-                        const isShopItem =
-                          itemId.startsWith('bg_') ||
-                          itemId.startsWith('floor_') ||
-                          itemId.startsWith('wall_')
                         return (
                           <button
                             key={itemId}

@@ -13,7 +13,6 @@ import {
   Sparkles,
   PaintBucket,
   BrickWall,
-  PaintRoller,
 } from 'lucide-react'
 
 // ─────────────────────────────────────────────

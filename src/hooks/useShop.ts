@@ -61,18 +61,103 @@ export type BuyResult =
   | { success: false; reason: 'insufficient_funds' | 'already_owned' | 'unavailable_today' }
 
 // ─────────────────────────────────────────────
+// GIFTS
+// Path: house/gifts/{giftId}
+
+export interface GiftItem {
+  itemId: string
+  itemLabel: string
+  itemCategory: string
+}
+
+export interface Gift {
+  id: string
+  items: GiftItem[]
+  fromUid: string
+  fromName: string
+  toUid: string
+  message: string
+  opened: boolean
+  createdAt: string
+  position: { x: number; y: number }
+}
+
+export function subscribeGifts(callback: (gifts: Gift[]) => void): () => void {
+  const r = ref(db, 'house/gifts')
+  const handler = onValue(r, (snap) => {
+    const val = snap.val() as Record<string, Gift> | null
+    const gifts = val ? Object.values(val).filter((g) => !g.opened) : []
+    callback(gifts)
+  })
+  return () => off(r, 'value', handler)
+}
+
+export async function sendGift(
+  fromUid: string,
+  fromName: string,
+  toUid: string,
+  items: ShopItem[],
+  message: string
+): Promise<BuyResult> {
+  const unavailable = items.find((i) => !isAvailableToday(i))
+  if (unavailable) return { success: false, reason: 'unavailable_today' }
+
+  const totalCost = items.reduce((sum, i) => sum + getDiscountedCost(i), 0)
+  const coins = await getCoins()
+  if (coins < totalCost) return { success: false, reason: 'insufficient_funds' }
+
+  const giftId = `gift_${Date.now()}_${Math.random().toString(36).slice(2)}`
+  const position = {
+    x: 120 + Math.floor(Math.random() * 200),
+    y: 80 + Math.floor(Math.random() * 120),
+  }
+
+  const updates: Record<string, unknown> = {
+    'garden/coins': coins - totalCost,
+    [`house/gifts/${giftId}`]: {
+      id: giftId,
+      items: items.map((i) => ({
+        itemId: i.id,
+        itemLabel: i.label,
+        itemCategory: i.category,
+      })),
+      fromUid,
+      fromName,
+      toUid,
+      message,
+      opened: false,
+      createdAt: new Date().toISOString(),
+      position,
+    },
+  }
+  await update(ref(db), updates)
+  return { success: true, finalCost: totalCost }
+}
+
+export async function openGift(gift: Gift, toUid: string): Promise<void> {
+  const updates: Record<string, unknown> = {
+    [`house/gifts/${gift.id}/opened`]: true,
+  }
+
+  for (const giftItem of gift.items) {
+    const isHouse =
+      giftItem.itemCategory === 'floor' ||
+      giftItem.itemCategory === 'wall' ||
+      giftItem.itemCategory === 'background' ||
+      giftItem.itemCategory === 'furniture' ||
+      giftItem.itemCategory === 'room'
+    const path = isHouse
+      ? `house/inventory/${giftItem.itemId}`
+      : `users/${toUid}/inventory/${giftItem.itemId}`
+    updates[path] = true
+  }
+
+  await update(ref(db), updates)
+}
+
+// ─────────────────────────────────────────────
 // HELPERS FIREBASE — inventory
 // ─────────────────────────────────────────────
-
-/** Path do inventário de casinha (compartilhado) */
-function houseInventoryPath(itemId: string): string {
-  return `house/inventory/${itemId}`
-}
-
-/** Path do inventário de roupa (por uid) */
-function characterInventoryPath(uid: string, itemId: string): string {
-  return `users/${uid}/inventory/${itemId}`
-}
 
 /** Verifica categoria para decidir qual path usar */
 function isHouseCategory(category: ShopCategory): boolean {
@@ -156,7 +241,6 @@ export async function buyItem(uid: string, item: ShopItem): Promise<BuyResult> {
   }
 
   // 4. Debita coins + salva inventário (multi-path update)
-  const coinsRef = ref(db, 'garden/coins')
   const updates: Record<string, unknown> = {
     'garden/coins': coins - finalCost,
     [inventoryPath]: true,
@@ -261,6 +345,7 @@ export function useShop(uid: string): UseShopReturn {
       unsubCoins()
       unsubHouse()
       unsubChar()
+      unsubWishlist()
     }
   }, [uid])
 
