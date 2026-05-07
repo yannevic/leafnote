@@ -83,6 +83,11 @@ export const BACKGROUNDS: BackgroundOption[] = [
     css: 'linear-gradient(to bottom, #fad4b0 0%, #f9c0c0 40%, #e8d5f5 100%)',
   },
   {
+    id: 'sunset2',
+    label: 'Pôr do sol 2',
+    css: 'linear-gradient(to bottom, #ff7e5f 0%, #feb47b 50%, #ffd6a5 100%)',
+  },
+  {
     id: 'mist',
     label: 'Névoa',
     css: 'repeating-linear-gradient(180deg, #f0ecf8 0px, #f0ecf8 12px, #e6e0f4 12px, #e6e0f4 24px)',
@@ -90,12 +95,27 @@ export const BACKGROUNDS: BackgroundOption[] = [
   {
     id: 'garden',
     label: 'Jardim',
-    css: 'radial-gradient(circle, #c8e8d0 1.5px, transparent 1.5px), #f0f8f2',
+    css: 'radial-gradient(circle, #c8e8d0 1.5px, transparent 1.5px) 0 0 / 10px 10px, #f0f8f2',
+  },
+  {
+    id: 'forest',
+    label: 'Floresta',
+    css: 'linear-gradient(to bottom, #2d5a27 0%, #4a7c42 40%, #6a9e5f 100%)',
   },
   {
     id: 'night',
     label: 'Noturno',
     css: 'linear-gradient(to bottom, #1a1a3e 0%, #2d2060 50%, #3d2a6e 100%)',
+  },
+  {
+    id: 'indoor',
+    label: 'Interior',
+    css: 'linear-gradient(to bottom, #d4a574 0%, #c49060 40%, #f5e6d3 100%)',
+  },
+  {
+    id: 'dark',
+    label: 'Noturno escuro',
+    css: 'linear-gradient(to bottom, #0a0a1a 0%, #1a0a2e 50%, #0d0d2b 100%)',
   },
 ]
 

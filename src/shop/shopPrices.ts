@@ -664,13 +664,13 @@ export const SHOP_HOUSE_ITEMS: ShopItem[] = [
   // ── FUNDOS ──────────────────────────────
 
   { id: 'bg_forest', label: 'Floresta', category: 'background', tier: 'common', cost: 50 },
-  { id: 'bg_night', label: 'Noite', category: 'background', tier: 'common', cost: 50 },
+  { id: 'bg_night', label: 'Noturno', category: 'background', tier: 'common', cost: 50 },
   { id: 'bg_sunset', label: 'Pôr do sol', category: 'background', tier: 'special', cost: 70 },
-  { id: 'bg_indoor', label: 'Interior', category: 'background', tier: 'common', cost: 50 },
-  { id: 'bg_sunset2', label: 'Por do sol 2', category: 'background', tier: 'special', cost: 70 },
+  { id: 'bg_sunset2', label: 'Pôr do sol 2', category: 'background', tier: 'special', cost: 70 },
   { id: 'bg_mist', label: 'Névoa', category: 'background', tier: 'special', cost: 70 },
   { id: 'bg_garden', label: 'Jardim', category: 'background', tier: 'special', cost: 70 },
-  { id: 'bg_dark', label: 'Noturno', category: 'background', tier: 'special', cost: 70 },
+  { id: 'bg_indoor', label: 'Interior', category: 'background', tier: 'common', cost: 50 },
+  { id: 'bg_dark', label: 'Noturno escuro', category: 'background', tier: 'special', cost: 70 },
 ]
 
 // ─────────────────────────────────────────────
