@@ -513,43 +513,19 @@ export const SHOP_HOUSE_ITEMS: ShopItem[] = [
   { id: 'floor_bw_11', label: 'P&B 11', category: 'floor', tier: 'common', cost: 60 },
   { id: 'floor_bw_12', label: 'P&B 12', category: 'floor', tier: 'common', cost: 60 },
 
-  { id: 'floor_carpet_pink', label: 'Carpete rosa', category: 'floor', tier: 'common', cost: 70 },
-  { id: 'floor_carpet_blue', label: 'Carpete azul', category: 'floor', tier: 'common', cost: 70 },
-  { id: 'floor_carpet_green', label: 'Carpete verde', category: 'floor', tier: 'common', cost: 70 },
-  {
-    id: 'floor_carpet_yellow',
-    label: 'Carpete amarelo',
-    category: 'floor',
-    tier: 'common',
-    cost: 70,
-  },
-  { id: 'floor_carpet_purple', label: 'Carpete roxo', category: 'floor', tier: 'common', cost: 70 },
-  {
-    id: 'floor_carpet_red',
-    label: 'Carpete vermelho',
-    category: 'floor',
-    tier: 'common',
-    cost: 70,
-  },
-  {
-    id: 'floor_carpet_orange',
-    label: 'Carpete laranja',
-    category: 'floor',
-    tier: 'common',
-    cost: 70,
-  },
-  { id: 'floor_carpet_teal', label: 'Carpete teal', category: 'floor', tier: 'common', cost: 70 },
-  {
-    id: 'floor_carpet_brown',
-    label: 'Carpete marrom',
-    category: 'floor',
-    tier: 'common',
-    cost: 70,
-  },
-  { id: 'floor_carpet_grey', label: 'Carpete cinza', category: 'floor', tier: 'common', cost: 70 },
-  { id: 'floor_carpet_beige', label: 'Carpete bege', category: 'floor', tier: 'common', cost: 70 },
-  { id: 'floor_carpet_mint', label: 'Carpete mint', category: 'floor', tier: 'common', cost: 70 },
-  { id: 'floor_carpet_lilac', label: 'Carpete lilás', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_pink', label: 'Carpete 1', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_blue', label: 'Carpete 2', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_green', label: 'Carpete 3', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_yellow', label: 'Carpete 4', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_purple', label: 'Carpete 5', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_red', label: 'Carpete 6', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_orange', label: 'Carpete 7', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_teal', label: 'Carpete 8', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_brown', label: 'Carpete 9', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_grey', label: 'Carpete 10', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_beige', label: 'Carpete 11', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_mint', label: 'Carpete 12', category: 'floor', tier: 'common', cost: 70 },
+  { id: 'floor_carpet_lilac', label: 'Carpete 13', category: 'floor', tier: 'common', cost: 70 },
 
   { id: 'floor_checker_1', label: 'Xadrez 1', category: 'floor', tier: 'common', cost: 70 },
   { id: 'floor_checker_2', label: 'Xadrez 2', category: 'floor', tier: 'common', cost: 70 },
@@ -567,10 +543,10 @@ export const SHOP_HOUSE_ITEMS: ShopItem[] = [
   { id: 'floor_checker_14', label: 'Xadrez 14', category: 'floor', tier: 'common', cost: 70 },
   { id: 'floor_checker_15', label: 'Xadrez 15', category: 'floor', tier: 'common', cost: 70 },
 
-  { id: 'floor_cobble_1', label: 'Paralelepípedo 1', category: 'floor', tier: 'basic', cost: 50 },
-  { id: 'floor_cobble_2', label: 'Paralelepípedo 2', category: 'floor', tier: 'basic', cost: 50 },
-  { id: 'floor_cobble_3', label: 'Paralelepípedo 3', category: 'floor', tier: 'basic', cost: 50 },
-  { id: 'floor_cobble_4', label: 'Paralelepípedo 4', category: 'floor', tier: 'basic', cost: 50 },
+  { id: 'floor_cobble_1', label: 'Pedra 1', category: 'floor', tier: 'basic', cost: 50 },
+  { id: 'floor_cobble_2', label: 'Pedra 2', category: 'floor', tier: 'basic', cost: 50 },
+  { id: 'floor_cobble_3', label: 'Pedra 3', category: 'floor', tier: 'basic', cost: 50 },
+  { id: 'floor_cobble_4', label: 'Pedra 4', category: 'floor', tier: 'basic', cost: 50 },
 
   { id: 'floor_pebble_1', label: 'Seixo 1', category: 'floor', tier: 'basic', cost: 50 },
   { id: 'floor_pebble_2', label: 'Seixo 2', category: 'floor', tier: 'basic', cost: 50 },
@@ -595,10 +571,10 @@ export const SHOP_HOUSE_ITEMS: ShopItem[] = [
 
   // ── PISOS — Cute Decor ✦ ────────────────
 
-  ...(['blue', 'green', 'orange', 'pink', 'violet'] as const).flatMap((color) =>
+  ...(['blue', 'green', 'orange', 'pink', 'violet'] as const).flatMap((color, ci) =>
     Array.from({ length: 6 }, (_, i) => ({
       id: `floor_cute_${color}_${i + 1}` as string,
-      label: `Cute ${color} ${i + 1}`,
+      label: `Cute Decor ${i + 1 + ci * 6}`,
       category: 'floor' as ShopCategory,
       tier: 'special' as ShopItemTier,
       cost: 90,
@@ -608,29 +584,29 @@ export const SHOP_HOUSE_ITEMS: ShopItem[] = [
   // ── PAREDES — comuns ────────────────────
 
   { id: 'wall_white', label: 'Branca', category: 'wall', tier: 'basic', cost: 0 }, // grátis
-  { id: 'wall_paint_pastel_1', label: 'Pastel 1', category: 'wall', tier: 'basic', cost: 80 },
-  { id: 'wall_paint_pastel_2', label: 'Pastel 2', category: 'wall', tier: 'basic', cost: 80 },
-  { id: 'wall_paint_pastel_3', label: 'Pastel 3', category: 'wall', tier: 'basic', cost: 80 },
-  { id: 'wall_paint_pastel_4', label: 'Pastel 4', category: 'wall', tier: 'basic', cost: 80 },
-  { id: 'wall_paint_pastel_5', label: 'Pastel 5', category: 'wall', tier: 'basic', cost: 80 },
-  { id: 'wall_paint_pastel_6', label: 'Pastel 6', category: 'wall', tier: 'basic', cost: 80 },
-  { id: 'wall_paint_pastel_7', label: 'Pastel 7', category: 'wall', tier: 'basic', cost: 80 },
-  { id: 'wall_paint_pastel_8', label: 'Pastel 8', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_1', label: 'Tinta lisa 1', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_2', label: 'Tinta lisa 2', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_3', label: 'Tinta lisa 3', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_4', label: 'Tinta lisa 4', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_5', label: 'Tinta lisa 5', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_6', label: 'Tinta lisa 6', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_7', label: 'Tinta lisa 7', category: 'wall', tier: 'basic', cost: 80 },
+  { id: 'wall_paint_pastel_8', label: 'Tinta lisa 8', category: 'wall', tier: 'basic', cost: 80 },
 
-  ...(['earthy', 'bright', 'grey'] as const).flatMap((group) =>
+  ...(['earthy', 'bright', 'grey'] as const).flatMap((group, gi) =>
     Array.from({ length: 8 }, (_, i) => ({
       id: `wall_paint_${group}_${i + 1}` as string,
-      label: `${group.charAt(0).toUpperCase() + group.slice(1)} ${i + 1}`,
+      label: `Tinta lisa ${i + 1 + 8 + gi * 8}`,
       category: 'wall' as ShopCategory,
       tier: 'basic' as ShopItemTier,
       cost: 80,
     }))
   ),
 
-  ...(['pastel', 'earthy', 'bright', 'grey'] as const).flatMap((group) =>
+  ...(['pastel', 'earthy', 'bright', 'grey'] as const).flatMap((group, gi) =>
     Array.from({ length: 8 }, (_, i) => ({
       id: `wall_stripes_${group}_${i + 1}` as string,
-      label: `Listrada ${group} ${i + 1}`,
+      label: `Tinta listrada ${i + 1 + gi * 8}`,
       category: 'wall' as ShopCategory,
       tier: 'common' as ShopItemTier,
       cost: 100,
@@ -679,10 +655,10 @@ export const SHOP_HOUSE_ITEMS: ShopItem[] = [
 
   // ── PAREDES — Cute Decor ✦ ──────────────
 
-  ...(['blue', 'green', 'orange', 'pink', 'violet'] as const).flatMap((color) =>
+  ...(['blue', 'green', 'orange', 'pink', 'violet'] as const).flatMap((color, ci) =>
     Array.from({ length: 12 }, (_, i) => ({
       id: `wall_cute_${color}_${i + 1}` as string,
-      label: `Cutie ${color} ${i + 1}`,
+      label: `Cute Decor ${i + 1 + ci * 12}`,
       category: 'wall' as ShopCategory,
       tier: 'special' as ShopItemTier,
       cost: 120,

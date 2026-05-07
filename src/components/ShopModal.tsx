@@ -241,35 +241,92 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
     )
   }
 
-  const tileW = isFloor ? 80 : 52
-  const tileH = isFloor ? 40 : 78
+  // dimensões reais do tile no spritesheet
+  const realW = isFloor ? 256 : 256
+  const realH = isFloor ? 128 : 384
+
+  // dimensões de display no card
+  const displayW = isFloor ? 80 : 52
+  const displayH = isFloor ? 40 : 78
+
   const cols = SHEET_COLS[tile.sheet] ?? 4
+  const scale = displayW / realW
+
+  const scaleX = displayW / realW
+  const scaleY = displayH / realH
+
+  // sheetH real baseado no número de rows
+  const sheetRows = isFloor
+    ? ((
+        {
+          'base floor/carpet spritesheet.png': 4,
+          'base floor/chckerboard spritesheet.png': 4,
+          'base floor/stone square spritesheet.png': 5,
+          'base floor/wood spritesheet.png': 3,
+          'base floor/black and white.png': 3,
+          'base floor/cobblestone spritesheet.png': 2,
+          'base floor/pebbles spritesheet.png': 2,
+          'floor (tiles)/cut_floor_blue.png': 2,
+          'floor (tiles)/cut_floor_green.png': 2,
+          'floor (tiles)/cut_floor_orange.png': 2,
+          'floor (tiles)/cut_floor_pink.png': 2,
+          'floor (tiles)/cut_floor_violet.png': 2,
+        } as Record<string, number>
+      )[tile.sheet] ?? 2)
+    : ((
+        {
+          'base walls/BASE_WHITE_WALL.png': 1,
+          'base walls/walls_paint_pastel.png': 2,
+          'base walls/walls_paint_earthy.png': 2,
+          'base walls/walls_paint_bright.png': 2,
+          'base walls/walls_paint_grey.png': 2,
+          'base walls/walls_paint_pastel_stripes.png': 2,
+          'base walls/walls_paint_earthy_stripes.png': 2,
+          'base walls/walls_paint_bright_stripes.png': 2,
+          'base walls/walls_paint_grey_stripes.png': 2,
+          'base walls/spritesheet(10).png': 2,
+          'base walls/spritesheet(11).png': 3,
+          'base walls/spritesheet(12).png': 2,
+          'base walls/spritesheet(13).png': 2,
+          'base walls/spritesheet(14).png': 2,
+          'walls (tiles)/cutie blue pastels.png': 3,
+          'walls (tiles)/cutie green pastels.png': 3,
+          'walls (tiles)/cutie orange pastels.png': 3,
+          'walls (tiles)/cutie pink pastels.png': 3,
+          'walls (tiles)/cutie violet pastels.png': 3,
+        } as Record<string, number>
+      )[tile.sheet] ?? 2)
+
+  const sheetW = cols * realW
+  const sheetH = sheetRows * realH
 
   return (
     <div
       style={{
-        width: tileW,
-        height: tileH,
+        width: displayW,
+        height: displayH,
         flexShrink: 0,
         borderRadius: 6,
+        overflow: 'hidden',
         background: 'repeating-linear-gradient(45deg,#e5e7eb 0,#e5e7eb 4px,#fff 0,#fff 8px)',
       }}
     >
       <div
         style={{
-          width: tileW,
-          height: tileH,
-          backgroundImage: `url(./house/${tile.sheet})`,
-          backgroundPosition: `-${tile.col * tileW}px -${tile.row * tileH}px`,
-          backgroundSize: `${cols * tileW}px auto`,
+          width: displayW,
+          height: displayH,
+          backgroundImage: `url("./house/${tile.sheet.replace(/ /g, '%20')}")`,
+          backgroundSize: `${sheetW * scaleX}px ${sheetH * scaleY}px`,
+          backgroundPosition: `-${tile.col * realW * scaleX}px -${tile.row * realH * scaleY}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
+          marginLeft: isFloor ? 0 : 13,
+          marginTop: isFloor ? 0 : 8,
         }}
       />
     </div>
   )
 }
-
 function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): CharacterPiece[] {
   // Toggle: se já está no carrinho, remove
   if (cart.find((p) => p.id === newPiece.id)) {
