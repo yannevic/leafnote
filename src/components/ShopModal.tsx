@@ -37,15 +37,15 @@ interface ConfirmState {
   item: ShopItem | null
   piece: CharacterPiece | null
   open: boolean
-  isCart?: boolean
+  isCart?: boolean // carrinho de casinha
+  isClothesCart?: boolean // carrinho de roupas
 }
+
 // ─────────────────────────────────────────────
-// SHEET COLS — quantas colunas cada spritesheet tem
-// Necessário para backgroundSize correto
+// SHEET COLS
 // ─────────────────────────────────────────────
 
 const SHEET_COLS: Record<string, number> = {
-  // floors
   'base floor/black and white.png': 4,
   'base floor/carpet spritesheet.png': 4,
   'base floor/chckerboard spritesheet.png': 4,
@@ -58,7 +58,6 @@ const SHEET_COLS: Record<string, number> = {
   'floor (tiles)/cut_floor_orange.png': 3,
   'floor (tiles)/cut_floor_pink.png': 3,
   'floor (tiles)/cut_floor_violet.png': 3,
-  // walls
   'base walls/walls_paint_pastel.png': 4,
   'base walls/walls_paint_earthy.png': 4,
   'base walls/walls_paint_bright.png': 4,
@@ -80,7 +79,7 @@ const SHEET_COLS: Record<string, number> = {
 }
 
 // ─────────────────────────────────────────────
-// SEÇÕES da loja — agrupamento visual
+// SEÇÕES
 // ─────────────────────────────────────────────
 
 interface ShopSection {
@@ -217,7 +216,7 @@ function getCharSections(): { label: string; key: string }[] {
 }
 
 // ─────────────────────────────────────────────
-// THUMBNAIL — tile da casinha
+// THUMBNAIL
 // ─────────────────────────────────────────────
 
 function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean }) {
@@ -244,21 +243,14 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
     )
   }
 
-  // dimensões reais do tile no spritesheet
-  const realW = isFloor ? 256 : 256
+  const realW = 256
   const realH = isFloor ? 128 : 384
-
-  // dimensões de display no card
   const displayW = isFloor ? 80 : 52
   const displayH = isFloor ? 40 : 78
-
   const cols = SHEET_COLS[tile.sheet] ?? 4
-  const scale = displayW / realW
-
   const scaleX = displayW / realW
   const scaleY = displayH / realH
 
-  // sheetH real baseado no número de rows
   const sheetRows = isFloor
     ? ((
         {
@@ -322,33 +314,32 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
           backgroundPosition: `-${tile.col * realW * scaleX}px -${tile.row * realH * scaleY}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
-          marginLeft: isFloor ? 0 : tile.sheet === 'base walls/BASE_WHITE_WALL.png' ? 0 : 13,
-          marginTop: isFloor ? 0 : tile.sheet === 'base walls/BASE_WHITE_WALL.png' ? 0 : 8,
+          marginLeft: isFloor ? 0 : 13,
+          marginTop: isFloor ? 0 : 8,
         }}
       />
     </div>
   )
 }
+
+// ─────────────────────────────────────────────
+// APPLY EXCLUSION — lógica de preview de roupas
+// ─────────────────────────────────────────────
+
 function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): CharacterPiece[] {
-  // Toggle: se já está no carrinho, remove
   if (cart.find((p) => p.id === newPiece.id)) {
     return cart.filter((p) => p.id !== newPiece.id)
   }
-
-  // Dress exclui top e bottom
   if (newPiece.category === 'dress') {
     return [...cart.filter((p) => p.category !== 'top' && p.category !== 'bottom'), newPiece]
   }
-  // Top ou bottom excluem dress
   if (newPiece.category === 'top' || newPiece.category === 'bottom') {
     return [
       ...cart.filter((p) => p.category !== 'dress' && p.category !== newPiece.category),
       newPiece,
     ]
   }
-
-  // Single-slot: substitui se já existe categoria
-  const SINGLE_SLOT: string[] = [
+  const SINGLE_SLOT = [
     'body',
     'hair',
     'bangs',
@@ -363,20 +354,15 @@ function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): Chara
   if (SINGLE_SLOT.includes(newPiece.category)) {
     return [...cart.filter((p) => p.category !== newPiece.category), newPiece]
   }
-
-  // Multi-slot: apenas adiciona (sem substituir)
   return [...cart, newPiece]
 }
 
 // ─────────────────────────────────────────────
-// MANEQUIM — preview da peça de roupa
-// Body neutro (body-b-1) + peça selecionada
+// MANEQUIM
 // ─────────────────────────────────────────────
 
 function Mannequin({ cart, variant }: { cart: CharacterPiece[]; variant: string }) {
   const bodyPiece = ALL_PIECES.find((p) => p.id === 'body-b-1')
-
-  // Ordena cart pela layer order para renderizar em camadas corretas
   const sorted = [...cart].sort(
     (a, b) => LAYER_ORDER.indexOf(a.category) - LAYER_ORDER.indexOf(b.category)
   )
@@ -453,7 +439,7 @@ function Mannequin({ cart, variant }: { cart: CharacterPiece[]; variant: string 
 }
 
 // ─────────────────────────────────────────────
-// ITEM CARD — sem cadeado, sempre clicável
+// ITEM CARD
 // ─────────────────────────────────────────────
 
 interface ItemCardProps {
@@ -469,8 +455,10 @@ interface ItemCardProps {
   isCharacter?: boolean
   piece?: CharacterPiece
   selected?: boolean
+  inCart?: boolean
   onBuy: () => void
   onPreview?: () => void
+  onAddCart?: () => void
 }
 
 function ItemCard({
@@ -486,8 +474,10 @@ function ItemCard({
   isCharacter,
   piece,
   selected,
+  inCart,
   onBuy,
   onPreview,
+  onAddCart,
 }: ItemCardProps) {
   const finalCost = getDiscountedCost({
     id,
@@ -530,7 +520,6 @@ function ItemCard({
         ;(e.currentTarget as HTMLDivElement).style.boxShadow = ''
       }}
     >
-      {/* Badge desconto */}
       {discount && !owned && (
         <div
           style={{
@@ -549,8 +538,6 @@ function ItemCard({
           -{discount}%
         </div>
       )}
-
-      {/* Badge comprado */}
       {owned && (
         <div
           style={{
@@ -570,7 +557,6 @@ function ItemCard({
         </div>
       )}
 
-      {/* Thumbnail */}
       {isCharacter && piece ? (
         <div
           style={{
@@ -594,7 +580,6 @@ function ItemCard({
         <HouseThumbnail itemId={id} isFloor={isFloor ?? true} />
       )}
 
-      {/* Label */}
       <span
         style={{
           fontSize: 11,
@@ -612,7 +597,6 @@ function ItemCard({
         {label}
       </span>
 
-      {/* Preço / Comprado / Indisponível */}
       {owned ? (
         <span
           style={{
@@ -629,46 +613,82 @@ function ItemCard({
           Indisponível
         </span>
       ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onBuy()
-          }}
+        <div
           style={{
             display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            width: '100%',
             alignItems: 'center',
-            gap: 3,
-            background: isCute ? '#9b5fd4' : 'var(--color-leaf-600, #5a9a5a)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 20,
-            padding: '3px 10px',
-            fontSize: 11,
-            fontWeight: 700,
-            fontFamily: 'Baloo 2, sans-serif',
-            cursor: 'pointer',
-            transition: 'background 0.15s',
           }}
         >
-          <img src={coinIcon} style={{ width: 12, height: 12, imageRendering: 'pixelated' }} />{' '}
-          {discount ? (
-            <>
-              <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 9 }}>
-                {cost}
-              </span>{' '}
-              {finalCost}
-            </>
-          ) : (
-            finalCost
+          {onAddCart && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onAddCart()
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3,
+                background: inCart ? '#e8f0e8' : 'transparent',
+                color: inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#9ca3af',
+                border: `1.5px solid ${inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5'}`,
+                borderRadius: 20,
+                padding: '2px 8px',
+                fontSize: 10,
+                fontWeight: 700,
+                fontFamily: 'Baloo 2, sans-serif',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              <ShoppingCart size={10} />
+              {inCart ? 'No carrinho' : 'Carrinho'}
+            </button>
           )}
-        </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onBuy()
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+              background: isCute ? '#9b5fd4' : 'var(--color-leaf-600, #5a9a5a)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 20,
+              padding: '3px 10px',
+              fontSize: 11,
+              fontWeight: 700,
+              fontFamily: 'Baloo 2, sans-serif',
+              cursor: 'pointer',
+              transition: 'background 0.15s',
+            }}
+          >
+            <img src={coinIcon} style={{ width: 12, height: 12, imageRendering: 'pixelated' }} />{' '}
+            {discount ? (
+              <>
+                <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 9 }}>
+                  {cost}
+                </span>{' '}
+                {finalCost}
+              </>
+            ) : (
+              finalCost
+            )}
+          </button>
+        </div>
       )}
     </div>
   )
 }
 
 // ─────────────────────────────────────────────
-// SEÇÃO com título
+// SECTION
 // ─────────────────────────────────────────────
 
 function Section({
@@ -711,7 +731,7 @@ function Section({
 }
 
 // ─────────────────────────────────────────────
-// MODAL DE CONFIRMAÇÃO
+// CONFIRM MODAL
 // ─────────────────────────────────────────────
 
 function ConfirmModal({
@@ -746,7 +766,6 @@ function ConfirmModal({
         style={{
           background: 'white',
           borderRadius: 24,
-          padding: '0',
           maxWidth: 300,
           width: '90%',
           boxShadow: '0 24px 60px rgba(0,0,0,0.22)',
@@ -757,12 +776,11 @@ function ConfirmModal({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Topo colorido */}
         <div
           style={{
             background: canAfford
-              ? 'linear-gradient(135deg, #e8f5e8 0%, #f0faf0 100%)'
-              : 'linear-gradient(135deg, #fff3e0 0%, #fff8f0 100%)',
+              ? 'linear-gradient(135deg,#e8f5e8 0%,#f0faf0 100%)'
+              : 'linear-gradient(135deg,#fff3e0 0%,#fff8f0 100%)',
             padding: '28px 24px 20px',
             display: 'flex',
             flexDirection: 'column',
@@ -771,7 +789,6 @@ function ConfirmModal({
             borderBottom: '1.5px solid #f0ebe4',
           }}
         >
-          {/* Ícone */}
           <div
             style={{
               width: 64,
@@ -782,9 +799,6 @@ function ConfirmModal({
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 32,
-              boxShadow: canAfford
-                ? '0 4px 16px rgba(90,154,90,0.18)'
-                : '0 4px 16px rgba(251,146,60,0.18)',
             }}
           >
             {canAfford ? (
@@ -793,8 +807,6 @@ function ConfirmModal({
               <img src={coinIcon} style={{ width: 44, height: 44, imageRendering: 'pixelated' }} />
             )}
           </div>
-
-          {/* Título */}
           <div
             style={{
               fontFamily: 'Baloo 2, sans-serif',
@@ -807,146 +819,74 @@ function ConfirmModal({
             {canAfford ? `Comprar ${label}?` : 'Moedas insuficientes'}
           </div>
         </div>
-
-        {/* Corpo */}
         <div
           style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-          {canAfford ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+          >
             <div
               style={{
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                fontFamily: 'Baloo 2, sans-serif',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: canAfford ? '#f9f5f0' : '#fff3e0',
+                borderRadius: 10,
+                padding: '8px 12px',
               }}
             >
-              {/* linha custo */}
-              <div
+              <span style={{ fontSize: 13, color: '#6b7280' }}>Custo</span>
+              <span
                 style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  background: '#f9f5f0',
-                  borderRadius: 10,
-                  padding: '8px 12px',
+                  gap: 4,
+                  fontWeight: 800,
+                  fontSize: 15,
+                  color: '#3d2408',
                 }}
               >
-                <span style={{ fontSize: 13, color: '#6b7280' }}>Custo</span>
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    fontWeight: 800,
-                    fontSize: 15,
-                    color: '#3d2408',
-                  }}
-                >
-                  <img
-                    src={coinIcon}
-                    style={{ width: 14, height: 14, imageRendering: 'pixelated' }}
-                  />
-                  {cost}
-                </span>
-              </div>
-              {/* linha saldo */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  background: '#f9f5f0',
-                  borderRadius: 10,
-                  padding: '8px 12px',
-                }}
-              >
-                <span style={{ fontSize: 13, color: '#6b7280' }}>Seu saldo</span>
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    fontWeight: 800,
-                    fontSize: 15,
-                    color: '#3d2408',
-                  }}
-                >
-                  <img
-                    src={coinIcon}
-                    style={{ width: 14, height: 14, imageRendering: 'pixelated' }}
-                  />
-                  {coins}
-                </span>
-              </div>
+                <img
+                  src={coinIcon}
+                  style={{ width: 14, height: 14, imageRendering: 'pixelated' }}
+                />
+                {cost}
+              </span>
             </div>
-          ) : (
             <div
               style={{
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                fontFamily: 'Baloo 2, sans-serif',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: canAfford ? '#f9f5f0' : '#fff3e0',
+                borderRadius: 10,
+                padding: '8px 12px',
               }}
             >
-              {/* linha faltando */}
-              <div
+              <span style={{ fontSize: 13, color: '#6b7280' }}>Seu saldo</span>
+              <span
                 style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  background: '#fff3e0',
-                  borderRadius: 10,
-                  padding: '8px 12px',
+                  gap: 4,
+                  fontWeight: 800,
+                  fontSize: 15,
+                  color: canAfford ? '#3d2408' : '#ef4444',
                 }}
               >
-                <span style={{ fontSize: 13, color: '#6b7280' }}>Necessário</span>
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    fontWeight: 800,
-                    fontSize: 15,
-                    color: '#3d2408',
-                  }}
-                >
-                  <img
-                    src={coinIcon}
-                    style={{ width: 18, height: 18, imageRendering: 'pixelated', marginTop: -5 }}
-                  />
-                  {cost}
-                </span>
-              </div>
-              {/* linha saldo */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  background: '#fff3e0',
-                  borderRadius: 10,
-                  padding: '8px 12px',
-                }}
-              >
-                <span style={{ fontSize: 13, color: '#6b7280' }}>Seu saldo</span>
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    fontWeight: 800,
-                    fontSize: 15,
-                    color: '#ef4444',
-                  }}
-                >
-                  <img
-                    src={coinIcon}
-                    style={{ width: 18, height: 18, imageRendering: 'pixelated', marginTop: -5 }}
-                  />
-                  {coins}
-                </span>
-              </div>
+                <img
+                  src={coinIcon}
+                  style={{ width: 14, height: 14, imageRendering: 'pixelated' }}
+                />
+                {coins}
+              </span>
+            </div>
+            {!canAfford && (
               <p
                 style={{
                   margin: 0,
@@ -959,10 +899,8 @@ function ConfirmModal({
               >
                 Continue cuidando do jardim para ganhar mais! 🌱
               </p>
-            </div>
-          )}
-
-          {/* Botões */}
+            )}
+          </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={onCancel}
@@ -1024,17 +962,17 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const [charSubTab, setCharSubTab] = useState<string>('top')
   const [confirm, setConfirm] = useState<ConfirmState>({ item: null, piece: null, open: false })
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
+
+  // cart = preview do manequim (o que está sendo experimentado)
   const [cart, setCart] = useState<CharacterPiece[]>([])
-  const [tryOnVariant, setTryOnVariant] = useState<string>('b')
+  // clothesCart = carrinho de compra de roupas
+  const [clothesCart, setClothesCart] = useState<CharacterPiece[]>([])
+  // houseCart = carrinho de compra de itens da casinha
   const [houseCart, setHouseCart] = useState<ShopItem[]>([])
 
-  const toggleHouseCart = (item: ShopItem) => {
-    setHouseCart((prev) =>
-      prev.find((i) => i.id === item.id) ? prev.filter((i) => i.id !== item.id) : [...prev, item]
-    )
-  }
+  const [tryOnVariant, setTryOnVariant] = useState<string>('b')
 
-  const houseCartTotal = houseCart.reduce((sum, i) => sum + getDiscountedCost(i), 0)
+  // Painel preview casinha
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewScale, setPreviewScale] = useState(0.4)
   const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 })
@@ -1043,15 +981,29 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
   const [previewBtnY, setPreviewBtnY] = useState(100)
   const btnDragging = useRef(false)
   const btnLastY = useRef(0)
+
+  // Painel provador roupas
+  const [clothesPreviewOpen, setClothesPreviewOpen] = useState(false)
+  const [clothesBtnY, setClothesBtnY] = useState(100)
+  const clothesBtnDragging = useRef(false)
+  const clothesBtnLastY = useRef(0)
+
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      if (!btnDragging.current) return
-      const dy = e.clientY - btnLastY.current
-      btnLastY.current = e.clientY
-      setPreviewBtnY((y) => Math.max(0, y + dy))
+      if (btnDragging.current) {
+        const dy = e.clientY - btnLastY.current
+        btnLastY.current = e.clientY
+        setPreviewBtnY((y) => Math.max(0, y + dy))
+      }
+      if (clothesBtnDragging.current) {
+        const dy = e.clientY - clothesBtnLastY.current
+        clothesBtnLastY.current = e.clientY
+        setClothesBtnY((y) => Math.max(0, y + dy))
+      }
     }
     const onUp = () => {
       btnDragging.current = false
+      clothesBtnDragging.current = false
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
@@ -1061,19 +1013,26 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
     }
   }, [])
 
-  const cartTotal = cart
-    .filter((p) => !characterOwned.has(p.id))
-    .reduce((sum, p) => sum + (p.cost ?? 0), 0)
-  const cartUnowned = cart.filter((p) => !characterOwned.has(p.id))
-
-  const toggleCartPiece = (piece: CharacterPiece) => {
-    setCart((prev) => applyExclusion(prev, piece))
+  // ── Helpers de carrinho de roupas ──
+  const addToClothesCart = (piece: CharacterPiece) => {
+    if (clothesCart.find((p) => p.id === piece.id)) return
+    setClothesCart((prev) => [...prev, piece])
   }
-
-  const removeFromCart = (pieceId: string) => {
-    setCart((prev) => prev.filter((p) => p.id !== pieceId))
+  const removeFromClothesCart = (pieceId: string) => {
+    setClothesCart((prev) => prev.filter((p) => p.id !== pieceId))
   }
-  // ── Preview da casinha ──
+  const clothesCartUnowned = clothesCart.filter((p) => !characterOwned.has(p.id))
+  const clothesCartTotal = clothesCartUnowned.reduce((sum, p) => sum + (p.cost ?? 0), 0)
+
+  // ── Helpers de carrinho de casa ──
+  const toggleHouseCart = (item: ShopItem) => {
+    setHouseCart((prev) =>
+      prev.find((i) => i.id === item.id) ? prev.filter((i) => i.id !== item.id) : [...prev, item]
+    )
+  }
+  const houseCartTotal = houseCart.reduce((sum, i) => sum + getDiscountedCost(i), 0)
+
+  // ── Preview tiles casinha ──
   const DEFAULT_FLOOR: TileOption = {
     id: 'preview-floor',
     label: '',
@@ -1111,56 +1070,40 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
       sheet: ref.sheet,
       col: ref.col,
       row: ref.row,
-      tileW: isFloor ? 256 : 256,
+      tileW: 256,
       tileH: isFloor ? 128 : 384,
       sheetW: dims.sheetW,
       sheetH: dims.sheetH,
     }
   }
 
-  // ── Seções da aba ativa ──
   const floorSections = getFloorSections()
   const wallSections = getWallSections()
   const charSections = getCharSections()
   const charPieces = getCharacterShopPieces().filter((p) => p.category === charSubTab)
 
-  // Item map para lookup rápido
   const itemById: Record<string, ShopItem> = {}
   SHOP_HOUSE_ITEMS.forEach((i) => {
     itemById[i.id] = i
   })
 
-  // ── Handlers ──
+  // ── Handlers de compra ──
+  const handleBuyHouse = (item: ShopItem) => setConfirm({ item, piece: null, open: true })
+  const handleBuyPiece = (piece: CharacterPiece) => setConfirm({ item: null, piece, open: true })
 
-  const handleBuyHouse = (item: ShopItem) => {
-    setConfirm({ item, piece: null, open: true })
-  }
-
-  const handleBuyPiece = (piece: CharacterPiece) => {
-    setConfirm({ item: null, piece, open: true })
-  }
   const handleConfirm = async () => {
-    const { item, piece, isCart } = confirm
+    const { item, piece, isCart, isClothesCart } = confirm
     setConfirm({ item: null, piece: null, open: false })
 
     if (isCart) {
-      const isHouseCart = houseCart.length > 0 && confirm.item?.id === houseCart[0]?.id
-      const itemsToBuy = isHouseCart
-        ? houseCart
-        : cartUnowned.map((p) => ({
-            id: p.id,
-            label: p.label,
-            category: 'character' as const,
-            tier: 'common' as const,
-            cost: p.cost ?? 0,
-          }))
+      // Carrinho de casinha
       let successCount = 0
-      for (const i of itemsToBuy) {
+      for (const i of houseCart) {
         const result = await buy(i as ShopItem)
         if (result.success) successCount++
       }
       if (successCount > 0) {
-        if (isHouseCart) setHouseCart([])
+        setHouseCart([])
         setFeedback({
           msg: `✓ ${successCount} ${successCount === 1 ? 'item comprado' : 'itens comprados'}!`,
         })
@@ -1169,6 +1112,31 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
       return
     }
 
+    if (isClothesCart) {
+      // Carrinho de roupas
+      const itemsToBuy = clothesCartUnowned.map((p) => ({
+        id: p.id,
+        label: p.label,
+        category: 'character' as const,
+        tier: 'common' as const,
+        cost: p.cost ?? 0,
+      }))
+      let successCount = 0
+      for (const i of itemsToBuy) {
+        const result = await buy(i as ShopItem)
+        if (result.success) successCount++
+      }
+      if (successCount > 0) {
+        setClothesCart([])
+        setFeedback({
+          msg: `✓ ${successCount} ${successCount === 1 ? 'item comprado' : 'itens comprados'}!`,
+        })
+        setTimeout(() => setFeedback(null), 2500)
+      }
+      return
+    }
+
+    // Compra individual
     let result: BuyResult
     let label = ''
 
@@ -1193,17 +1161,18 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
     }
   }
 
-  const confirmItem = confirm.item
-  const confirmPiece = confirm.piece
-  const isCartConfirm = confirm.isCart
-  const confirmCost = isCartConfirm
-    ? cartTotal
-    : confirmItem
-      ? getDiscountedCost(confirmItem)
-      : (confirmPiece?.cost ?? 0)
-  const confirmLabel = isCartConfirm
-    ? `${cartUnowned.length} ${cartUnowned.length === 1 ? 'item' : 'itens'}`
-    : (confirmItem?.label ?? confirmPiece?.label ?? '')
+  const confirmCost = confirm.isCart
+    ? houseCartTotal
+    : confirm.isClothesCart
+      ? clothesCartTotal
+      : confirm.item
+        ? getDiscountedCost(confirm.item)
+        : (confirm.piece?.cost ?? 0)
+  const confirmLabel = confirm.isCart
+    ? `${houseCart.length} ${houseCart.length === 1 ? 'item' : 'itens'}`
+    : confirm.isClothesCart
+      ? `${clothesCartUnowned.length} ${clothesCartUnowned.length === 1 ? 'item' : 'itens'}`
+      : (confirm.item?.label ?? confirm.piece?.label ?? '')
   const confirmCanAfford = coins >= confirmCost
 
   return (
@@ -1251,17 +1220,14 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
             cursor: 'pointer',
           }}
         >
-          <ChevronLeft size={16} />
-          Voltar
+          <ChevronLeft size={16} /> Voltar
         </button>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <ShoppingBag size={18} color="var(--color-petal-400)" />
           <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-leaf-800)' }}>
             Loja
           </span>
         </div>
-
         <div
           style={{
             display: 'flex',
@@ -1331,7 +1297,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
         {/* ───── ABA CASINHA ───── */}
         {mainTab === 'casa' && (
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-            {/* Botão de preview arrastável */}
+            {/* Botão flutuante de preview/carrinho */}
             <div style={{ position: 'relative', flexShrink: 0, zIndex: 51 }}>
               <div
                 style={{
@@ -1343,7 +1309,6 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                   flexDirection: 'row',
                 }}
               >
-                {/* Painel quadrado — aparece À ESQUERDA do botão */}
                 {previewOpen && (
                   <div
                     style={{
@@ -1373,7 +1338,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         />
                       ) : null
                     })()}
-                    {/* Header */}
+                    {/* Controles de zoom */}
                     <div
                       style={{
                         display: 'flex',
@@ -1432,8 +1397,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         reset
                       </button>
                     </div>
-
-                    {/* Cena — arrastar e zoom só aqui */}
+                    {/* Cena */}
                     <div
                       style={{
                         height: 300,
@@ -1464,7 +1428,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         previewDragging.current = false
                         e.stopPropagation()
                       }}
-                      onMouseLeave={(e) => {
+                      onMouseLeave={() => {
                         previewDragging.current = false
                       }}
                     >
@@ -1678,8 +1642,7 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                     )}
                   </div>
                 )}
-
-                {/* Botão vertical — arrastar só aqui */}
+                {/* Botão arrastável */}
                 <button
                   onClick={() => setPreviewOpen((v) => !v)}
                   onMouseDown={(e) => {
@@ -1717,7 +1680,6 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
 
             {/* Grid + sub-tabs */}
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {/* Sub-tabs */}
               <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0', flexShrink: 0 }}>
                 {(
                   [
@@ -1750,7 +1712,6 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                 ))}
               </div>
 
-              {/* Grid com seções */}
               <div
                 className="char-scroll"
                 style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 24px' }}
@@ -1762,7 +1723,6 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         const item = itemById[id]
                         if (!item) return null
                         const owned = isOwned(id, 'floor')
-
                         const available = isAvailableToday(item)
                         return (
                           <ItemCard
@@ -1784,8 +1744,9 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             onPreview={() => {
                               const t = tileOptionFromId(id, true)
                               if (t) setPreviewFloor(t)
-                              toggleHouseCart(item)
                             }}
+                            onAddCart={() => toggleHouseCart(item)}
+                            inCart={houseCart.some((i) => i.id === id)}
                             onBuy={() => handleBuyHouse(item)}
                           />
                         )
@@ -1800,7 +1761,6 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                         const item = itemById[id]
                         if (!item) return null
                         const owned = isOwned(id, 'wall')
-
                         const available = isAvailableToday(item)
                         return (
                           <ItemCard
@@ -1822,8 +1782,9 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                             onPreview={() => {
                               const t = tileOptionFromId(id, false)
                               if (t) setPreviewWall(t)
-                              toggleHouseCart(item)
                             }}
+                            onAddCart={() => toggleHouseCart(item)}
+                            inCart={houseCart.some((i) => i.id === id)}
                             onBuy={() => handleBuyHouse(item)}
                           />
                         )
@@ -1847,11 +1808,9 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                           available={isAvailableToday(item)}
                           isFloor
                           selected={previewBg === item.id.replace('bg_', '')}
-                          onPreview={() => {
-                            const bgId = item.id.replace('bg_', '')
-                            setPreviewBg(bgId)
-                            toggleHouseCart(item)
-                          }}
+                          onPreview={() => setPreviewBg(item.id.replace('bg_', ''))}
+                          onAddCart={() => toggleHouseCart(item)}
+                          inCart={houseCart.some((i) => i.id === item.id)}
                           onBuy={() => handleBuyHouse(item)}
                         />
                       )
@@ -1866,242 +1825,320 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
         {/* ───── ABA ROUPAS ───── */}
         {mainTab === 'roupas' && (
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-            {/* Manequim + carrinho lateral */}
-            <div
-              style={{
-                width: 200,
-                flexShrink: 0,
-                borderRight: '2px solid var(--color-wood-300)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '12px 8px',
-                gap: 8,
-                background: 'var(--color-bark-100)',
-                overflowY: 'auto',
-              }}
-            >
+            {/* Botão flutuante de provador/carrinho */}
+            <div style={{ position: 'relative', flexShrink: 0, zIndex: 51 }}>
               <div
                 style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: '#8b6914',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  position: 'absolute',
+                  left: 0,
+                  top: clothesBtnY,
+                  display: 'flex',
+                  alignItems: 'stretch',
+                  flexDirection: 'row',
                 }}
               >
-                Provador
-              </div>
-              <Mannequin cart={cart} variant={tryOnVariant} />
-              {cart.some((p) => p.hasColor) && (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 4,
-                    justifyContent: 'center',
-                    padding: '4px 8px',
-                    background: 'white',
-                    border: '1.5px solid var(--color-wood-300)',
-                    borderRadius: 10,
-                    width: '100%',
-                  }}
-                >
-                  {Object.entries(COLOR_VARIANT_LABELS).map(([key, label]) => (
-                    <button
-                      key={key}
-                      onClick={() => setTryOnVariant(key)}
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: 8,
-                        border:
-                          tryOnVariant === key
-                            ? '2px solid var(--color-petal-400)'
-                            : '2px solid transparent',
-                        background:
-                          tryOnVariant === key ? 'var(--color-petal-200)' : 'var(--color-wood-300)',
-                        color: 'var(--color-soil-900)',
-                        fontSize: 10,
-                        fontFamily: 'Baloo 2, sans-serif',
-                        fontWeight: tryOnVariant === key ? 700 : 400,
-                        cursor: 'pointer',
-                        transition: 'all 0.12s',
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {cart.length > 0 && (
-                <div
-                  style={{
-                    width: '100%',
-                    background: 'white',
-                    border: '1.5px solid var(--color-wood-300)',
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
+                {clothesPreviewOpen && (
                   <div
                     style={{
-                      background: 'var(--color-wood-300)',
-                      padding: '4px 8px',
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: '#3d2408',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      textAlign: 'center',
+                      width: 240,
+                      background: 'var(--color-bark-100)',
+                      border: '2px solid var(--color-wood-300)',
+                      borderRadius: '0 0 12px 0',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'hidden',
                     }}
                   >
-                    🧾 carrinho
-                  </div>
-                  <div
-                    style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}
-                  >
-                    {cart.map((p) => {
-                      const alreadyOwned = characterOwned.has(p.id)
-                      return (
+                    {/* Manequim */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '10px 8px 6px',
+                        gap: 6,
+                        background: '#f5ede4',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Mannequin cart={cart} variant={tryOnVariant} />
+                      {cart.some((p) => p.hasColor) && (
                         <div
-                          key={p.id}
                           style={{
                             display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 4,
-                            padding: '2px 0',
-                            borderBottom: '1px dashed #e5ddd5',
+                            flexWrap: 'wrap',
+                            gap: 3,
+                            justifyContent: 'center',
+                            padding: '3px 6px',
+                            background: 'white',
+                            border: '1.5px solid var(--color-wood-300)',
+                            borderRadius: 10,
+                            width: '100%',
                           }}
                         >
-                          <span
-                            style={{
-                              fontSize: 10,
-                              color: '#3d2408',
-                              flex: 1,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {p.label}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: alreadyOwned ? 'var(--color-leaf-600, #5a9a5a)' : '#3d2408',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {alreadyOwned ? (
-                              '✓'
-                            ) : (
-                              <>
+                          {Object.entries(COLOR_VARIANT_LABELS).map(([key, label]) => (
+                            <button
+                              key={key}
+                              onClick={() => setTryOnVariant(key)}
+                              style={{
+                                padding: '1px 6px',
+                                borderRadius: 8,
+                                border:
+                                  tryOnVariant === key
+                                    ? '2px solid var(--color-petal-400)'
+                                    : '2px solid transparent',
+                                background:
+                                  tryOnVariant === key
+                                    ? 'var(--color-petal-200)'
+                                    : 'var(--color-wood-300)',
+                                color: 'var(--color-soil-900)',
+                                fontSize: 9,
+                                fontFamily: 'Baloo 2, sans-serif',
+                                fontWeight: tryOnVariant === key ? 700 : 400,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Carrinho de roupas */}
+                    {clothesCart.length > 0 && (
+                      <div
+                        style={{
+                          background: 'rgba(255,255,255,0.95)',
+                          borderTop: '1.5px solid var(--color-wood-300)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          maxHeight: 260,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: 'var(--color-wood-300)',
+                            padding: '3px 8px',
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: '#3d2408',
+                            textTransform: 'uppercase' as const,
+                            letterSpacing: '0.05em',
+                            textAlign: 'center' as const,
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          🧾 carrinho
+                        </div>
+                        <div
+                          style={{
+                            overflowY: 'auto',
+                            padding: '4px 8px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 3,
+                          }}
+                        >
+                          {clothesCart.map((p) => {
+                            const alreadyOwned = characterOwned.has(p.id)
+                            return (
+                              <div
+                                key={p.id}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  gap: 4,
+                                  padding: '2px 0',
+                                  borderBottom: '1px dashed #e5ddd5',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    color: '#3d2408',
+                                    flex: 1,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    fontFamily: 'Baloo 2, sans-serif',
+                                  }}
+                                >
+                                  {p.label}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    color: alreadyOwned ? 'var(--color-leaf-600)' : '#3d2408',
+                                    flexShrink: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    fontFamily: 'Baloo 2, sans-serif',
+                                  }}
+                                >
+                                  {alreadyOwned ? (
+                                    '✓'
+                                  ) : (
+                                    <>
+                                      <img
+                                        src={coinIcon}
+                                        style={{
+                                          width: 10,
+                                          height: 10,
+                                          imageRendering: 'pixelated',
+                                        }}
+                                      />
+                                      {p.cost ?? 0}
+                                    </>
+                                  )}
+                                </span>
+                                <button
+                                  onClick={() => removeFromClothesCart(p.id)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: '#c4b8a8',
+                                    padding: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <X size={11} />
+                                </button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        {clothesCartUnowned.length > 0 && (
+                          <>
+                            <div
+                              style={{
+                                padding: '4px 8px',
+                                borderTop: '1.5px solid var(--color-wood-300)',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 800,
+                                  color: '#3d2408',
+                                  fontFamily: 'Baloo 2, sans-serif',
+                                }}
+                              >
+                                Total
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  color: '#3d2408',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 3,
+                                  fontFamily: 'Baloo 2, sans-serif',
+                                }}
+                              >
                                 <img
                                   src={coinIcon}
-                                  style={{ width: 10, height: 10, imageRendering: 'pixelated' }}
+                                  style={{ width: 12, height: 12, imageRendering: 'pixelated' }}
                                 />
-                                {p.cost ?? 0}
-                              </>
-                            )}
-                          </span>
+                                {clothesCartTotal}
+                              </span>
+                            </div>
+                            <div style={{ padding: '4px 8px 6px' }}>
+                              <button
+                                onClick={() =>
+                                  setConfirm({
+                                    item: null,
+                                    piece: clothesCartUnowned[0],
+                                    open: true,
+                                    isClothesCart: true,
+                                  })
+                                }
+                                style={{
+                                  width: '100%',
+                                  padding: '5px 0',
+                                  borderRadius: 8,
+                                  border: 'none',
+                                  background:
+                                    coins >= clothesCartTotal
+                                      ? 'var(--color-leaf-600, #5a9a5a)'
+                                      : '#d1d5db',
+                                  color: 'white',
+                                  fontFamily: 'Baloo 2, sans-serif',
+                                  fontWeight: 700,
+                                  fontSize: 11,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Comprar tudo
+                              </button>
+                            </div>
+                          </>
+                        )}
+                        <div style={{ padding: '0 8px 6px', textAlign: 'center' }}>
                           <button
-                            onClick={() => removeFromCart(p.id)}
+                            onClick={() => setClothesCart([])}
                             style={{
                               background: 'none',
                               border: 'none',
                               cursor: 'pointer',
-                              color: '#c4b8a8',
-                              padding: 0,
-                              flexShrink: 0,
-                              display: 'flex',
-                              alignItems: 'center',
+                              fontSize: 10,
+                              color: '#9ca3af',
+                              fontFamily: 'Baloo 2, sans-serif',
+                              textDecoration: 'underline',
                             }}
                           >
-                            <X size={11} />
+                            limpar
                           </button>
                         </div>
-                      )
-                    })}
+                      </div>
+                    )}
                   </div>
-                  {cartUnowned.length > 0 && (
-                    <div
-                      style={{
-                        borderTop: '1.5px solid var(--color-wood-300)',
-                        padding: '5px 8px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <span style={{ fontSize: 10, fontWeight: 800, color: '#3d2408' }}>Total</span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: '#3d2408',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 3,
-                        }}
-                      >
-                        <img
-                          src={coinIcon}
-                          style={{ width: 12, height: 12, imageRendering: 'pixelated' }}
-                        />{' '}
-                        {cartTotal}
-                      </span>
-                    </div>
-                  )}
-                  {cartUnowned.length > 0 && (
-                    <div style={{ padding: '0 8px 8px' }}>
-                      <button
-                        onClick={() =>
-                          setConfirm({
-                            item: null,
-                            piece: cartUnowned[0],
-                            open: true,
-                            isCart: true,
-                          })
-                        }
-                        style={{
-                          width: '100%',
-                          padding: '6px 0',
-                          borderRadius: 8,
-                          border: 'none',
-                          background:
-                            coins >= cartTotal ? 'var(--color-leaf-600, #5a9a5a)' : '#d1d5db',
-                          color: 'white',
-                          fontFamily: 'Baloo 2, sans-serif',
-                          fontWeight: 700,
-                          fontSize: 12,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Comprar tudo
-                      </button>
-                    </div>
-                  )}
-                  <div style={{ padding: '0 8px 6px', textAlign: 'center' }}>
-                    <button
-                      onClick={() => setCart([])}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: 10,
-                        color: '#9ca3af',
-                        fontFamily: 'Baloo 2, sans-serif',
-                        textDecoration: 'underline',
-                      }}
-                    >
-                      limpar
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
+
+                {/* Botão arrastável */}
+                <button
+                  onClick={() => setClothesPreviewOpen((v) => !v)}
+                  onMouseDown={(e) => {
+                    clothesBtnDragging.current = true
+                    clothesBtnLastY.current = e.clientY
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  style={{
+                    width: 32,
+                    height: 80,
+                    background: 'var(--color-bark-100)',
+                    border: '2px solid var(--color-wood-300)',
+                    borderLeft: 'none',
+                    borderRadius: '0 12px 12px 0',
+                    cursor: 'grab',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--color-leaf-600)',
+                    fontSize: 10,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 800,
+                    writingMode: 'vertical-rl',
+                    letterSpacing: '0.05em',
+                    flexShrink: 0,
+                    userSelect: 'none',
+                  }}
+                >
+                  {clothesCart.length > 0 ? <ShoppingCart size={13} /> : <Eye size={13} />}
+                  {clothesCart.length > 0 ? 'Carrinho' : 'Provador'}
+                </button>
+              </div>
             </div>
 
             {/* Área direita: sub-tabs + grid */}
@@ -2180,7 +2217,9 @@ export function ShopModal({ uid, onClose }: ShopModalProps) {
                           isCharacter
                           piece={p}
                           selected={cart.some((c) => c.id === p.id)}
-                          onPreview={() => toggleCartPiece(p)}
+                          inCart={clothesCart.some((c) => c.id === p.id)}
+                          onPreview={() => setCart((prev) => applyExclusion(prev, p))}
+                          onAddCart={() => addToClothesCart(p)}
                           onBuy={() => handleBuyPiece(p)}
                         />
                       ))}
