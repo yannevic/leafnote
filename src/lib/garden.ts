@@ -188,7 +188,8 @@ export async function waterPlant(
   const rarity = FLOWERS[plant.flowerType].rarity
   const daysNeeded = DAYS_PER_STAGE[rarity]
   const newDaysWatered = plant.daysWatered + 1
-  const newStage = Math.min(5, Math.floor(newDaysWatered / daysNeeded) + 1)
+  const calculatedStage = Math.min(5, Math.floor(newDaysWatered / daysNeeded) + 1)
+  const newStage = Math.min(plant.stage + 1, calculatedStage)
 
   await update(plantRef, {
     lastWateredDate: today,

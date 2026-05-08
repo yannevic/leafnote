@@ -22,6 +22,18 @@ const TIER_LABEL: Record<FlowerRarity, string> = {
   epica: 'Épica',
 }
 
+import { Clover } from 'lucide-react'
+
+function RarityBadge({ rarity }: { rarity: FlowerRarity }) {
+  const RARITY_COLOR: Record<FlowerRarity, string> = {
+    comum: '#7fb87f',
+    incomum: '#8b6914',
+    rara: '#c87090',
+    epica: '#7a3040',
+  }
+  return <Clover size={14} color={RARITY_COLOR[rarity]} style={{ flexShrink: 0 }} />
+}
+
 export default function SeedExchangeModal({ seeds, onClose }: Props) {
   const [selected, setSelected] = useState<string[]>([])
   const [chosenReward, setChosenReward] = useState<FlowerType | null>(null)
@@ -37,7 +49,8 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
     ? getExchangeOptions(selectedTier, selectedTypes)
     : []
 
-  const requiredCount = selectedTier ? EXCHANGE_COST[selectedTier] : 5
+  // Usa requiredCount em todos os lugares — sem hardcode de 5
+  const requiredCount = selectedTier ? EXCHANGE_COST[selectedTier] : EXCHANGE_COST['comum']
 
   const handleSelect = (seed: SeedData) => {
     const info = FLOWERS[seed.flowerType]
@@ -51,14 +64,13 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
       return
     }
 
-    const cost = EXCHANGE_COST[info.rarity] ?? 5
+    const cost = EXCHANGE_COST[info.rarity]
     if (selected.length >= cost) {
       setLimitWarning(true)
       setTimeout(() => setLimitWarning(false), 2500)
       return
     }
 
-    // Só permite selecionar do mesmo tier
     if (selectedTier && info.rarity !== selectedTier) return
 
     setSelected((v) => [...v, seed.id])
@@ -80,6 +92,7 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
   }
 
   return (
+    // Backdrop — stopPropagation no container interno impede fechamento acidental
     <div
       style={{
         position: 'fixed',
@@ -103,6 +116,7 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
           fontFamily: 'Baloo 2, sans-serif',
           boxShadow: '0 12px 48px rgba(0,0,0,0.22)',
           overflow: 'hidden',
+          position: 'relative',
         }}
       >
         {/* Header */}
@@ -146,10 +160,11 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
             Como funciona?
           </div>
           <div style={{ fontSize: 12, color: '#8E6D1A', lineHeight: 1.7 }}>
-            Selecione abaixo as sementes coletadas do mesmo tier que deseja trocar. Depois, escolha
-            à direita qual semente deseja receber no lugar delas.
+            Selecione sementes do mesmo tier para trocar. Depois, escolha à direita qual semente
+            deseja receber.
           </div>
-          <div style={{ marginTop: 8, display: 'flex', gap: 10 }}>
+          {/* Legenda de raridade */}
+          <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {(['comum', 'incomum', 'rara'] as FlowerRarity[]).map((r) => (
               <div
                 key={r}
@@ -160,21 +175,27 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
                   borderRadius: 7,
                   padding: '5px 8px',
                   textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
                 }}
               >
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 800,
-                    color: selectedTier === r ? '#518451' : '#8E6D1A',
-                    textTransform: 'capitalize',
-                    marginBottom: 2,
-                  }}
-                >
-                  {r}
-                </div>
-                <div style={{ fontSize: 11, color: '#8E6D1A', opacity: 0.85 }}>
-                  {EXCHANGE_COST[r]} sementes
+                <RarityBadge rarity={r} />
+                <div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: selectedTier === r ? '#518451' : '#8E6D1A',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {r}
+                  </div>
+                  <div style={{ fontSize: 10, color: '#8E6D1A', opacity: 0.85 }}>
+                    {EXCHANGE_COST[r]}x
+                  </div>
                 </div>
               </div>
             ))}
@@ -194,7 +215,7 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
               fontWeight: 600,
             }}
           >
-            Limite de {selectedTier ? EXCHANGE_COST[selectedTier] : 5} sementes atingido!
+            Limite de {requiredCount} sementes atingido para esse tier!
           </div>
         )}
 
@@ -228,7 +249,7 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
                   <button
                     key={seed.id}
                     onClick={() => handleSelect(seed)}
-                    title={info.name}
+                    title={`${info.name} (${TIER_LABEL[info.rarity]})`}
                     disabled={isDisabled}
                     style={{
                       background: isSelected ? '#d4ead4' : '#E8F5E8',
@@ -241,12 +262,16 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
                       justifyContent: 'center',
                       cursor: isDisabled ? 'default' : 'pointer',
                       opacity: isDisabled ? 0.35 : 1,
-                      fontSize: 22,
                       padding: 0,
                       transition: 'all 0.12s',
+                      flexDirection: 'column',
+                      gap: 2,
                     }}
                   >
-                    {info.emoji}
+                    <RarityBadge rarity={info.rarity} />
+                    <span style={{ fontSize: 8, color: '#2D4A2D', fontWeight: 700, lineHeight: 1 }}>
+                      {info.name.slice(0, 6)}
+                    </span>
                   </button>
                 )
               })}
@@ -280,7 +305,8 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
               {Array.from({ length: Math.max(20, exchangeOptions.length) }).map((_, i) => {
                 const type = exchangeOptions[i] as FlowerType | undefined
-                if (!type || selected.length < 5) {
+                // Mostra opções quando atingir o custo correto do tier
+                if (!type || selected.length < requiredCount) {
                   return <EmptySlot key={i} />
                 }
                 const info = FLOWERS[type]
@@ -300,12 +326,16 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      fontSize: 22,
                       padding: 0,
                       transition: 'all 0.12s',
+                      flexDirection: 'column',
+                      gap: 2,
                     }}
                   >
-                    {info.emoji}
+                    <RarityBadge rarity={info.rarity} />
+                    <span style={{ fontSize: 8, color: '#2D4A2D', fontWeight: 700, lineHeight: 1 }}>
+                      {info.name.slice(0, 6)}
+                    </span>
                   </button>
                 )
               })}
@@ -313,85 +343,90 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
           </div>
         </div>
 
-        {/* Confirmar */}
+        {/* Botão confirmar — usa requiredCount em vez de 5 hardcoded */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px 18px' }}>
           <button
             onClick={handleConfirm}
-            disabled={selected.length !== 5 || !chosenReward || loading}
+            disabled={selected.length !== requiredCount || !chosenReward || loading}
             style={{
-              background: selected.length === 5 && chosenReward ? '#C59F78' : '#e0d0bb',
-              color: selected.length === 5 && chosenReward ? '#fff' : '#b0a090',
+              background: selected.length === requiredCount && chosenReward ? '#C59F78' : '#e0d0bb',
+              color: selected.length === requiredCount && chosenReward ? '#fff' : '#b0a090',
               border: '1.5px solid #C59F78',
               borderRadius: 10,
               padding: '8px 24px',
               fontSize: 13,
               fontWeight: 800,
               fontFamily: 'Baloo 2, sans-serif',
-              cursor: selected.length === 5 && chosenReward ? 'pointer' : 'default',
+              cursor: selected.length === requiredCount && chosenReward ? 'pointer' : 'default',
               transition: 'all 0.15s',
             }}
           >
-            {loading ? 'Trocando...' : 'Confirmar'}
+            {loading
+              ? 'Trocando...'
+              : selected.length > 0
+                ? `Confirmar (${selected.length}/${requiredCount})`
+                : 'Confirmar'}
           </button>
         </div>
-      </div>
 
-      {/* Alert de sucesso */}
-      {confirmed && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.45)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 400,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
+        {/* Alert de sucesso — renderizado DENTRO do modal com position absolute
+            para evitar propagação de clique pro backdrop externo */}
+        {confirmed && (
           <div
             style={{
-              background: '#FFF8F0',
-              border: '2px solid #C59F78',
-              borderRadius: 14,
-              padding: '28px 32px',
-              fontFamily: 'Baloo 2, sans-serif',
-              textAlign: 'center',
-              maxWidth: 320,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(245, 236, 215, 0.97)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 16,
+              zIndex: 10,
             }}
           >
             <div
               style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#8E6D1A',
-                marginBottom: 18,
-                lineHeight: 1.6,
-              }}
-            >
-              Suas sementes foram trocadas e sua nova semente já está disponível no seu inventário.
-            </div>
-            <button
-              onClick={handleReset}
-              style={{
-                background: '#C59F78',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 10,
-                padding: '8px 28px',
-                fontSize: 13,
-                fontWeight: 800,
+                background: '#FFF8F0',
+                border: '2px solid #C59F78',
+                borderRadius: 14,
+                padding: '28px 32px',
                 fontFamily: 'Baloo 2, sans-serif',
-                cursor: 'pointer',
+                textAlign: 'center',
+                maxWidth: 300,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
               }}
             >
-              Ok
-            </button>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: '#8E6D1A',
+                  marginBottom: 18,
+                  lineHeight: 1.6,
+                }}
+              >
+                Suas sementes foram trocadas! A nova semente já está no seu inventário.
+              </div>
+              <button
+                onClick={handleReset}
+                style={{
+                  background: '#C59F78',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 10,
+                  padding: '8px 28px',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  fontFamily: 'Baloo 2, sans-serif',
+                  cursor: 'pointer',
+                }}
+              >
+                Ok
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

@@ -9,6 +9,7 @@ import {
   Leaf,
   ArrowLeftRight,
   HelpCircle,
+  Clover,
 } from 'lucide-react'
 import GardenGuideModal from './GardenGuideModal'
 import SeedExchangeModal from './SeedExchangeModal'
@@ -24,6 +25,13 @@ interface GardenViewProps {
   partnerUid: string
   partnerName: string
   onClose: () => void
+}
+
+const RARITY_COLOR: Record<string, string> = {
+  comum: '#7fb87f',
+  incomum: '#8b6914',
+  rara: '#c87090',
+  epica: '#7a3040',
 }
 
 const PLANTS_PER_PAGE = 4
@@ -57,7 +65,8 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
   const [showSeedModal, setShowSeedModal] = useState(false)
   const [plantingSeed, setPlantingSeed] = useState<SeedData | null>(null)
-  const [_seedRollDone, setSeedRollDone] = useState(false)
+  // Guarda o id do evento que o usuário fechou — para avançar para o próximo
+  const [closedEventIds, setClosedEventIds] = useState<string[]>([])
   const [showExchangeModal, setShowExchangeModal] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
   const [sellFeedback, setSellFeedback] = useState<string | null>(null)
@@ -107,7 +116,15 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
 
   // Modal de roll ativo: welcome ou evento de estágio
   const showWelcomeRoll = welcomePending
-  const showEventRoll = !showWelcomeRoll && currentEvent != null
+  // Filtra eventos que o usuário já fechou nesta sessão
+  const showEventRoll =
+    !showWelcomeRoll && currentEvent != null && !closedEventIds.includes(currentEvent.id)
+
+  const handleCloseEventRoll = () => {
+    if (currentEvent) {
+      setClosedEventIds((prev) => [...prev, currentEvent.id])
+    }
+  }
 
   return (
     <>
@@ -158,7 +175,6 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
               </h2>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* Toggle modo pânico */}
               <div
                 style={{
                   display: 'flex',
@@ -285,7 +301,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                       className="flex flex-col items-center justify-center h-full"
                       style={{ minHeight: 220, color: 'var(--color-leaf-600)', gap: 8 }}
                     >
-                      <span style={{ fontSize: 40 }}>🌱</span>
+                      <Sprout size={40} />
                       <span style={{ fontSize: 14, fontWeight: 600 }}>Nenhuma planta ainda</span>
                       <span style={{ fontSize: 12 }}>Plante uma semente para começar!</span>
                     </div>
@@ -387,6 +403,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   <div className="flex flex-wrap gap-2">
                     {seeds.map((s) => {
                       const info = FLOWERS[s.flowerType]
+
                       return (
                         <div
                           key={s.id}
@@ -396,13 +413,19 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                             gap: 4,
                             background: 'var(--color-leaf-100)',
                             borderRadius: 8,
-                            padding: '3px 6px 3px 10px',
+                            padding: '3px 6px 3px 8px',
                             fontSize: 12,
                             fontWeight: 600,
                             color: 'var(--color-leaf-950)',
                           }}
                         >
-                          {info.emoji} {info.name}
+                          {/* Badge de raridade */}
+                          <Clover
+                            size={14}
+                            color={RARITY_COLOR[info.rarity]}
+                            style={{ flexShrink: 0 }}
+                          />
+                          {info.name}
                           <button
                             onClick={() => handleSellSeed(s)}
                             title={`Vender por ${SEED_SELL_VALUE[info.rarity]} moedas`}
@@ -430,7 +453,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
         </div>
       </div>
 
-      {/* Modal de detalhes da planta — fora do overlay */}
+      {/* Modal de detalhes da planta */}
       {selectedPlant && (
         <FlowerModal
           plant={selectedPlant}
@@ -455,13 +478,18 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
           partnerAlreadyRolled={partnerRolledWelcome}
           iAlreadyRolled={iAlreadyRolledWelcome}
           onRoll={rollForWelcome}
-          onClose={() => setSeedRollDone(true)}
+          onClose={() => {
+            /* welcome não fecha manualmente */
+          }}
         />
       )}
 
-      {/* Modal evento de estágio */}
+      {/* Modal evento de estágio
+          key={currentEvent.id} força remontagem a cada novo evento,
+          resolvendo o travamento do botão fechar */}
       {showEventRoll && currentEvent && (
         <SeedRollModal
+          key={currentEvent.id}
           eventId={currentEvent.id}
           plantName={currentEvent.plantName}
           newStage={currentEvent.newStage}
@@ -470,7 +498,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
           partnerAlreadyRolled={partnerRolledEvent(currentEvent.id)}
           iAlreadyRolled={false}
           onRoll={(roll: number) => rollForEvent(currentEvent.id, roll)}
-          onClose={() => setSeedRollDone(true)}
+          onClose={handleCloseEventRoll}
         />
       )}
 
@@ -510,11 +538,12 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                 color: 'var(--color-leaf-950)',
               }}
             >
-              🌱 Escolha uma semente para plantar
+              Escolha uma semente para plantar
             </h3>
             <div className="flex flex-col gap-2 mb-4">
               {seeds.map((s) => {
                 const info = FLOWERS[s.flowerType]
+
                 return (
                   <button
                     key={s.id}
@@ -538,7 +567,8 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                       gap: 10,
                     }}
                   >
-                    <span style={{ fontSize: 20 }}>{info.emoji}</span>
+                    {/* Badge de raridade no lugar do emoji */}
+                    <Clover size={14} color={RARITY_COLOR[info.rarity]} style={{ flexShrink: 0 }} />
                     <div>
                       <div>{info.name}</div>
                       <div
@@ -635,8 +665,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
               Vender semente
             </div>
             <div style={{ fontSize: 13, color: '#5a4010', marginBottom: 18 }}>
-              {FLOWERS[confirmSellSeed.flowerType].emoji} {FLOWERS[confirmSellSeed.flowerType].name}{' '}
-              por{' '}
+              {FLOWERS[confirmSellSeed.flowerType].name} por{' '}
               <strong>{SEED_SELL_VALUE[FLOWERS[confirmSellSeed.flowerType].rarity]} moedas</strong>?
             </div>
             <div style={{ display: 'flex', gap: 8 }}>

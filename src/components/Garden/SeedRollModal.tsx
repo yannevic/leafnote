@@ -122,10 +122,8 @@ export default function SeedRollModal({
       setValues(finalValues)
 
       const myRoll = panicMode ? finalValues[0] + finalValues[1] : finalValues[0]
-      console.log('myRoll:', myRoll)
 
       const result = await onRoll(myRoll)
-      console.log('result:', result)
 
       if (result.done && result.flowerType) {
         setFlowerResult(result.flowerType)
@@ -140,25 +138,16 @@ export default function SeedRollModal({
   }, [modalState, diceCount, panicMode, onRoll])
 
   // Quando parceiro rola enquanto estamos em waiting
-  const checkPartnerDone = useCallback(() => {
-    if (modalState === 'waiting' && partnerAlreadyRolled && flowerResult == null) {
-      // O Firebase já processou e a semente foi adicionada
-      // Precisamos descobrir qual flor foi — mas como já foi salva, mostramos mensagem genérica
-      setModalState('result')
-    }
-  }, [modalState, partnerAlreadyRolled, flowerResult])
-
-  // Chama sempre que partnerAlreadyRolled mudar
   if (modalState === 'waiting' && partnerAlreadyRolled && flowerResult == null) {
-    checkPartnerDone()
+    setModalState('result')
   }
 
   const isRolling = modalState === 'rolling'
   const canRoll = modalState === 'idle'
 
   const titleText = () => {
-    if (isWelcome) return '🌱 Bem-vindos ao jardim!'
-    return `🌸 ${plantName} subiu para o estágio ${newStage}!`
+    if (isWelcome) return 'Bem-vindos ao jardim!'
+    return `${plantName} subiu para o estágio ${newStage}!`
   }
 
   const subtitleText = () => {
@@ -171,6 +160,15 @@ export default function SeedRollModal({
     : values.length > 0
       ? FLOWERS[getFlowerFromSum(panicMode ? values[0] + values[1] : values[0])]
       : null
+
+  // Fechar: reseta estado local antes de chamar onClose
+  // Isso permite que o próximo evento abra o modal limpo
+  const handleClose = () => {
+    setModalState('idle')
+    setFlowerResult(null)
+    setValues(Array.from({ length: diceCount }, () => 1))
+    onClose()
+  }
 
   return (
     <>
@@ -232,7 +230,7 @@ export default function SeedRollModal({
             <div style={{ fontSize: 13, color: 'var(--color-bark-700)' }}>{subtitleText()}</div>
             {panicMode && (
               <div style={{ fontSize: 11, color: '#c87090', marginTop: 4, fontWeight: 600 }}>
-                🚨 Modo pânico ativo — rolando pelos dois
+                Modo pânico ativo — rolando pelos dois
               </div>
             )}
           </div>
@@ -245,14 +243,14 @@ export default function SeedRollModal({
             ))}
           </div>
 
-          {/* Preview da flor (antes de rolar mostra o que seria) */}
+          {/* Preview da flor */}
           {modalState === 'idle' && previewFlower && (
             <div style={{ fontSize: 12, color: 'var(--color-bark-700)', opacity: 0.6 }}>
               Role para descobrir qual flor você ganha
             </div>
           )}
 
-          {/* Resultado */}
+          {/* Resultado com flor conhecida */}
           {modalState === 'result' && flowerResult && (
             <div
               style={{
@@ -306,14 +304,14 @@ export default function SeedRollModal({
                 fontWeight: 600,
               }}
             >
-              ⏳ Aguardando {partnerName} rolar...
+              Aguardando {partnerName} rolar...
             </div>
           )}
 
           {/* Status do parceiro */}
           {modalState === 'idle' && partnerAlreadyRolled && !panicMode && (
             <div style={{ fontSize: 12, color: 'var(--color-leaf-600)', fontWeight: 600 }}>
-              ✓ {partnerName} já rolou — sua vez!
+              {partnerName} já rolou — sua vez!
             </div>
           )}
 
@@ -335,7 +333,7 @@ export default function SeedRollModal({
                 boxShadow: '0 3px 8px rgba(74,122,74,0.35)',
               }}
             >
-              🎲 Rolar
+              Rolar
             </button>
           )}
 
@@ -347,7 +345,7 @@ export default function SeedRollModal({
 
           {modalState === 'result' && (
             <button
-              onClick={onClose}
+              onClick={handleClose}
               style={{
                 width: '100%',
                 padding: '8px 0',
