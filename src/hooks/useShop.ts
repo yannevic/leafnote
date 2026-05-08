@@ -77,6 +77,7 @@ export interface Gift {
   fromName: string
   toUid: string
   message: string
+  color: 'purple' | 'green' | 'white' | 'brown' | 'red' | 'blue'
   opened: boolean
   createdAt: string
   position: { x: number; y: number }
@@ -86,7 +87,11 @@ export function subscribeGifts(callback: (gifts: Gift[]) => void): () => void {
   const r = ref(db, 'house/gifts')
   const handler = onValue(r, (snap) => {
     const val = snap.val() as Record<string, Gift> | null
-    const gifts = val ? Object.values(val).filter((g) => !g.opened) : []
+    const gifts = val
+      ? Object.entries(val)
+          .filter(([, g]) => !g.opened)
+          .map(([id, g]) => ({ ...g, id }))
+      : []
     callback(gifts)
   })
   return () => off(r, 'value', handler)
@@ -97,7 +102,8 @@ export async function sendGift(
   fromName: string,
   toUid: string,
   items: ShopItem[],
-  message: string
+  message: string,
+  color: Gift['color'] = 'purple'
 ): Promise<BuyResult> {
   const unavailable = items.find((i) => !isAvailableToday(i))
   if (unavailable) return { success: false, reason: 'unavailable_today' }
@@ -108,8 +114,8 @@ export async function sendGift(
 
   const giftId = `gift_${Date.now()}_${Math.random().toString(36).slice(2)}`
   const position = {
-    x: 120 + Math.floor(Math.random() * 200),
-    y: 80 + Math.floor(Math.random() * 120),
+    x: 400 + Math.floor(Math.random() * 200),
+    y: 500 + Math.floor(Math.random() * 120),
   }
 
   const updates: Record<string, unknown> = {
@@ -125,6 +131,7 @@ export async function sendGift(
       fromName,
       toUid,
       message,
+      color,
       opened: false,
       createdAt: new Date().toISOString(),
       position,

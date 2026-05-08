@@ -12,11 +12,24 @@ import {
   ShoppingBag,
   Heart,
   X,
+  Gift,
+  Sparkles,
+  Wallpaper,
+  Shirt,
+  ArrowRight,
 } from 'lucide-react'
 import { ref, onValue, set } from 'firebase/database'
 import { db } from '../lib/firebase'
-import { subscribeHouseInventory, subscribeWishlist } from '../hooks/useShop'
+import {
+  subscribeHouseInventory,
+  subscribeWishlist,
+  subscribeGifts,
+  openGift,
+  type Gift as GiftType,
+} from '../hooks/useShop'
+import chestSprite from '../assets/house/treasure_chests.png'
 import { HOUSE_TILE_MAP, SHOP_HOUSE_ITEMS } from '../shop/shopPrices'
+import type { SheetGroup } from './HouseSceneShared'
 import { ALL_PIECES } from '../assets/character/index'
 import {
   HouseScene,
@@ -71,6 +84,94 @@ interface HouseModalProps {
 type HouseTab = 'floor' | 'wall' | 'background'
 type WallSide = 'left' | 'right'
 
+// ─────────────────────────────────────────────
+// CHEST SPRITE
+// ─────────────────────────────────────────────
+
+const CHEST_COLOR_COL: Record<GiftType['color'], number> = {
+  purple: 0,
+  green: 1,
+  white: 2,
+  brown: 3,
+  red: 4,
+  blue: 5,
+}
+
+const FRAME_W = 32
+const FRAME_H = 32
+const SHEET_COLS_CHEST = 6
+const DISPLAY_SCALE = 3
+
+function ChestSprite({
+  color,
+  onClick,
+  canOpen,
+  resetKey,
+}: {
+  color: GiftType['color']
+  onClick: () => void
+  canOpen: boolean
+  resetKey: number
+}) {
+  const [frame, setFrame] = useState(0)
+  const [animating, setAnimating] = useState(false)
+  const col = CHEST_COLOR_COL[color]
+
+  const idleFrames = [0, 1, 2, 1]
+  const openFrames = [3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 7, 7]
+
+  useEffect(() => {
+    setAnimating(false)
+    setFrame(0)
+  }, [resetKey])
+
+  useEffect(() => {
+    if (animating) return
+    let i = 0
+    const interval = setInterval(() => {
+      i = (i + 1) % idleFrames.length
+      setFrame(idleFrames[i])
+    }, 200)
+    return () => clearInterval(interval)
+  }, [animating])
+
+  const handleClick = () => {
+    if (!canOpen || animating) return
+    setAnimating(true)
+    let i = 0
+    const interval = setInterval(() => {
+      setFrame(openFrames[i])
+      i++
+      if (i >= openFrames.length) {
+        clearInterval(interval)
+        onClick()
+      }
+    }, 80)
+  }
+
+  const displayW = FRAME_W * DISPLAY_SCALE
+  const displayH = FRAME_H * DISPLAY_SCALE
+  const sheetW = FRAME_W * SHEET_COLS_CHEST * DISPLAY_SCALE
+  const sheetH = FRAME_H * 15 * DISPLAY_SCALE
+
+  return (
+    <div
+      onClick={handleClick}
+      style={{
+        width: displayW,
+        height: displayH,
+        backgroundImage: `url(${chestSprite})`,
+        backgroundSize: `${sheetW}px ${sheetH}px`,
+        backgroundPosition: `-${col * FRAME_W * DISPLAY_SCALE}px -${frame * FRAME_H * DISPLAY_SCALE}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        cursor: canOpen && !animating ? 'pointer' : 'default',
+        filter: canOpen ? 'drop-shadow(0 0 6px rgba(255,220,100,0.7))' : 'brightness(0.7)',
+      }}
+    />
+  )
+}
+
 export default function HouseModal({
   myUid,
   partnerUid,
@@ -88,19 +189,41 @@ export default function HouseModal({
   const [activeWallRightGroup, setActiveWallRightGroup] = useState(0)
   const [panelOpen, setPanelOpen] = useState(true)
   const [houseOwned, setHouseOwned] = useState<Set<string>>(new Set())
-
-  // ── NOVO: inventário desbloqueado ──
   const [myWishlist, setMyWishlist] = useState<Set<string>>(new Set())
   const [partnerWishlist, setPartnerWishlist] = useState<Set<string>>(new Set())
   const [wishlistOpen, setWishlistOpen] = useState(false)
   const [goToShopConfirm, setGoToShopConfirm] = useState<string | null>(null)
+  const [gifts, setGifts] = useState<GiftType[]>([])
+  const [activeGift, setActiveGift] = useState<GiftType | null>(null)
+  const [chestResetKeys, setChestResetKeys] = useState<Record<string, number>>({})
+  const [giftPhase, setGiftPhase] = useState<'message' | 'reveal' | null>(null)
+  const [newItems, setNewItems] = useState<Set<string>>(new Set())
+  const [seenItems, setSeenItems] = useState<Set<string>>(new Set())
 
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
   const lastPos = useRef({ x: 0, y: 0 })
+  const initialInventoryRef = useRef<Set<string> | null>(null)
 
-  // Carrega config do Firebase
+  function itemIdToSheet(id: string): string | null {
+    return HOUSE_TILE_MAP[id]?.sheet ?? null
+  }
+
+  function sheetBelongsToGroup(sheet: string, group: SheetGroup): boolean {
+    if (group.sheets) return group.sheets.some((s) => s.sheet === sheet)
+    return group.sheet === sheet
+  }
+
+  function groupHasNewItem(group: SheetGroup): boolean {
+    return [...newItems].some((id) => {
+      const info = HOUSE_TILE_MAP[id]
+      if (!info) return false
+      if (group.sheets) return group.sheets.some((s) => s.sheet === info.sheet)
+      return group.sheet === info.sheet
+    })
+  }
+
   useEffect(() => {
     const r = ref(db, 'house/config')
     return onValue(r, (snap) => {
@@ -116,7 +239,6 @@ export default function HouseModal({
     })
   }, [])
 
-  // ── NOVO: subscribe no inventário da casinha ──
   useEffect(() => {
     const unsub = subscribeHouseInventory(setHouseOwned)
     return unsub
@@ -133,7 +255,29 @@ export default function HouseModal({
     return unsub
   }, [partnerUid])
 
-  // ── NOVO: verifica se um tile está desbloqueado ──
+  useEffect(() => {
+    const unsub = subscribeGifts(setGifts)
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    if (initialInventoryRef.current === null) {
+      initialInventoryRef.current = new Set(houseOwned)
+      return
+    }
+    setNewItems((prev) => {
+      const next = new Set(prev)
+      houseOwned.forEach((id) => {
+        if (!initialInventoryRef.current!.has(id) && !seenItems.has(id)) {
+          next.add(id)
+        }
+      })
+      // remove itens já vistos
+      seenItems.forEach((id) => next.delete(id))
+      return next
+    })
+  }, [houseOwned, seenItems])
+
   function isTileOwned(sheet: string, col: number, row: number): boolean {
     const isDefault =
       (sheet === DEFAULT_CONFIG.floor.sheet &&
@@ -247,7 +391,7 @@ export default function HouseModal({
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
-      {/* HEADER — sem mudança */}
+      {/* HEADER */}
       <div
         style={{
           height: 56,
@@ -290,7 +434,6 @@ export default function HouseModal({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Botão loja */}
           {onOpenShop && (
             <button
               onClick={() => onOpenShop?.()}
@@ -372,7 +515,7 @@ export default function HouseModal({
 
       {/* BODY */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {/* CENA — sem mudança */}
+        {/* CENA */}
         <div
           style={{
             position: 'absolute',
@@ -408,6 +551,7 @@ export default function HouseModal({
                 transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
                 transformOrigin: 'center center',
                 transition: dragging.current ? 'none' : 'transform 0.05s',
+                position: 'relative',
               }}
             >
               <HouseScene
@@ -416,6 +560,27 @@ export default function HouseModal({
                 wallRightTile={selectedWallRightTile}
                 overlap={currentOverlap}
               />
+              {gifts.map((gift) => (
+                <div
+                  key={gift.id}
+                  style={{
+                    position: 'absolute',
+                    left: gift.position.x,
+                    top: gift.position.y,
+                    zIndex: 100,
+                  }}
+                >
+                  <ChestSprite
+                    color={gift.color}
+                    canOpen={gift.toUid === myUid}
+                    resetKey={chestResetKeys[gift.id] ?? 0}
+                    onClick={() => {
+                      setActiveGift(gift)
+                      setGiftPhase('message')
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -465,34 +630,69 @@ export default function HouseModal({
                   { id: 'floor' as const, icon: <Layers size={14} />, label: 'Chão' },
                   { id: 'wall' as const, icon: <PaintRoller size={14} />, label: 'Parede' },
                   { id: 'background' as const, icon: <ImageIcon size={14} />, label: 'Fundo' },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 5,
-                      padding: '6px 4px',
-                      borderRadius: 10,
-                      border:
-                        tab === t.id
-                          ? '2px solid var(--color-leaf-500)'
-                          : '2px solid var(--color-wood-300)',
-                      background: tab === t.id ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
-                      color: tab === t.id ? '#fff' : 'var(--color-leaf-700)',
-                      fontSize: 12,
-                      fontWeight: tab === t.id ? 700 : 500,
-                      fontFamily: 'Baloo 2, sans-serif',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {t.icon} {t.label}
-                  </button>
-                ))}
+                ].map((t) => {
+                  const hasNew = [...newItems].some((id) => {
+                    if (t.id === 'background') return id.startsWith('bg_')
+                    const info = HOUSE_TILE_MAP[id]
+                    if (!info) return false
+                    if (t.id === 'floor')
+                      return FLOOR_GROUPS.some((g) =>
+                        g.sheets
+                          ? g.sheets.some((s) => s.sheet === info.sheet)
+                          : g.sheet === info.sheet
+                      )
+                    if (t.id === 'wall')
+                      return WALL_GROUPS.some((g) =>
+                        g.sheets
+                          ? g.sheets.some((s) => s.sheet === info.sheet)
+                          : g.sheet === info.sheet
+                      )
+                    return false
+                  })
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTab(t.id)}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 5,
+                        padding: '6px 4px',
+                        borderRadius: 10,
+                        border:
+                          tab === t.id
+                            ? '2px solid var(--color-leaf-500)'
+                            : '2px solid var(--color-wood-300)',
+                        background: tab === t.id ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
+                        color: tab === t.id ? '#fff' : 'var(--color-leaf-700)',
+                        fontSize: 12,
+                        fontWeight: tab === t.id ? 700 : 500,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        position: 'relative',
+                      }}
+                    >
+                      {t.icon} {t.label}
+                      {hasNew && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: 3,
+                            right: 3,
+                            width: 7,
+                            height: 7,
+                            borderRadius: '50%',
+                            background: '#4ade80',
+                            border: '1.5px solid white',
+                          }}
+                        />
+                      )}
+                    </button>
+                  )
+                })}
               </div>
 
               {/* Sub-tabs Esquerda / Direita */}
@@ -509,31 +709,57 @@ export default function HouseModal({
                   {[
                     { id: 'left' as const, label: 'Esquerda' },
                     { id: 'right' as const, label: 'Direita' },
-                  ].map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => setWallSide(s.id)}
-                      style={{
-                        flex: 1,
-                        padding: '4px 8px',
-                        borderRadius: 8,
-                        border:
-                          wallSide === s.id
-                            ? '2px solid var(--color-petal-400)'
-                            : '2px solid var(--color-wood-300)',
-                        background: wallSide === s.id ? 'var(--color-petal-200)' : 'transparent',
-                        color:
-                          wallSide === s.id ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
-                        fontSize: 12,
-                        fontWeight: wallSide === s.id ? 700 : 400,
-                        fontFamily: 'Baloo 2, sans-serif',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
+                  ].map((s) => {
+                    const sideHasNew = [...newItems].some((id) => {
+                      const info = HOUSE_TILE_MAP[id]
+                      if (!info) return false
+                      return WALL_GROUPS.some((g) =>
+                        g.sheets
+                          ? g.sheets.some((sh) => sh.sheet === info.sheet)
+                          : g.sheet === info.sheet
+                      )
+                    })
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => setWallSide(s.id)}
+                        style={{
+                          flex: 1,
+                          padding: '4px 8px',
+                          borderRadius: 8,
+                          border:
+                            wallSide === s.id
+                              ? '2px solid var(--color-petal-400)'
+                              : '2px solid var(--color-wood-300)',
+                          background: wallSide === s.id ? 'var(--color-petal-200)' : 'transparent',
+                          color:
+                            wallSide === s.id ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
+                          fontSize: 12,
+                          fontWeight: wallSide === s.id ? 700 : 400,
+                          fontFamily: 'Baloo 2, sans-serif',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          position: 'relative',
+                        }}
+                      >
+                        {s.label}
+                        {sideHasNew && (
+                          <span
+                            style={{
+                              position: 'absolute',
+                              top: 3,
+                              right: 3,
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              background: '#4ade80',
+                              border: '1.5px solid white',
+                            }}
+                          />
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
 
@@ -555,6 +781,7 @@ export default function HouseModal({
                   >
                     {groups.map((g, i) => {
                       const isCute = g.label === 'Cute Decor ✦'
+                      const groupHasNew = groupHasNewItem(g)
                       return (
                         <button
                           key={g.label}
@@ -596,15 +823,30 @@ export default function HouseModal({
                             cursor: 'pointer',
                             transition: 'all 0.15s',
                             whiteSpace: 'nowrap',
+                            position: 'relative',
                           }}
                         >
                           {g.icon} {g.label}
+                          {groupHasNew && (
+                            <span
+                              style={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 6,
+                                width: 7,
+                                height: 7,
+                                borderRadius: '50%',
+                                background: '#4ade80',
+                                border: '1.5px solid white',
+                              }}
+                            />
+                          )}
                         </button>
                       )
                     })}
                   </div>
 
-                  {/* Grid de tiles — ALTERADO: mostra cadeado nos bloqueados */}
+                  {/* Grid de tiles */}
                   <div
                     className="char-scroll"
                     style={{
@@ -630,13 +872,14 @@ export default function HouseModal({
                           editingWallConfig.row === tile.row
                       const displayW = isFloor ? 80 : 52
                       const displayH = isFloor ? 40 : 78
-
+                      const tileItemId = tileToItemId(tile.sheet, tile.col, tile.row)
+                      const tileIsNew = tileItemId ? newItems.has(tileItemId) : false
                       return (
                         <button
                           key={tile.id}
                           title={owned ? tile.label : `🔒 ${tile.label} — compre na loja`}
                           onClick={() => {
-                            if (!owned) return // bloqueado — não faz nada
+                            if (!owned) return
                             if (isFloor)
                               setConfig((c: HouseConfig) => ({
                                 ...c,
@@ -648,6 +891,14 @@ export default function HouseModal({
                                 col: tile.col,
                                 row: tile.row,
                               })
+                            if (tileItemId) {
+                              setSeenItems((prev) => new Set([...prev, tileItemId]))
+                              setNewItems((prev) => {
+                                const next = new Set(prev)
+                                next.delete(tileItemId)
+                                return next
+                              })
+                            }
                           }}
                           style={{
                             padding: 0,
@@ -679,8 +930,6 @@ export default function HouseModal({
                               }}
                             />
                           </div>
-
-                          {/* Overlay cadeado nos bloqueados */}
                           {!owned && (
                             <div
                               style={{
@@ -696,11 +945,25 @@ export default function HouseModal({
                               <Lock size={12} color="#6b7280" />
                             </div>
                           )}
+                          {tileIsNew && (
+                            <span
+                              style={{
+                                position: 'absolute',
+                                top: 3,
+                                right: 3,
+                                width: 7,
+                                height: 7,
+                                borderRadius: '50%',
+                                background: '#4ade80',
+                                border: '1.5px solid white',
+                                zIndex: 2,
+                              }}
+                            />
+                          )}
                         </button>
                       )
                     })}
 
-                    {/* Dica de loja se houver tiles bloqueados no grupo */}
                     {tiles.some((t) => !isTileOwned(t.sheet, t.col, t.row)) && onOpenShop && (
                       <div
                         style={{
@@ -751,7 +1014,7 @@ export default function HouseModal({
                 </>
               )}
 
-              {/* Grid de fundos — ALTERADO: mostra cadeado nos bloqueados */}
+              {/* Grid de fundos */}
               {tab === 'background' && (
                 <div
                   className="char-scroll"
@@ -768,6 +1031,7 @@ export default function HouseModal({
                   {BACKGROUNDS.map((bg) => {
                     const isSelected = (config.background ?? DEFAULT_BACKGROUND) === bg.id
                     const owned = isBgOwned(bg.id)
+                    const bgIsNew = newItems.has(bgToItemId(bg.id))
                     if (!owned) return null
                     return (
                       <button
@@ -775,6 +1039,13 @@ export default function HouseModal({
                         onClick={() => {
                           if (!owned) return
                           setConfig((c: HouseConfig) => ({ ...c, background: bg.id }))
+                          const bgItemId = bgToItemId(bg.id)
+                          setSeenItems((prev) => new Set([...prev, bgItemId]))
+                          setNewItems((prev) => {
+                            const next = new Set(prev)
+                            next.delete(bgItemId)
+                            return next
+                          })
                         }}
                         style={{
                           display: 'flex',
@@ -841,6 +1112,20 @@ export default function HouseModal({
                           {bg.label}
                         </span>
                         {!owned && <Lock size={13} color="#9ca3af" />}
+                        {bgIsNew && (
+                          <span
+                            style={{
+                              position: 'absolute',
+                              top: 6,
+                              right: 6,
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              background: '#4ade80',
+                              border: '1.5px solid white',
+                            }}
+                          />
+                        )}
                       </button>
                     )
                   })}
@@ -874,6 +1159,7 @@ export default function HouseModal({
         </div>
       </div>
 
+      {/* MODAL WISHLIST */}
       {wishlistOpen && (
         <div
           onClick={() => setWishlistOpen(false)}
@@ -902,7 +1188,6 @@ export default function HouseModal({
               border: '2px solid var(--color-wood-300)',
             }}
           >
-            {/* Header */}
             <div
               style={{
                 display: 'flex',
@@ -941,7 +1226,6 @@ export default function HouseModal({
               </button>
             </div>
 
-            {/* Colunas */}
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               {[
                 { label: myName || 'Você', wishlist: myWishlist },
@@ -973,13 +1257,7 @@ export default function HouseModal({
                   >
                     {col.label}
                   </div>
-                  <div
-                    style={{
-                      overflowY: 'auto',
-                      flex: 1,
-                      padding: '8px 0',
-                    }}
-                  >
+                  <div style={{ overflowY: 'auto', flex: 1, padding: '8px 0' }}>
                     {col.wishlist.size === 0 ? (
                       <div
                         style={{
@@ -993,48 +1271,46 @@ export default function HouseModal({
                         nenhum item ainda
                       </div>
                     ) : (
-                      [...col.wishlist].map((itemId) => {
-                        return (
-                          <button
-                            key={itemId}
-                            onClick={() => onOpenShop && setGoToShopConfirm(itemId)}
+                      [...col.wishlist].map((itemId) => (
+                        <button
+                          key={itemId}
+                          onClick={() => onOpenShop && setGoToShopConfirm(itemId)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            width: '100%',
+                            padding: '7px 14px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: '1px dashed #e5ddd5',
+                            cursor: onOpenShop ? 'pointer' : 'default',
+                            textAlign: 'left',
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          <Heart
+                            size={11}
+                            color="#e85d8a"
+                            fill="#e85d8a"
+                            style={{ flexShrink: 0 }}
+                          />
+                          <span
                             style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 8,
-                              width: '100%',
-                              padding: '7px 14px',
-                              background: 'none',
-                              border: 'none',
-                              borderBottom: '1px dashed #e5ddd5',
-                              cursor: onOpenShop ? 'pointer' : 'default',
-                              textAlign: 'left',
-                              fontFamily: 'Baloo 2, sans-serif',
+                              fontSize: 12,
+                              color: '#3d2408',
+                              flex: 1,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
                             }}
                           >
-                            <Heart
-                              size={11}
-                              color="#e85d8a"
-                              fill="#e85d8a"
-                              style={{ flexShrink: 0 }}
-                            />
-                            <span
-                              style={{
-                                fontSize: 12,
-                                color: '#3d2408',
-                                flex: 1,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {SHOP_HOUSE_ITEMS.find((i) => i.id === itemId)?.label ??
-                                ALL_PIECES.find((p) => p.id === itemId)?.label ??
-                                itemId}
-                            </span>
-                          </button>
-                        )
-                      })
+                            {SHOP_HOUSE_ITEMS.find((i) => i.id === itemId)?.label ??
+                              ALL_PIECES.find((p) => p.id === itemId)?.label ??
+                              itemId}
+                          </span>
+                        </button>
+                      ))
                     )}
                   </div>
                 </div>
@@ -1044,6 +1320,7 @@ export default function HouseModal({
         </div>
       )}
 
+      {/* MODAL IR PARA LOJA */}
       {goToShopConfirm && (
         <div
           onClick={() => setGoToShopConfirm(null)}
@@ -1119,6 +1396,213 @@ export default function HouseModal({
               >
                 Ir à loja
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE REVELAÇÃO DO PRESENTE */}
+      {activeGift && giftPhase && (
+        <div
+          onClick={() => {
+            if (giftPhase !== 'reveal') {
+              setChestResetKeys((k) => ({ ...k, [activeGift.id]: (k[activeGift.id] ?? 0) + 1 }))
+            }
+            setActiveGift(null)
+            setGiftPhase(null)
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 500,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: 24,
+              maxWidth: 320,
+              width: '90%',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.25)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'stretch',
+            }}
+          >
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #fff0f5 0%, #fce8f0 100%)',
+                padding: '28px 24px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 12,
+                borderBottom: '1.5px solid #f0ebe4',
+              }}
+            >
+              <ChestSprite
+                color={activeGift.color}
+                canOpen={false}
+                resetKey={0}
+                onClick={() => {}}
+              />
+              <div
+                style={{
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 800,
+                  fontSize: 15,
+                  color: '#3d2408',
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                {giftPhase === 'message' ? (
+                  <>{`presente de ${activeGift.fromName}`}</>
+                ) : (
+                  <>
+                    <Sparkles size={16} color="#e85d8a" /> seus itens
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: '20px 24px 24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              {giftPhase === 'message' && (
+                <>
+                  {activeGift.message && (
+                    <div
+                      style={{
+                        background: '#fdf6f0',
+                        borderRadius: 12,
+                        padding: '12px 14px',
+                        fontSize: 13,
+                        color: '#3d2408',
+                        lineHeight: 1.6,
+                        border: '1.5px solid #e5ddd5',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      "{activeGift.message}"
+                    </div>
+                  )}
+                  <button
+                    onClick={async () => {
+                      await openGift(activeGift, myUid)
+                      setGiftPhase('reveal')
+                    }}
+                    style={{
+                      padding: '12px 0',
+                      borderRadius: 14,
+                      border: 'none',
+                      background: '#e85d8a',
+                      color: 'white',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <Gift size={16} /> Abrir presente
+                  </button>
+                </>
+              )}
+
+              {giftPhase === 'reveal' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                  }}
+                >
+                  {activeGift.items.map((item) => {
+                    const cat = item.itemCategory
+                    const targetTab: HouseTab =
+                      cat === 'floor' ? 'floor' : cat === 'background' ? 'background' : 'wall'
+                    return (
+                      <div
+                        key={item.itemId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '8px 12px',
+                          borderRadius: 10,
+                          background: '#f9f5f0',
+                          border: '1.5px solid #e5ddd5',
+                          fontSize: 13,
+                          color: '#3d2408',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {cat === 'floor' ? (
+                          <Layers size={15} color="#c4956a" />
+                        ) : cat === 'wall' ? (
+                          <Wallpaper size={15} color="#c4956a" />
+                        ) : cat === 'background' ? (
+                          <ImageIcon size={15} color="#c4956a" />
+                        ) : (
+                          <Shirt size={15} color="#c4956a" />
+                        )}
+                        <span style={{ flex: 1 }}>{item.itemLabel}</span>
+                        <button
+                          onClick={() => {
+                            setActiveGift(null)
+                            setGiftPhase(null)
+                            setPanelOpen(true)
+                            setTab(targetTab)
+                            // Marca só esse item como visto
+                            setSeenItems((prev) => new Set([...prev, item.itemId]))
+                            setNewItems((prev) => {
+                              const next = new Set(prev)
+                              next.delete(item.itemId)
+                              return next
+                            })
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: 'var(--color-leaf-600, #5a9a5a)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 8,
+                            padding: '4px 10px',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            fontFamily: 'Baloo 2, sans-serif',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ver <ArrowRight size={11} />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>

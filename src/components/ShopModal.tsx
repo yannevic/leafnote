@@ -8,9 +8,15 @@ import {
   Eye,
   ShoppingCart,
   Heart,
-  Gift,
+  Gift as GiftIcon,
 } from 'lucide-react'
-import { useShop, getCharacterShopPieces, sendGift, type BuyResult } from '../hooks/useShop'
+import {
+  useShop,
+  getCharacterShopPieces,
+  sendGift,
+  type BuyResult,
+  type Gift,
+} from '../hooks/useShop'
 import {
   HouseScene,
   FLOOR_GROUPS,
@@ -837,6 +843,8 @@ function ConfirmModal({
   giftMessage,
   onGiftModeChange,
   onGiftMessageChange,
+  giftColor,
+  onGiftColorChange,
   onConfirm,
   onCancel,
 }: {
@@ -849,6 +857,8 @@ function ConfirmModal({
   giftMessage: string
   onGiftModeChange: (v: boolean) => void
   onGiftMessageChange: (v: string) => void
+  giftColor: Gift['color']
+  onGiftColorChange: (v: Gift['color']) => void
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -1028,28 +1038,63 @@ function ConfirmModal({
                   transition: 'all 0.15s',
                 }}
               >
-                <Gift size={15} color={giftMode ? '#e85d8a' : '#6b7280'} />
+                <GiftIcon size={15} color={giftMode ? '#e85d8a' : '#6b7280'} />
                 Dar de presente
               </button>
               {giftMode && (
-                <textarea
-                  placeholder="escreva um bilhete..."
-                  value={giftMessage}
-                  onChange={(e) => onGiftMessageChange(e.target.value)}
-                  rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: 10,
-                    border: '1.5px solid #e5ddd5',
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontSize: 12,
-                    color: '#3d2408',
-                    resize: 'none',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
+                <>
+                  <textarea
+                    placeholder="escreva um bilhete..."
+                    value={giftMessage}
+                    onChange={(e) => onGiftMessageChange(e.target.value)}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: 10,
+                      border: '1.5px solid #e5ddd5',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      fontSize: 12,
+                      color: '#3d2408',
+                      resize: 'none',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 4 }}>
+                    {(
+                      [
+                        { id: 'purple', color: '#9b59b6' },
+                        { id: 'green', color: '#27ae60' },
+                        { id: 'white', color: '#ecf0f1' },
+                        { id: 'brown', color: '#8b5e3c' },
+                        { id: 'red', color: '#e74c3c' },
+                        { id: 'blue', color: '#2980b9' },
+                      ] as {
+                        id: 'purple' | 'green' | 'white' | 'brown' | 'red' | 'blue'
+                        color: string
+                      }[]
+                    ).map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => onGiftColorChange(c.id)}
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: '50%',
+                          background: c.color,
+                          border:
+                            giftColor === c.id ? '3px solid #3d2408' : '2px solid transparent',
+                          cursor: 'pointer',
+                          padding: 0,
+                          outline: 'none',
+                          transition: 'transform 0.12s',
+                          transform: giftColor === c.id ? 'scale(1.2)' : 'scale(1)',
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -1120,6 +1165,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
   const [giftMode, setGiftMode] = useState(false)
   const [giftMessage, setGiftMessage] = useState('')
+  const [giftColor, setGiftColor] = useState<Gift['color']>('purple')
 
   useEffect(() => {
     if (!initialItemId) return
@@ -1324,7 +1370,14 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
               : []
 
       if (itemsToGift.length === 0) return
-      const result = await sendGift(uid, myName ?? '', partnerUid, itemsToGift, giftMessage)
+      const result = await sendGift(
+        uid,
+        myName ?? '',
+        partnerUid,
+        itemsToGift,
+        giftMessage,
+        giftColor
+      )
       setGiftMode(false)
       setGiftMessage('')
       if (result.success) {
@@ -1851,7 +1904,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                                 gap: 4,
                               }}
                             >
-                              <Gift size={11} /> Presentear
+                              <GiftIcon size={11} /> Presentear
                             </button>
                           )}
                         </div>
@@ -2348,7 +2401,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                                     gap: 4,
                                   }}
                                 >
-                                  <Gift size={11} /> Presentear
+                                  <GiftIcon size={11} /> Presentear
                                 </button>
                               )}
                             </div>
@@ -2587,11 +2640,14 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
           giftMessage={giftMessage}
           onGiftModeChange={setGiftMode}
           onGiftMessageChange={setGiftMessage}
+          giftColor={giftColor}
+          onGiftColorChange={setGiftColor}
           onConfirm={handleConfirm}
           onCancel={() => {
             setConfirm({ item: null, piece: null, open: false })
             setGiftMode(false)
             setGiftMessage('')
+            setGiftColor('purple')
           }}
         />
       )}
