@@ -1735,11 +1735,15 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                             color: '#3d2408',
                             textTransform: 'uppercase',
                             letterSpacing: '0.05em',
-                            textAlign: 'center',
                             fontFamily: 'Baloo 2, sans-serif',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 4,
                           }}
                         >
-                          🛒 carrinho
+                          <ShoppingCart size={11} />
+                          carrinho
                         </div>
                         <div
                           style={{
@@ -2218,14 +2222,14 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                             color: '#3d2408',
                             textTransform: 'uppercase' as const,
                             letterSpacing: '0.05em',
-                            textAlign: 'center' as const,
                             fontFamily: 'Baloo 2, sans-serif',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 4,
                           }}
                         >
-                          <ShoppingCart
-                            size={11}
-                            style={{ marginRight: 4, verticalAlign: 'middle' }}
-                          />{' '}
+                          <ShoppingCart size={11} />
                           carrinho
                         </div>
                         <div
