@@ -1216,6 +1216,8 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 })
   const previewDragging = useRef(false)
   const previewLastPos = useRef({ x: 0, y: 0 })
+  const previewSceneRef = useRef<HTMLDivElement>(null)
+  const previewScaleRef = useRef(0.4)
   const [previewBtnY, setPreviewBtnY] = useState(100)
   const btnDragging = useRef(false)
   const btnLastY = useRef(0)
@@ -1249,6 +1251,21 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
+  }, [])
+
+  useEffect(() => {
+    const el = previewSceneRef.current
+    if (!el) return
+    const handler = (e: WheelEvent) => {
+      e.preventDefault()
+      previewScaleRef.current = Math.min(
+        1.5,
+        Math.max(0.2, previewScaleRef.current - e.deltaY * 0.001)
+      )
+      setPreviewScale(previewScaleRef.current)
+    }
+    el.addEventListener('wheel', handler, { passive: false })
+    return () => el.removeEventListener('wheel', handler)
   }, [])
 
   // ── Helpers de carrinho de roupas ──
@@ -1658,13 +1675,11 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                         height: 300,
                         flexShrink: 0,
                         overflow: 'hidden',
-                        cursor: previewDragging.current ? 'grabbing' : 'grab',
+                        cursor: 'grab',
                         position: 'relative',
                         zIndex: 1,
                       }}
                       onWheel={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
                         setPreviewScale((s) => Math.min(1.5, Math.max(0.2, s - e.deltaY * 0.001)))
                       }}
                       onMouseDown={(e) => {
@@ -1701,6 +1716,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                           style={{
                             transform: `translate(${previewOffset.x}px, ${previewOffset.y}px) scale(${previewScale})`,
                             transformOrigin: 'center center',
+                            willChange: 'transform',
                           }}
                         >
                           <HouseScene
