@@ -184,15 +184,16 @@ export default function WeekCalendar({
               <button
                 className="text-sm font-bold hover:opacity-80 transition-opacity"
                 style={{
-                  background: '#fce8f528',
-                  color: '#c87090',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  border: '1.5px solid #e8a0b0',
-                  borderRadius: 12,
-                  padding: '5px 10px',
+                  background: `${t.accent}18`,
+                  border: 'none',
+                  borderRadius: 10,
+                  width: 32,
+                  height: 32,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0,
                 }}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -201,8 +202,8 @@ export default function WeekCalendar({
                 title="eii coisas de garotas aqui, pode ir saindo!"
               >
                 <svg
-                  width="14"
-                  height="14"
+                  width="15"
+                  height="15"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="#c87090"
@@ -212,20 +213,23 @@ export default function WeekCalendar({
                 >
                   <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
                 </svg>
-                ciclo
               </button>
             )}
 
             <button
               ref={themeButtonRef}
-              className="text-sm font-bold hover:opacity-80 transition-opacity"
+              className="hover:opacity-80 transition-opacity"
               style={{
                 background: `${t.accent}18`,
-                color: t.accent,
-                fontFamily: 'Baloo 2, sans-serif',
-                border: `1.5px solid ${t.border}`,
-                borderRadius: 12,
-                padding: '5px 10px',
+                border: 'none',
+                borderRadius: 10,
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                padding: 0,
               }}
               onClick={() => {
                 if (themeButtonRef.current) {
@@ -234,8 +238,24 @@ export default function WeekCalendar({
                 }
                 setShowThemePicker((v) => !v)
               }}
+              title="tema"
             >
-              🎨 tema
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={t.accent}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="13.5" cy="6.5" r=".5" fill={t.accent} />
+                <circle cx="17.5" cy="10.5" r=".5" fill={t.accent} />
+                <circle cx="8.5" cy="7.5" r=".5" fill={t.accent} />
+                <circle cx="6.5" cy="12.5" r=".5" fill={t.accent} />
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+              </svg>
             </button>
 
             <button

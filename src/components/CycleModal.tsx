@@ -25,7 +25,6 @@ export default function CycleModal({ myUid, onClose }: Props) {
   const [actualEndDate, setActualEndDate] = useState('')
   const [nextPrediction, setNextPrediction] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -76,49 +75,82 @@ export default function CycleModal({ myUid, onClose }: Props) {
     setSaving(false)
   }
 
-  const labelStyle: React.CSSProperties = {
-    fontFamily: "'Baloo 2', cursive",
-    fontSize: 13,
-    color: '#a06060',
-    display: 'block',
-    marginBottom: 4,
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    borderRadius: 10,
-    border: '1.5px solid #e8d5b0',
-    background: '#fffaf4',
-    padding: '8px 14px',
-    fontFamily: "'Baloo 2', cursive",
-    fontSize: 14,
-    color: '#5a2a2a',
-    outline: 'none',
-    boxSizing: 'border-box',
-  }
-
-  const sectionStyle: React.CSSProperties = {
-    background: '#fdf0f4',
-    borderRadius: 12,
-    padding: '14px 16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 12,
-  }
-
   function formatDate(dateStr: string): string {
     if (!dateStr) return ''
     const [year, month, day] = dateStr.split('-')
     return `${day}/${month}/${year}`
   }
 
+  const labelStyle: React.CSSProperties = {
+    fontFamily: 'Baloo 2, sans-serif',
+    fontSize: 11,
+    fontWeight: 800,
+    color: 'rgba(122,48,64,0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+    display: 'block',
+    marginBottom: 5,
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    borderRadius: 10,
+    border: '1.5px solid rgba(232,160,176,0.4)',
+    background: 'rgba(253,242,246,0.6)',
+    padding: '8px 12px',
+    fontFamily: 'Baloo 2, sans-serif',
+    fontSize: 13,
+    fontWeight: 600,
+    color: '#3d1a10',
+    outline: 'none',
+    boxSizing: 'border-box',
+  }
+
+  const sectionStyle: React.CSSProperties = {
+    background: 'rgba(253,242,246,0.55)',
+    border: '1.5px solid rgba(232,160,176,0.3)',
+    borderRadius: 14,
+    padding: '14px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  }
+
+  const sectionTitle: React.CSSProperties = {
+    fontFamily: 'Baloo 2, sans-serif',
+    fontSize: 11,
+    fontWeight: 800,
+    color: 'rgba(122,48,64,0.55)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.8px',
+    margin: 0,
+  }
+
+  const btnStyle = (bg: string, color = '#3d1a10'): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    background: bg,
+    color,
+    border: 'none',
+    borderRadius: 12,
+    padding: '10px',
+    fontFamily: 'Baloo 2, sans-serif',
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: 'pointer',
+    width: '100%',
+  })
+
   return (
     <div
+      onClick={onClose}
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(26,42,26,0.55)',
+        background: 'rgba(44,20,8,0.35)',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
@@ -126,49 +158,51 @@ export default function CycleModal({ myUid, onClose }: Props) {
       }}
     >
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#fdf6ec',
+          background:
+            'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
           borderRadius: 20,
-          padding: '28px 32px',
-          width: 440,
+          padding: '24px 28px',
+          width: 420,
           maxHeight: '90vh',
           overflowY: 'auto',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
-          border: '2px solid #e8d5b0',
+          boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+          border: '1.5px solid rgba(232,160,176,0.4)',
           display: 'flex',
           flexDirection: 'column',
-          gap: 20,
+          gap: 16,
+          fontFamily: 'Baloo 2, sans-serif',
         }}
       >
+        {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2
-            style={{ fontFamily: "'Baloo 2', cursive", fontSize: 20, color: '#5a2a2a', margin: 0 }}
-          >
-            Ciclo menstrual
-          </h2>
+          <span style={{ fontSize: 16, fontWeight: 800, color: '#3d1a10' }}>ciclo menstrual</span>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a06060' }}
+            style={{
+              background: 'rgba(200,120,140,0.15)',
+              border: 'none',
+              borderRadius: '50%',
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
           >
-            <X size={20} />
+            <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
           </button>
         </div>
 
+        {/* novo ciclo */}
         {!hasCurrent && (
           <div style={sectionStyle}>
-            <p
-              style={{
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 13,
-                color: '#a06060',
-                margin: 0,
-              }}
-            >
-              Novo ciclo
-            </p>
-
+            <p style={sectionTitle}>novo ciclo</p>
             <div>
-              <label style={labelStyle}>Data prevista para descer</label>
+              <label style={labelStyle}>data prevista para descer</label>
               <input
                 type="date"
                 value={predictedDate}
@@ -176,85 +210,63 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 style={inputStyle}
               />
             </div>
-
-            <div>
-              <label style={labelStyle}>Dias de TPM antes (padrão 7)</label>
-              <input
-                type="number"
-                min={1}
-                max={14}
-                value={tpmDays}
-                onChange={(e) => setTpmDays(Number(e.target.value))}
-                style={{ ...inputStyle, width: 80 }}
-              />
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>dias de tpm antes</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={14}
+                  value={tpmDays}
+                  onChange={(e) => setTpmDays(Number(e.target.value))}
+                  style={{ ...inputStyle, width: '100%' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>duração (dias)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={14}
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  style={{ ...inputStyle, width: '100%' }}
+                />
+              </div>
             </div>
-
-            <div>
-              <label style={labelStyle}>Duração média do ciclo (dias)</label>
-              <input
-                type="number"
-                min={1}
-                max={14}
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                style={{ ...inputStyle, width: 80 }}
-              />
-            </div>
-
             {predictedDate && (
               <p
                 style={{
-                  fontFamily: "'Baloo 2', cursive",
+                  fontFamily: 'Baloo 2, sans-serif',
                   fontSize: 12,
-                  color: '#c4956a',
+                  color: 'rgba(122,48,64,0.6)',
                   margin: 0,
                 }}
               >
-                TPM prevista a partir de{' '}
-                <strong>{formatDate(addDays(predictedDate, -tpmDays))}</strong>
+                tpm a partir de <strong>{formatDate(addDays(predictedDate, -tpmDays))}</strong>
               </p>
             )}
-
             <button
               onClick={handleSaveNew}
               disabled={!predictedDate || saving}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                background: '#e8a0b0',
-                color: '#5a2a2a',
-                border: 'none',
-                borderRadius: 12,
-                padding: '10px',
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: predictedDate && !saving ? 'pointer' : 'not-allowed',
-                opacity: !predictedDate || saving ? 0.6 : 1,
+                ...btnStyle('rgba(232,160,176,0.6)'),
+                opacity: !predictedDate || saving ? 0.5 : 1,
               }}
             >
-              <Save size={15} /> Salvar previsão
+              <Save size={14} strokeWidth={2.5} /> salvar previsão
             </button>
           </div>
         )}
 
+        {/* previsão atual + confirmar */}
         {hasCurrent && !isActive && (
           <div style={sectionStyle}>
-            <p
-              style={{
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 13,
-                color: '#a06060',
-                margin: 0,
-              }}
-            >
-              Previsão atual — {formatDate(currentCycle.data.predictedDate)}
+            <p style={sectionTitle}>
+              previsão atual — {formatDate(currentCycle.data.predictedDate)}
             </p>
-
             <div>
-              <label style={labelStyle}>Ajustar data prevista</label>
+              <label style={labelStyle}>ajustar data prevista</label>
               <input
                 type="date"
                 value={predictedDate}
@@ -262,9 +274,8 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 style={inputStyle}
               />
             </div>
-
             <div>
-              <label style={labelStyle}>Dias de TPM antes</label>
+              <label style={labelStyle}>dias de tpm antes</label>
               <input
                 type="number"
                 min={1}
@@ -274,44 +285,19 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 style={{ ...inputStyle, width: 80 }}
               />
             </div>
-
             <button
               onClick={handleSaveNew}
               disabled={!predictedDate || saving}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                background: '#dcc4f0',
-                color: '#5a2a2a',
-                border: 'none',
-                borderRadius: 12,
-                padding: '10px',
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
+              style={btnStyle('rgba(210,185,245,0.6)')}
             >
-              <Save size={15} /> Atualizar previsão
+              <Save size={14} strokeWidth={2.5} /> atualizar previsão
             </button>
 
-            <hr style={{ border: 'none', borderTop: '1px solid #e8d5b0', margin: '4px 0' }} />
+            <div style={{ height: 1, background: 'rgba(232,160,176,0.3)', margin: '2px 0' }} />
 
-            <p
-              style={{
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 13,
-                color: '#a06060',
-                margin: 0,
-              }}
-            >
-              Confirmar que desceu
-            </p>
-
+            <p style={sectionTitle}>confirmar que desceu</p>
             <div>
-              <label style={labelStyle}>Data real que desceu</label>
+              <label style={labelStyle}>data real que desceu</label>
               <input
                 type="date"
                 value={confirmedDate}
@@ -319,9 +305,8 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 style={inputStyle}
               />
             </div>
-
             <div>
-              <label style={labelStyle}>Duração prevista (dias)</label>
+              <label style={labelStyle}>duração prevista (dias)</label>
               <input
                 type="number"
                 min={1}
@@ -331,58 +316,40 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 style={{ ...inputStyle, width: 80 }}
               />
             </div>
-
             <button
               onClick={handleConfirmStarted}
               disabled={!confirmedDate || saving}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                background: '#f5a0a0',
-                color: '#5a2a2a',
-                border: 'none',
-                borderRadius: 12,
-                padding: '10px',
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: confirmedDate && !saving ? 'pointer' : 'not-allowed',
-                opacity: !confirmedDate || saving ? 0.6 : 1,
+                ...btnStyle('rgba(245,160,160,0.6)'),
+                opacity: !confirmedDate || saving ? 0.5 : 1,
               }}
             >
-              <CheckCircle size={15} /> Desceu hoje
+              <CheckCircle size={14} strokeWidth={2.5} /> desceu hoje
             </button>
           </div>
         )}
 
+        {/* ciclo ativo */}
         {isActive && (
           <div style={sectionStyle}>
-            <p
-              style={{
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 13,
-                color: '#a06060',
-                margin: 0,
-              }}
-            >
-              Ciclo ativo desde {formatDate(currentCycle.data.confirmedDate ?? '')}
+            <p style={sectionTitle}>
+              ciclo ativo desde {formatDate(currentCycle.data.confirmedDate ?? '')}
             </p>
             <p
               style={{
-                fontFamily: "'Baloo 2', cursive",
+                fontFamily: 'Baloo 2, sans-serif',
                 fontSize: 12,
-                color: '#c4956a',
+                color: 'rgba(122,48,64,0.6)',
                 margin: 0,
               }}
             >
-              Previsão de fim:{' '}
-              {formatDate(currentCycle.data.actualEndDate ?? currentCycle.data.endDate)}
+              previsão de fim:{' '}
+              <strong>
+                {formatDate(currentCycle.data.actualEndDate ?? currentCycle.data.endDate)}
+              </strong>
             </p>
-
             <div>
-              <label style={labelStyle}>Corrigir data de fim (opcional)</label>
+              <label style={labelStyle}>corrigir data de fim (opcional)</label>
               <input
                 type="date"
                 value={actualEndDate}
@@ -390,68 +357,49 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 style={inputStyle}
               />
             </div>
-
             <button
               onClick={handleEndCycle}
               disabled={saving}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                background: '#b0d4a0',
-                color: '#2a4a2a',
-                border: 'none',
-                borderRadius: 12,
-                padding: '10px',
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: saving ? 'not-allowed' : 'pointer',
-                opacity: saving ? 0.6 : 1,
-              }}
+              style={{ ...btnStyle('rgba(176,212,160,0.6)', '#2a4a2a'), opacity: saving ? 0.5 : 1 }}
             >
-              <StopCircle size={15} /> Ciclo encerrado
+              <StopCircle size={14} strokeWidth={2.5} /> ciclo encerrado
             </button>
           </div>
         )}
 
+        {/* próximo previsto */}
         {nextPrediction && (
           <div
             style={{
-              background: '#f5f0e8',
+              background: 'rgba(245,240,232,0.7)',
+              border: '1.5px solid rgba(196,149,106,0.3)',
               borderRadius: 12,
-              padding: '12px 16px',
+              padding: '10px 14px',
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 8,
             }}
           >
-            <CalendarDays size={16} color="#c4956a" />
+            <CalendarDays size={14} color="rgba(196,149,106,0.9)" strokeWidth={2} />
             <p
               style={{
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 13,
-                color: '#8b6914',
+                fontFamily: 'Baloo 2, sans-serif',
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'rgba(122,80,20,0.8)',
                 margin: 0,
               }}
             >
-              Próximo ciclo previsto: <strong>{formatDate(nextPrediction ?? '')}</strong>
+              próximo ciclo previsto: <strong>{formatDate(nextPrediction)}</strong>
             </p>
           </div>
         )}
 
+        {/* encerrado */}
         {isEnded && (
           <div style={sectionStyle}>
-            <p
-              style={{
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 13,
-                color: '#a06060',
-                margin: 0,
-              }}
-            >
-              Ciclo deste mês encerrado. Registre o próximo quando quiser.
+            <p style={{ ...sectionTitle, textTransform: 'none', fontSize: 13 }}>
+              ciclo encerrado 🌸 registre o próximo quando quiser.
             </p>
             <button
               onClick={() => {
@@ -459,23 +407,9 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 setConfirmedDate('')
                 setActualEndDate('')
               }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                background: '#e8a0b0',
-                color: '#5a2a2a',
-                border: 'none',
-                borderRadius: 12,
-                padding: '10px',
-                fontFamily: "'Baloo 2', cursive",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
+              style={btnStyle('rgba(232,160,176,0.6)')}
             >
-              <CalendarDays size={15} /> Registrar próximo ciclo
+              <CalendarDays size={14} strokeWidth={2.5} /> registrar próximo ciclo
             </button>
           </div>
         )}

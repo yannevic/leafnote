@@ -1505,7 +1505,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onClose={() => setShowCalendar(false)}
             onPinToBoard={(entry, dateKey) => setPinColorPicker({ entry, dateKey })}
             onOpenCycleModal={() => {
-              setShowCalendar(false)
               setShowCycleModal(true)
             }}
             onPinCycleToBoard={() => {
