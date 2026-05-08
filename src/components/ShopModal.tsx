@@ -39,7 +39,7 @@ import {
   COLOR_VARIANT_LABELS,
 } from '../assets/character/index'
 import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
-import coinIcon from '../assets/coin.png'
+import { PiMoneyWavyLight } from 'react-icons/pi'
 
 // ─────────────────────────────────────────────
 // TIPOS
@@ -779,7 +779,7 @@ function ItemCard({
                 color: inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#7a7068',
               }}
             >
-              <img src={coinIcon} style={{ width: 12, height: 12, imageRendering: 'pixelated' }} />
+              <PiMoneyWavyLight size={14} />
               {discount ? (
                 <>
                   <span style={{ textDecoration: 'line-through', opacity: 0.45, fontSize: 10 }}>
@@ -926,11 +926,7 @@ function ConfirmModal({
               fontSize: 32,
             }}
           >
-            {canAfford ? (
-              '🛍️'
-            ) : (
-              <img src={coinIcon} style={{ width: 44, height: 44, imageRendering: 'pixelated' }} />
-            )}
+            {canAfford ? '🛍️' : <PiMoneyWavyLight size={40} />}
           </div>
           <div
             style={{
@@ -980,10 +976,7 @@ function ConfirmModal({
                   color: '#3d2408',
                 }}
               >
-                <img
-                  src={coinIcon}
-                  style={{ width: 14, height: 14, imageRendering: 'pixelated' }}
-                />
+                <PiMoneyWavyLight size={16} />
                 {cost}
               </span>
             </div>
@@ -1008,11 +1001,8 @@ function ConfirmModal({
                   color: canAfford ? '#3d2408' : '#ef4444',
                 }}
               >
-                <img
-                  src={coinIcon}
-                  style={{ width: 14, height: 14, imageRendering: 'pixelated' }}
-                />
-                {coins}
+                <PiMoneyWavyLight size={16} />
+                {cost}
               </span>
             </div>
             {!canAfford && (
@@ -1567,8 +1557,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
             fontFamily: 'Baloo 2, sans-serif',
           }}
         >
-          <img src={coinIcon} style={{ width: 18, height: 18, imageRendering: 'pixelated' }} />{' '}
-          {coins}
+          <PiMoneyWavyLight size={20} /> {coins}
         </div>
       </div>
 
@@ -1812,10 +1801,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                                   fontFamily: 'Baloo 2, sans-serif',
                                 }}
                               >
-                                <img
-                                  src={coinIcon}
-                                  style={{ width: 10, height: 10, imageRendering: 'pixelated' }}
-                                />
+                                <PiMoneyWavyLight size={12} />
                                 {getDiscountedCost(i)}
                               </span>
                               <button
@@ -1867,10 +1853,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                               fontFamily: 'Baloo 2, sans-serif',
                             }}
                           >
-                            <img
-                              src={coinIcon}
-                              style={{ width: 12, height: 12, imageRendering: 'pixelated' }}
-                            />
+                            <PiMoneyWavyLight size={14} />
                             {houseCartTotal}
                           </span>
                         </div>
@@ -2302,14 +2285,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                                     '✓'
                                   ) : (
                                     <>
-                                      <img
-                                        src={coinIcon}
-                                        style={{
-                                          width: 10,
-                                          height: 10,
-                                          imageRendering: 'pixelated',
-                                        }}
-                                      />
+                                      <PiMoneyWavyLight size={12} />
                                       {p.cost ?? 0}
                                     </>
                                   )}
@@ -2364,10 +2340,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                                   fontFamily: 'Baloo 2, sans-serif',
                                 }}
                               >
-                                <img
-                                  src={coinIcon}
-                                  style={{ width: 12, height: 12, imageRendering: 'pixelated' }}
-                                />
+                                <PiMoneyWavyLight size={14} />
                                 {clothesCartTotal}
                               </span>
                             </div>

@@ -4,7 +4,7 @@ import BoardSwitcher from './BoardSwitcher'
 import type { BoardMeta } from '../lib/boards'
 import NotificationCenter from './NotificationCenter'
 import type { AppNotification } from '../hooks/useNotificationCenter'
-import coinIcon from '../assets/coin.png'
+import { PiMoneyWavyLight } from 'react-icons/pi'
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
 import type { UpdateStatus } from './UpdateNotifier'
@@ -186,8 +186,8 @@ export default function TitleBar({
             color: '#c4956a',
           }}
         >
-          <img src={coinIcon} style={{ width: 25, height: 25 }} />
-          <span style={{ fontSize: 15, fontWeight: 800, marginTop: 6 }}>{coins}</span>
+          <PiMoneyWavyLight size={22} />
+          <span style={{ fontSize: 15, fontWeight: 800, marginTop: 4 }}>{coins}</span>
         </div>
         <NotificationCenter notifications={notifications} />
 

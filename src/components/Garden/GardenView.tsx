@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import coinIcon from '../../assets/coin.png'
+import { PiMoneyWavyLight } from 'react-icons/pi'
 import { TbPlant2 } from 'react-icons/tb'
 import {
   ChevronLeft,
@@ -185,8 +185,8 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   color: '#8b6914',
                 }}
               >
-                <img src={coinIcon} style={{ width: 22, height: 22, display: 'block' }} />
-                <span style={{ fontSize: 15, fontWeight: 800, marginTop: 6 }}>{coins}</span>
+                <PiMoneyWavyLight size={20} />
+                <span style={{ fontSize: 15, fontWeight: 800, marginTop: 4 }}>{coins}</span>
               </div>
               <button
                 onClick={() => setShowGuideModal(true)}
