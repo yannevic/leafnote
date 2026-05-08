@@ -13,6 +13,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.43.0",
     "better-sqlite3": "^11.0.0",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.0.0",

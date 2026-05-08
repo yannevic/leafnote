@@ -57,7 +57,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
   const widgetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setPos({ x: window.innerWidth / 2 - 30, y: 60 })
+    setPos({ x: window.innerWidth / 2 - 26, y: 108 })
   }, [])
 
   useEffect(() => {
@@ -173,12 +173,14 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         onMouseDown={onMouseDown}
         onClick={() => setExpanded((v) => !v)}
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: 12,
-          background: 'linear-gradient(180deg, #fdf6f0 0%, #fce8ee 100%)',
-          border: '1.5px solid #e8a0b0',
-          boxShadow: '0 2px 10px rgba(44,20,8,0.18)',
+          width: 42,
+          height: 42,
+          borderRadius: 14,
+          background: 'rgba(245,185,210,0.32)',
+          border: '1.5px solid rgba(215,145,180,0.45)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          boxShadow: '0 2px 10px rgba(44,20,8,0.10)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -190,7 +192,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
           <img
             src={moodImages[myMood] ?? ''}
             alt={myMood}
-            style={{ width: 42, height: 42, objectFit: 'contain', pointerEvents: 'none' }}
+            style={{ width: 34, height: 34, objectFit: 'contain', pointerEvents: 'none' }}
           />
         ) : (
           <span style={{ fontSize: 20 }}>🙂</span>
@@ -222,13 +224,17 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         <div
           style={{
             position: 'absolute',
-            top: 0,
-            left: 52,
-            background: 'linear-gradient(180deg, #fdf6f0 0%, #fce8ee 100%)',
-            border: '1.5px solid #e8a0b0',
+            top: 56, // expande pra baixo, abaixo do botão
+            left: '50%',
+            transform: 'translateX(-50%)', // centraliza em relação ao botão
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.45) 0%, rgba(252,232,238,0.38) 100%)',
+            border: '1.5px solid rgba(255,255,255,0.35)',
+            backdropFilter: 'blur(18px) saturate(1.4)',
+            WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
+            boxShadow: '0 8px 32px rgba(232,160,176,0.18), inset 0 1px 0 rgba(255,255,255,0.5)',
             borderRadius: 16,
             padding: 12,
-            boxShadow: '0 4px 24px rgba(44,20,8,0.2)',
             zIndex: 101,
             display: 'grid',
             gridTemplateColumns: `repeat(${COLS}, ${IMG_SIZE}px)`,
