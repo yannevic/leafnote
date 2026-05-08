@@ -157,6 +157,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showShop, setShowShop] = useState(false)
   const [shopInitialItem, setShopInitialItem] = useState<string | undefined>()
   const [expandedMenu, setExpandedMenu] = useState(false)
+  const [cycleToast, setCycleToast] = useState<string | null>(null)
+  function showCycleToast(msg: string) {
+    setCycleToast(msg)
+    setTimeout(() => setCycleToast(null), 3000)
+  }
   const {
     config: characterConfig,
     saveConfig: saveCharacterConfig,
@@ -754,6 +759,33 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         )}
         <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
         <MoodWidget uid={uid} partnerUid={partnerUid} />
+        {cycleToast && (
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 32,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.55) 0%, rgba(252,232,238,0.45) 100%)',
+              border: '1.5px solid rgba(255,255,255,0.35)',
+              backdropFilter: 'blur(18px) saturate(1.4)',
+              WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
+              borderRadius: 14,
+              padding: '10px 20px',
+              fontFamily: 'Baloo 2, sans-serif',
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#7a3040',
+              boxShadow: '0 4px 20px rgba(44,20,8,0.2)',
+              zIndex: 999,
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+            }}
+          >
+            {cycleToast}
+          </div>
+        )}
         {/* ── Botões fixos direita ── */}
         <div
           style={{
@@ -1508,6 +1540,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               setShowCycleModal(true)
             }}
             onPinCycleToBoard={() => {
+              const alreadyPinned = items.some((i) => i.type === 'cycle-pin')
+              if (alreadyPinned) {
+                showCycleToast('o ciclo já está fixado no mural 🌸')
+                return
+              }
               const item: CyclePinItemType = {
                 id: makeId(),
                 type: 'cycle-pin',

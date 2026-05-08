@@ -4,6 +4,7 @@ import { THEME_COLORS, DAY_NAMES, MONTH_NAMES, CalendarTheme, toDateKey } from '
 import WeekCalendarModal from './WeekCalendarModal'
 import { subscribeAllCycles } from '../lib/cycle'
 import type { CycleData } from '../lib/cycle'
+import { Pin } from 'lucide-react'
 
 const THEME_OPTIONS: { key: CalendarTheme; label: string }[] = [
   { key: 'rosa', label: 'Rosa 🌸' },
@@ -55,6 +56,7 @@ export default function WeekCalendar({
   const [datePickerPos, setDatePickerPos] = useState({ top: 0, left: 0 })
   const dateButtonRef = useRef<HTMLButtonElement>(null)
   const themeButtonRef = useRef<HTMLButtonElement>(null)
+  const [cyclePinned, setCyclePinned] = useState(false)
 
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
 
@@ -213,6 +215,31 @@ export default function WeekCalendar({
                 >
                   <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
                 </svg>
+              </button>
+            )}
+
+            {isNana && (
+              <button
+                className="hover:opacity-80 transition-opacity"
+                style={{
+                  background: `${t.accent}18`,
+                  border: 'none',
+                  borderRadius: 10,
+                  width: 32,
+                  height: 32,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPinCycleToBoard()
+                }}
+                title="fixar ciclo no mural"
+              >
+                <Pin size={15} color="#c87090" strokeWidth={2} />
               </button>
             )}
 
