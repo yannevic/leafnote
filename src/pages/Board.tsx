@@ -754,273 +754,394 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         )}
         <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
         <MoodWidget uid={uid} partnerUid={partnerUid} />
-        {/* Botão jardim */}
+        {/* ── Botões fixos direita ── */}
         <div
-          onClick={() => setShowGarden(true)}
           style={{
             position: 'fixed',
-            bottom: 24,
-            right: 20,
+            right: 95 - 86,
+            bottom: 95 - 86,
             zIndex: 48,
-            background: 'linear-gradient(145deg, #e8f5e8 0%, #a0c8a0 100%)',
-            border: '2px solid #7FB87F',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
+            width: 220,
+            height: 220,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#2d4a2d',
-            cursor: 'pointer',
-            boxShadow: '0 3px 10px rgba(79,160,79,0.2)',
-            userSelect: 'none',
-            transition: 'transform 0.15s',
           }}
-          title="jardim 🌱"
-        >
-          <Sprout size={22} strokeWidth={2} />
-        </div>
-        {/* Grupo expansível — guarda-roupa / casinha / loja */}
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 328,
-            right: 20,
-            zIndex: 48,
-            width: 140,
-            height: 140,
-          }}
-          onMouseEnter={() => setExpandedMenu(true)}
           onMouseLeave={() => setExpandedMenu(false)}
         >
-          {/* Botão principal — só ícone, sem clique */}
+          {/* todos os seus botões filhos aqui, sem mover nada */}
+          {/* Jardim — 0° topo */}
           <div
+            onClick={() => setShowGarden(true)}
+            title="jardim"
             style={{
               position: 'absolute',
-              bottom: 0,
-              right: 0,
-              background: expandedMenu
-                ? 'linear-gradient(145deg, #f5d0ff 0%, #c478a8 100%)'
-                : 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
-              border: '2px solid #c478a8',
-              borderRadius: '50%',
               width: 48,
               height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#5a1a3a',
-              cursor: 'default',
-              boxShadow: expandedMenu
-                ? '0 4px 16px rgba(196,120,168,0.5)'
-                : '0 3px 10px rgba(196,120,168,0.35)',
-              transition: 'all 0.2s ease',
-              userSelect: 'none',
-            }}
-          >
-            <Sparkles size={22} strokeWidth={2} />
-          </div>
-
-          {/* Sub-botão: guarda-roupa — 90° (esquerda) */}
-          <div
-            onClick={() => setShowCharacter(true)}
-            style={{
-              position: 'absolute',
-              bottom: 4,
-              right: expandedMenu ? 56 : 4,
-              opacity: expandedMenu ? 1 : 0,
-              transform: expandedMenu ? 'scale(1)' : 'scale(0.6)',
-              transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1)',
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              background: 'linear-gradient(145deg, #fce8f5 0%, #e8b0d0 100%)',
-              border: '2px solid #c478a8',
               borderRadius: '50%',
-              width: 40,
-              height: 40,
+              background: 'rgba(160,220,170,0.48)',
+              border: '1.5px solid rgba(140,200,150,0.65)',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#5a1a3a',
+              gap: 1,
               cursor: 'pointer',
-              boxShadow: '0 3px 10px rgba(196,120,168,0.35)',
-              userSelect: 'none',
-            }}
-            title="guarda-roupa"
-          >
-            <User size={18} strokeWidth={2} />
-          </div>
-
-          {/* Sub-botão: casinha — 45° (diagonal) */}
-          <div
-            onClick={() => setShowHouse(true)}
-            style={{
-              position: 'absolute',
-              bottom: expandedMenu ? 52 : 4,
-              right: expandedMenu ? 52 : 4,
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1), opacity 0.25s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + 0px), calc(-50% + -75px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
-              transform: expandedMenu ? 'scale(1)' : 'scale(0.6)',
-              transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1) 0.04s',
               pointerEvents: expandedMenu ? 'auto' : 'none',
-              background: 'linear-gradient(145deg, #e8f5e8 0%, #7FB87F 100%)',
-              border: '2px solid #4a7a4a',
-              borderRadius: '50%',
-              width: 40,
-              height: 40,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#1a3a1a',
-              cursor: 'pointer',
-              boxShadow: '0 3px 10px rgba(79,160,79,0.3)',
-              userSelect: 'none',
+              top: '50%',
+              left: '50%',
             }}
-            title="casinha"
           >
-            <House size={18} strokeWidth={2} />
+            <Sprout size={20} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              jardim
+            </span>
           </div>
 
-          {/* Sub-botão: loja — 0° (cima) */}
+          {/* Loja — 45° */}
           <div
             onClick={() => setShowShop(true)}
+            title="loja"
             style={{
               position: 'absolute',
-              bottom: expandedMenu ? 56 : 4,
-              right: 4,
-              opacity: expandedMenu ? 1 : 0,
-              transform: expandedMenu ? 'scale(1)' : 'scale(0.6)',
-              transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1) 0.08s',
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              background: 'linear-gradient(145deg, #fff8e1 0%, #f9c74f 100%)',
-              border: '2px solid #c9a227',
-              borderRadius: '50%',
-              width: 40,
-              height: 40,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#7a5000',
-              cursor: 'pointer',
-              boxShadow: '0 3px 10px rgba(201,162,39,0.35)',
-              userSelect: 'none',
-            }}
-            title="loja"
-          >
-            <ShoppingBag size={18} strokeWidth={2} />
-          </div>
-        </div>
-        {/* Botão calendário */}
-        <div
-          onClick={() => setShowCalendar(true)}
-          style={{
-            position: 'fixed',
-            bottom: 88,
-            right: 20,
-            zIndex: 48,
-            background: 'linear-gradient(145deg, #fce8ee 0%, #e8a0b0 100%)',
-            border: '2px solid #d4809a',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#7a3040',
-            cursor: 'pointer',
-            boxShadow: '0 3px 10px rgba(200,112,144,0.35)',
-            transition: 'transform 0.15s',
-            userSelect: 'none',
-          }}
-          title="abrir calendário"
-        >
-          <CalendarDays size={22} strokeWidth={2} />
-        </div>
-        {/* Botão filmes */}
-        <div
-          onClick={() => setShowMovies(true)}
-          style={{
-            position: 'fixed',
-            bottom: 216,
-            right: 20,
-            zIndex: 48,
-            background: 'linear-gradient(145deg, #dbeafe 0%, #6494c4 100%)',
-            border: '2px solid #4a74a4',
-            color: '#1e3a5f',
-            boxShadow: '0 3px 10px rgba(100,148,196,0.35)',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'transform 0.15s',
-            userSelect: 'none',
-          }}
-          title="filmes & séries"
-        >
-          <Film size={22} strokeWidth={2} />
-        </div>
-        {/* Botão carta especial */}
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 280,
-            right: 20,
-            zIndex: 48,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
-            alignItems: 'center',
-          }}
-        >
-          <div
-            onClick={() => setShowSpecialLetter(true)}
-            style={{
-              background: 'linear-gradient(145deg, #fce8f5 0%, #e8a0c8 100%)',
-              border: '2px solid #c478a8',
-              color: '#5a1a3a',
-              boxShadow: '0 3px 10px rgba(196,120,168,0.35)',
-              borderRadius: '50%',
               width: 48,
               height: 48,
+              borderRadius: '50%',
+              background: 'rgba(245,210,160,0.48)',
+              border: '1.5px solid rgba(220,175,110,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.03s, opacity 0.25s 0.03s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + -53px), calc(-50% + -53px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <ShoppingBag size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              loja
+            </span>
+          </div>
+
+          {/* Casa — 90° esquerda */}
+          <div
+            onClick={() => setShowHouse(true)}
+            title="casinha"
+            style={{
+              position: 'absolute',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'rgba(180,210,245,0.48)',
+              border: '1.5px solid rgba(140,175,225,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.06s, opacity 0.25s 0.06s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + -75px), calc(-50% + 0px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <House size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              casa
+            </span>
+          </div>
+
+          {/* Roupa — 135° */}
+          <div
+            onClick={() => setShowCharacter(true)}
+            title="guarda-roupa"
+            style={{
+              position: 'absolute',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'rgba(235,185,220,0.48)',
+              border: '1.5px solid rgba(205,145,190,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.09s, opacity 0.25s 0.09s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + -53px), calc(-50% + 53px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <User size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              roupa
+            </span>
+          </div>
+
+          {/* Carta especial — 180° baixo */}
+          <div
+            onClick={() => setShowSpecialLetter(true)}
+            title="carta especial"
+            style={{
+              position: 'absolute',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'rgba(245,185,210,0.48)',
+              border: '1.5px solid rgba(215,145,180,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.12s, opacity 0.25s 0.12s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + 0px), calc(-50% + 75px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <Mail size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              carta
+            </span>
+          </div>
+
+          {/* Widgets — 225° */}
+          <div
+            onClick={() => setShowWidgets(true)}
+            title="widgets"
+            style={{
+              position: 'absolute',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'rgba(210,185,245,0.48)',
+              border: '1.5px solid rgba(170,140,225,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.15s, opacity 0.25s 0.15s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + 53px), calc(-50% + 53px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <LayoutGrid size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              widgets
+            </span>
+          </div>
+
+          {/* Filmes — 270° direita */}
+          <div
+            onClick={() => setShowMovies(true)}
+            title="filmes e séries"
+            style={{
+              position: 'absolute',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'rgba(180,210,245,0.48)',
+              border: '1.5px solid rgba(130,170,225,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.18s, opacity 0.25s 0.18s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + 75px), calc(-50% + 0px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <Film size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              filmes
+            </span>
+          </div>
+
+          {/* Calendário — 315° */}
+          <div
+            onClick={() => setShowCalendar(true)}
+            title="calendário"
+            style={{
+              position: 'absolute',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'rgba(175,220,215,0.48)',
+              border: '1.5px solid rgba(120,185,178,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.21s, opacity 0.25s 0.21s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + 53px), calc(-50% + -53px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <CalendarDays size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              agenda
+            </span>
+          </div>
+
+          {/* Botão central */}
+          <div
+            onMouseEnter={() => setExpandedMenu(true)}
+            style={{
+              position: 'relative',
+              zIndex: 3,
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: expandedMenu ? 'rgba(220,175,235,0.55)' : 'rgba(210,185,245,0.42)',
+              border: '1.5px solid rgba(255,255,255,0.55)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'transform 0.15s',
-              userSelect: 'none',
+              boxShadow: expandedMenu
+                ? '0 4px 16px rgba(160,100,200,0.25)'
+                : '0 2px 8px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s',
+              color: 'rgba(61,36,8,0.82)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
             }}
-            title="carta especial 💌"
           >
-            <Mail size={22} strokeWidth={2} />
+            <Sparkles size={20} strokeWidth={1.8} />
           </div>
         </div>
-        {/* Botão widgets */}
-        <div
-          onClick={() => setShowWidgets(true)}
-          style={{
-            position: 'fixed',
-            bottom: 152,
-            right: 20,
-            zIndex: 48,
-            background: 'linear-gradient(145deg, #f5ecd7 0%, #c4956a 100%)',
-            border: '2px solid #a07840',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#5a3010',
-            cursor: 'pointer',
-            boxShadow: '0 3px 10px rgba(139,105,20,0.3)',
-            transition: 'transform 0.15s',
-            userSelect: 'none',
-          }}
-          title="abrir widgets"
-        >
-          <LayoutGrid size={22} strokeWidth={2} />
-        </div>
+
         {/* Painel de widgets */}
         {showWidgets && (
           <div
@@ -1266,7 +1387,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               <div
                 style={{
                   padding: '8px 12px 4px',
-                  fontSize: 10,
+                  fontSize: 9,
                   fontWeight: 800,
                   color: '#8b6914',
                   textTransform: 'uppercase',
@@ -1312,7 +1433,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               <div
                 style={{
                   padding: '4px 12px 4px',
-                  fontSize: 10,
+                  fontSize: 9,
                   fontWeight: 800,
                   color: '#8b6914',
                   textTransform: 'uppercase',
@@ -1535,7 +1656,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                         </div>
                         <div
                           style={{
-                            fontSize: 10,
+                            fontSize: 9,
                             color: '#8b6914',
                             opacity: 0.8,
                             overflow: 'hidden',
@@ -1553,7 +1674,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                           border: 'none',
                           borderRadius: 7,
                           padding: '5px 10px',
-                          fontSize: 10,
+                          fontSize: 9,
                           color: '#fff',
                           fontWeight: 700,
                           cursor: 'pointer',
@@ -1570,7 +1691,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                           border: '1px solid #e8607a',
                           borderRadius: 7,
                           padding: '5px 10px',
-                          fontSize: 10,
+                          fontSize: 9,
                           color: '#e8607a',
                           fontWeight: 700,
                           cursor: 'pointer',

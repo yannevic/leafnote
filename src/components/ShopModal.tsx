@@ -848,7 +848,6 @@ function Section({
 function ConfirmModal({
   label,
   cost,
-  coins,
   canAfford,
   hasPartner,
   giftMode,

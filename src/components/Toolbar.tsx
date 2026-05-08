@@ -15,45 +15,45 @@ interface Tool {
   type: BoardItemType
   icon: React.ReactNode
   label: string
-  color: string
-  shadow: string
+  bg: string
+  border: string
 }
 
 const TOOLS: Tool[] = [
   {
     type: 'postit',
-    icon: <StickyNote size={18} strokeWidth={2} />,
+    icon: <StickyNote size={18} strokeWidth={1.8} />,
     label: 'Post-it',
-    color: 'linear-gradient(145deg, #fef9c3, #d4a84b)',
-    shadow: '0 3px 10px #d4a84b33',
+    bg: 'rgba(245,213,220,0.42)',
+    border: 'rgba(245,180,200,0.6)',
   },
   {
     type: 'checklist',
-    icon: <CheckSquare size={18} strokeWidth={2} />,
+    icon: <CheckSquare size={18} strokeWidth={1.8} />,
     label: 'Checklist',
-    color: 'linear-gradient(145deg, #d1fae5, #5a9e80)',
-    shadow: '0 3px 10px #5a9e8033',
+    bg: 'rgba(180,230,200,0.42)',
+    border: 'rgba(140,200,160,0.6)',
   },
   {
     type: 'drawing',
-    icon: <Pencil size={18} strokeWidth={2} />,
+    icon: <Pencil size={18} strokeWidth={1.8} />,
     label: 'Desenho',
-    color: 'linear-gradient(145deg, #ede9fe, #8b72c8)',
-    shadow: '0 3px 10px #8b72c833',
+    bg: 'rgba(180,205,245,0.42)',
+    border: 'rgba(140,170,230,0.6)',
   },
   {
     type: 'tag',
-    icon: <TagIcon size={18} strokeWidth={2} />,
+    icon: <TagIcon size={18} strokeWidth={1.8} />,
     label: 'Tag',
-    color: 'linear-gradient(145deg, #dbeafe, #6494c4)',
-    shadow: '0 3px 10px #6494c433',
+    bg: 'rgba(210,185,245,0.42)',
+    border: 'rgba(170,140,230,0.6)',
   },
   {
     type: 'letter',
-    icon: <Mail size={18} strokeWidth={2} />,
+    icon: <Mail size={18} strokeWidth={1.8} />,
     label: 'Cartinha',
-    color: 'linear-gradient(145deg, #fce8ee, #d4809a)',
-    shadow: '0 3px 10px #d4809a33',
+    bg: 'rgba(245,200,180,0.42)',
+    border: 'rgba(220,160,130,0.6)',
   },
 ]
 
@@ -159,6 +159,9 @@ export default function Toolbar({
     return () => window.removeEventListener('click', handleBoardClick)
   }, [handleBoardClick])
 
+  // Todos os itens: tools + mover + lixeira
+  const allItems = TOOLS.length + 2 // tools + mover + lixeira
+
   if (pos.y < 0) return null
 
   return (
@@ -220,31 +223,36 @@ export default function Toolbar({
         {/* Ferramentas */}
         {TOOLS.map((tool, i) => {
           const isSelected = tool.type === selected
+          const delay = open ? `${i * 0.045}s` : `${(allItems - 1 - i) * 0.03}s`
           return (
             <div
               key={tool.type}
               onClick={(e) => handleChildClick(e, tool.type)}
               style={{
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 borderRadius: '50%',
-                border: isSelected && open ? '2.5px solid rgba(255,255,255,0.9)' : 'none',
-                background: tool.color,
+                background: tool.bg,
+                border: `1.5px solid ${isSelected && open ? 'rgba(255,255,255,0.9)' : tool.border}`,
                 boxShadow:
                   isSelected && open
-                    ? `0 0 0 3px rgba(255,255,255,0.3), ${tool.shadow}`
-                    : tool.shadow,
+                    ? '0 0 0 3px rgba(255,255,255,0.25)'
+                    : '0 2px 8px rgba(0,0,0,0.1)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
+                color: 'rgba(61,36,8,0.82)',
                 position: 'relative',
-                transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s',
-                transitionDelay: open ? `${i * 0.04}s` : '0s',
-                transform: open ? `scale(${isSelected ? 1.15 : 1})` : 'translateY(20px) scale(0.7)',
+                transition: 'transform 0.28s cubic-bezier(.34,1.56,.64,1), opacity 0.2s',
+                transitionDelay: delay,
+                transform: open
+                  ? `scale(${isSelected ? 1.12 : 1})`
+                  : 'translateY(16px) scale(0.65)',
                 opacity: open ? 1 : 0,
                 pointerEvents: open ? 'auto' : 'none',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
               }}
             >
               {tool.icon}
@@ -261,26 +269,30 @@ export default function Toolbar({
             setOpen(false)
           }}
           style={{
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             borderRadius: '50%',
-            border: 'none',
-            background: 'linear-gradient(145deg, #fee2e2, #c47a7a)',
-            boxShadow: '0 3px 10px #c47a7a33',
+            background: 'rgba(245,200,200,0.42)',
+            border: '1.5px solid rgba(220,140,140,0.6)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#fff',
+            color: 'rgba(61,36,8,0.82)',
             position: 'relative',
-            transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s',
-            transitionDelay: open ? `${(TOOLS.length + 1) * 0.04}s` : '0s',
-            transform: open ? 'scale(1)' : 'translateY(20px) scale(0.7)',
+            transition: 'transform 0.28s cubic-bezier(.34,1.56,.64,1), opacity 0.2s',
+            transitionDelay: open
+              ? `${TOOLS.length * 0.045}s`
+              : `${(allItems - 1 - TOOLS.length) * 0.03}s`,
+            transform: open ? 'scale(1)' : 'translateY(16px) scale(0.65)',
             opacity: open ? 1 : 0,
             pointerEvents: open ? 'auto' : 'none',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
           }}
         >
-          <Trash2 size={18} strokeWidth={2} />
+          <Trash2 size={18} strokeWidth={1.8} />
           {trashCount > 0 && (
             <div
               style={{
@@ -291,7 +303,7 @@ export default function Toolbar({
                 height: 15,
                 borderRadius: '50%',
                 background: '#1e1208',
-                border: '2px solid #fff',
+                border: '2px solid rgba(255,255,255,0.6)',
                 fontSize: 8,
                 fontWeight: 700,
                 color: '#fff',
@@ -314,30 +326,32 @@ export default function Toolbar({
             onToggleEdit()
           }}
           style={{
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             borderRadius: '50%',
-            border: editMode ? '2.5px solid rgba(255,255,255,0.9)' : 'none',
-            background: editMode
-              ? 'linear-gradient(145deg, #ccfbf1, #4a9e8a)'
-              : 'linear-gradient(145deg, #d4f5ee, #7abfb0)',
+            background: editMode ? 'rgba(160,220,200,0.55)' : 'rgba(175,220,215,0.42)',
+            border: `1.5px solid ${editMode ? 'rgba(255,255,255,0.9)' : 'rgba(130,190,180,0.6)'}`,
             boxShadow: editMode
-              ? '0 0 0 3px rgba(255,255,255,0.25), 0 3px 12px #4a9e8a33'
-              : '0 3px 10px #7abfb033',
+              ? '0 0 0 3px rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.1)'
+              : '0 2px 8px rgba(0,0,0,0.1)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#fff',
+            color: 'rgba(61,36,8,0.82)',
             position: 'relative',
-            transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s',
-            transitionDelay: open ? `${TOOLS.length * 0.04}s` : '0s',
-            transform: open ? 'scale(1)' : 'translateY(20px) scale(0.7)',
+            transition: 'transform 0.28s cubic-bezier(.34,1.56,.64,1), opacity 0.2s',
+            transitionDelay: open
+              ? `${(TOOLS.length + 1) * 0.045}s`
+              : `${(allItems - 1 - TOOLS.length - 1) * 0.03}s`,
+            transform: open ? 'scale(1)' : 'translateY(16px) scale(0.65)',
             opacity: open ? 1 : 0,
             pointerEvents: open ? 'auto' : 'none',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
           }}
         >
-          <Hand size={18} strokeWidth={2} />
+          <Hand size={18} strokeWidth={1.8} />
           <span style={LABEL_STYLE}>{editMode ? 'modo mover ativo' : 'mover itens'}</span>
         </div>
 
@@ -345,26 +359,26 @@ export default function Toolbar({
         <div
           onClick={handleMainClick}
           style={{
-            width: 54,
-            height: 54,
+            width: 50,
+            height: 50,
             borderRadius: '50%',
-            border: 'none',
-            background: open
-              ? 'linear-gradient(145deg, #e0d7f8, #7c6ab8)'
-              : 'linear-gradient(145deg, #ede9fe, #9b8ac4)',
+            background: open ? 'rgba(200,160,220,0.55)' : 'rgba(210,185,245,0.48)',
+            border: '1.5px solid rgba(255,255,255,0.55)',
             boxShadow: open
-              ? '0 6px 20px #7c6ab833, 0 0 0 4px rgba(180,160,240,0.2)'
-              : '0 4px 14px #9b8ac433',
+              ? '0 4px 16px rgba(160,100,200,0.3), 0 0 0 3px rgba(200,160,240,0.2)'
+              : '0 3px 10px rgba(0,0,0,0.12)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#fff',
+            color: 'rgba(61,36,8,0.85)',
             position: 'relative',
             zIndex: 2,
             flexShrink: 0,
             transition: 'transform 0.2s, box-shadow 0.2s, background 0.2s',
             transform: open ? 'scale(1.08)' : 'scale(1)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
           }}
         >
           <div
@@ -376,7 +390,7 @@ export default function Toolbar({
               justifyContent: 'center',
             }}
           >
-            {editMode ? <Hand size={24} strokeWidth={2} /> : <Plus size={24} strokeWidth={2.5} />}
+            {editMode ? <Hand size={22} strokeWidth={1.8} /> : <Plus size={22} strokeWidth={2} />}
           </div>
         </div>
       </div>
