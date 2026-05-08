@@ -1,5 +1,13 @@
 import { PlantData, FLOWERS } from '../../lib/garden'
 import { getFlowerImage } from '../../assets/garden'
+import { TbPlant2 } from 'react-icons/tb'
+
+const RARITY_COLOR: Record<string, string> = {
+  comum: '#3d7a3d',
+  incomum: '#8b6914',
+  rara: '#c87090',
+  epica: '#7a3040',
+}
 
 interface PlantProps {
   plant: PlantData
@@ -48,9 +56,13 @@ export default function Plant({ plant, onClick }: PlantProps) {
           background: 'rgba(255,255,255,0.45)',
           borderRadius: 6,
           padding: '1px 6px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
         }}
       >
-        {info.emoji} {info.name}
+        <TbPlant2 size={13} color={RARITY_COLOR[info.rarity]} style={{ flexShrink: 0 }} />
+        {info.name}
       </span>
       {plant.wilted && (
         <span className="text-xs" style={{ color: '#c87090' }}>

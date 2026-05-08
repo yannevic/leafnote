@@ -1,5 +1,13 @@
 import { useState, useCallback } from 'react'
 import { FLOWERS, FlowerType, getFlowerFromSum } from '../../lib/garden'
+import { TbPlant2 } from 'react-icons/tb'
+
+const RARITY_COLOR: Record<string, string> = {
+  comum: '#3d7a3d',
+  incomum: '#8b6914',
+  rara: '#c87090',
+  epica: '#7a3040',
+}
 
 interface DieFaceProps {
   value: number
@@ -262,7 +270,11 @@ export default function SeedRollModal({
                 border: '1.5px solid var(--color-leaf-400)',
               }}
             >
-              <div style={{ fontSize: 28, marginBottom: 4 }}>{FLOWERS[flowerResult].emoji}</div>
+              <TbPlant2
+                size={28}
+                color={RARITY_COLOR[FLOWERS[flowerResult].rarity]}
+                style={{ margin: '0 auto 4px' }}
+              />
               <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-leaf-950)' }}>
                 Semente de {FLOWERS[flowerResult].name}!
               </div>

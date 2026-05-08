@@ -20,26 +20,25 @@ export interface FlowerInfo {
   type: FlowerType
   name: string
   rarity: FlowerRarity
-  emoji: string
 }
 
 export const FLOWERS: Record<FlowerType, FlowerInfo> = {
-  rosa: { type: 'rosa', name: 'Rosa', rarity: 'comum', emoji: '🌸' },
-  margarida: { type: 'margarida', name: 'Margarida', rarity: 'comum', emoji: '🌼' },
-  peonia: { type: 'peonia', name: 'Peônia', rarity: 'comum', emoji: '🌸' },
-  papoula: { type: 'papoula', name: 'Papoula', rarity: 'comum', emoji: '🌺' },
-  lavanda: { type: 'lavanda', name: 'Lavanda', rarity: 'comum', emoji: '💜' },
-  tulipa: { type: 'tulipa', name: 'Tulipa', rarity: 'incomum', emoji: '🌷' },
-  girassol: { type: 'girassol', name: 'Girassol', rarity: 'incomum', emoji: '🌻' },
-  jasmin: { type: 'jasmin', name: 'Jasmim', rarity: 'incomum', emoji: '🤍' },
-  violeta: { type: 'violeta', name: 'Violeta', rarity: 'incomum', emoji: '💜' },
-  orquidea: { type: 'orquidea', name: 'Orquídea', rarity: 'rara', emoji: '🌺' },
-  lirio: { type: 'lirio', name: 'Lírio', rarity: 'rara', emoji: '🌸' },
-  especial: { type: 'especial', name: 'Flor Épica', rarity: 'epica', emoji: '🌸' },
+  rosa: { type: 'rosa', name: 'Rosa', rarity: 'comum' },
+  margarida: { type: 'margarida', name: 'Margarida', rarity: 'comum' },
+  peonia: { type: 'peonia', name: 'Peônia', rarity: 'comum' },
+  papoula: { type: 'papoula', name: 'Papoula', rarity: 'comum' },
+  lavanda: { type: 'lavanda', name: 'Lavanda', rarity: 'comum' },
+  tulipa: { type: 'tulipa', name: 'Tulipa', rarity: 'incomum' },
+  girassol: { type: 'girassol', name: 'Girassol', rarity: 'incomum' },
+  jasmin: { type: 'jasmin', name: 'Jasmim', rarity: 'incomum' },
+  violeta: { type: 'violeta', name: 'Violeta', rarity: 'incomum' },
+  orquidea: { type: 'orquidea', name: 'Orquídea', rarity: 'rara' },
+  lirio: { type: 'lirio', name: 'Lírio', rarity: 'rara' },
+  especial: { type: 'especial', name: 'Flor Épica', rarity: 'epica' },
 }
 
 export const RARITY_COLORS: Record<FlowerRarity, string> = {
-  comum: '#7fb87f',
+  comum: '#3d7a3d',
   incomum: '#8b6914',
   rara: '#c87090',
   epica: '#7a3040',

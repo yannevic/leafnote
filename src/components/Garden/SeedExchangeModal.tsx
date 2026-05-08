@@ -22,18 +22,17 @@ const TIER_LABEL: Record<FlowerRarity, string> = {
   epica: 'Épica',
 }
 
-import { Clover } from 'lucide-react'
+import { TbPlant2 } from 'react-icons/tb'
 
 function RarityBadge({ rarity }: { rarity: FlowerRarity }) {
   const RARITY_COLOR: Record<FlowerRarity, string> = {
-    comum: '#7fb87f',
+    comum: '#3d7a3d',
     incomum: '#8b6914',
     rara: '#c87090',
     epica: '#7a3040',
   }
-  return <Clover size={14} color={RARITY_COLOR[rarity]} style={{ flexShrink: 0 }} />
+  return <TbPlant2 size={16} color={RARITY_COLOR[rarity]} style={{ flexShrink: 0 }} />
 }
-
 export default function SeedExchangeModal({ seeds, onClose }: Props) {
   const [selected, setSelected] = useState<string[]>([])
   const [chosenReward, setChosenReward] = useState<FlowerType | null>(null)

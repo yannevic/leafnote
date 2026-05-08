@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import coinIcon from '../../assets/coin.png'
+import { TbPlant2 } from 'react-icons/tb'
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,7 +10,6 @@ import {
   Leaf,
   ArrowLeftRight,
   HelpCircle,
-  Clover,
 } from 'lucide-react'
 import GardenGuideModal from './GardenGuideModal'
 import SeedExchangeModal from './SeedExchangeModal'
@@ -28,7 +28,7 @@ interface GardenViewProps {
 }
 
 const RARITY_COLOR: Record<string, string> = {
-  comum: '#7fb87f',
+  comum: '#3d7a3d',
   incomum: '#8b6914',
   rara: '#c87090',
   epica: '#7a3040',
@@ -420,7 +420,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                           }}
                         >
                           {/* Badge de raridade */}
-                          <Clover
+                          <TbPlant2
                             size={14}
                             color={RARITY_COLOR[info.rarity]}
                             style={{ flexShrink: 0 }}
@@ -568,7 +568,11 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                     }}
                   >
                     {/* Badge de raridade no lugar do emoji */}
-                    <Clover size={14} color={RARITY_COLOR[info.rarity]} style={{ flexShrink: 0 }} />
+                    <TbPlant2
+                      size={16}
+                      color={RARITY_COLOR[info.rarity]}
+                      style={{ flexShrink: 0 }}
+                    />
                     <div>
                       <div>{info.name}</div>
                       <div

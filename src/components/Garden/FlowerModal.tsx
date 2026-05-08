@@ -2,6 +2,14 @@ import { X, Droplets, Droplet } from 'lucide-react'
 import { PlantData, FLOWERS, RARITY_COLORS, FlowerType, FLOWER_SELL_VALUE } from '../../lib/garden'
 import { getFlowerImage } from '../../assets/garden'
 import { useState } from 'react'
+import { TbPlant2 } from 'react-icons/tb'
+
+const RARITY_COLOR: Record<string, string> = {
+  comum: '#3d7a3d',
+  incomum: '#8b6914',
+  rara: '#c87090',
+  epica: '#7a3040',
+}
 
 interface FlowerModalProps {
   plant: PlantData
@@ -100,7 +108,12 @@ export default function FlowerModal({
         {/* Nome e raridade */}
         <div className="text-center mb-3">
           <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-leaf-950)', margin: 0 }}>
-            {info.emoji} {info.name}
+            <span
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              <TbPlant2 size={18} color={RARITY_COLOR[info.rarity]} />
+              {info.name}
+            </span>
           </h2>
           <span
             style={{
