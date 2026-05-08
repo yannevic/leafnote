@@ -27,6 +27,7 @@ export type CharacterCategoryMulti =
   | 'accessory_topo'
   | 'jaqueta'
   | 'tattoo'
+  | 'bottom_over'
 
 export type CharacterCategory = CharacterCategorySingle | CharacterCategoryMulti
 
@@ -47,8 +48,9 @@ export const MULTI_SLOT_CATEGORIES: CharacterCategoryMulti[] = [
   'accessory',
   'accessory_cima',
   'accessory_topo',
-  'jaqueta', // ← adiciona
+  'jaqueta',
   'tattoo',
+  'bottom_over',
 ]
 
 export function isMultiSlot(category: CharacterCategory): category is CharacterCategoryMulti {
@@ -91,6 +93,7 @@ export interface CharacterConfig {
   accessory_cima: string[]
   accessory_topo: string[]
   tattoo: string[]
+  bottom_over: []
   colorVariants: Record<string, string>
 }
 
@@ -117,6 +120,7 @@ export const DEFAULT_CHARACTER_CONFIG: CharacterConfig = {
   accessory_cima: [],
   accessory_topo: [],
   tattoo: [],
+  bottom_over: [],
   colorVariants: {},
 }
 
@@ -1063,7 +1067,7 @@ export const BOTTOMS: CharacterPiece[] = [
   ),
 
   // ── summer ──
-  ...Array.from({ length: 8 }, (_, i) =>
+  ...Array.from({ length: 5 }, (_, i) =>
     piece(
       `bottom-s-${i + 1}`,
       'bottom',
@@ -1075,6 +1079,32 @@ export const BOTTOMS: CharacterPiece[] = [
       false,
       50
     )
+  ),
+  ...[7, 8].map((n) =>
+    piece(
+      `bottom-s-${n}`,
+      'bottom',
+      S,
+      'fem',
+      `summer/color-assets/bottom${n}.png`,
+      `Bottom praia ${n}`,
+      undefined,
+      false,
+      50
+    )
+  ),
+]
+export const BOTTOMS_OVER: CharacterPiece[] = [
+  piece(
+    'bottom-over-s-6',
+    'bottom_over',
+    S,
+    'fem',
+    'summer/color-assets/bottom6.png',
+    'Caguinha praia',
+    undefined,
+    false,
+    50
   ),
 ]
 
@@ -1700,6 +1730,7 @@ export const ALL_PIECES: CharacterPiece[] = [
   ...BEARD,
   ...TOPS,
   ...BOTTOMS,
+  ...BOTTOMS_OVER,
   ...SKIRT_KIT,
   ...DRESSES,
   ...SAIA_COSTAS,
@@ -1741,6 +1772,7 @@ export const LAYER_ORDER: CharacterCategory[] = [
   'tattoo',
   'shoes',
   'bottom',
+  'bottom_over',
   'saia_top',
   'dress',
   'gloves',

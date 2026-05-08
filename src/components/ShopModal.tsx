@@ -228,6 +228,7 @@ function getCharSections(): { label: string; key: string }[] {
     { key: 'pupils', label: 'Pupilas' },
     { key: 'top', label: 'Parte de cima' },
     { key: 'bottom', label: 'Parte de baixo' },
+    { key: 'bottom_over', label: 'Caguinha' },
     { key: 'dress', label: 'Vestido' },
     { key: 'shoes', label: 'Sapatos' },
     { key: 'jaqueta', label: 'Jaquetas' },
@@ -364,7 +365,19 @@ function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): Chara
     return cart.filter((p) => p.id !== newPiece.id)
   }
   if (newPiece.category === 'dress') {
-    return [...cart.filter((p) => p.category !== 'top' && p.category !== 'bottom'), newPiece]
+    return [
+      ...cart.filter(
+        (p) =>
+          p.category !== 'top' &&
+          p.category !== 'bottom' &&
+          p.category !== 'bottom_over' &&
+          p.category !== 'dress'
+      ),
+      newPiece,
+    ]
+  }
+  if (newPiece.category === 'bottom_over') {
+    return [...cart.filter((p) => p.category !== 'dress'), newPiece]
   }
   if (newPiece.category === 'top' || newPiece.category === 'bottom') {
     return [
@@ -389,7 +402,6 @@ function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): Chara
   }
   return [...cart, newPiece]
 }
-
 // ─────────────────────────────────────────────
 // MANEQUIM
 // ─────────────────────────────────────────────
@@ -1311,6 +1323,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
     'bangs',
     'top',
     'bottom',
+    'bottom_over',
     'dress',
     'jaqueta',
     'saia_costas',

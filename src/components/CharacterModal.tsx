@@ -128,7 +128,7 @@ const TABS: Tab[] = [
         label: 'Padrão',
         sections: [
           { label: 'Parte de cima', category: 'top', packFilter: 'chibi-basics' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'chibi-basics' },
+          { label: 'Caguinha', category: 'bottom_over', packFilter: 'summer' },
           { label: 'Vestido', category: 'dress', packFilter: 'chibi-basics' },
           { label: 'Sapato', category: 'shoes', packFilter: 'chibi-basics' },
           { label: 'Luva', category: 'gloves', packFilter: 'chibi-basics' },
@@ -165,6 +165,7 @@ const TABS: Tab[] = [
         sections: [
           { label: 'Parte de cima', category: 'top', packFilter: 'summer' },
           { label: 'Parte de baixo', category: 'bottom', packFilter: 'summer' },
+          { label: 'Caguinha', category: 'bottom_over', packFilter: 'summer' },
           { label: 'Maiô inteiro', category: 'dress', packFilter: 'summer' },
           { label: 'Sandália', category: 'shoes', packFilter: 'summer' },
         ],

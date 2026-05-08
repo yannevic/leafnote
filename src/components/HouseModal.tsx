@@ -206,15 +206,6 @@ export default function HouseModal({
   const lastPos = useRef({ x: 0, y: 0 })
   const initialInventoryRef = useRef<Set<string> | null>(null)
 
-  function itemIdToSheet(id: string): string | null {
-    return HOUSE_TILE_MAP[id]?.sheet ?? null
-  }
-
-  function sheetBelongsToGroup(sheet: string, group: SheetGroup): boolean {
-    if (group.sheets) return group.sheets.some((s) => s.sheet === sheet)
-    return group.sheet === sheet
-  }
-
   function groupHasNewItem(group: SheetGroup): boolean {
     return [...newItems].some((id) => {
       const info = HOUSE_TILE_MAP[id]

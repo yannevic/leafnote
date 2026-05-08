@@ -18,6 +18,7 @@ const MULTI_KEYS: (keyof CharacterConfig)[] = [
   'accessory_topo',
   'jaqueta',
   'tattoo',
+  'bottom_over',
 ]
 
 export interface CharacterPreset {
