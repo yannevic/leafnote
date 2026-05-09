@@ -28,13 +28,13 @@ import {
 import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
 import type { CharacterPreset } from '../hooks/useCharacter'
 
-// ── Scrollbar custom global (injeta uma vez) ──────────────────
+// ── Scrollbar custom global ──────────────────────────────────
 const SCROLLBAR_CSS = `
-  .char-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+  .char-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
   .char-scroll::-webkit-scrollbar-track { background: transparent; }
-  .char-scroll::-webkit-scrollbar-thumb { background: var(--color-wood-300); border-radius: 99px; }
-  .char-scroll::-webkit-scrollbar-thumb:hover { background: var(--color-wood-400); }
-  .char-scroll { scrollbar-width: thin; scrollbar-color: var(--color-wood-300) transparent; }
+  .char-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+  .char-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+  .char-scroll { scrollbar-width: thin; scrollbar-color: rgba(232,160,176,0.55) transparent; }
 `
 if (!document.getElementById('char-scroll-style')) {
   const s = document.createElement('style')
@@ -45,6 +45,26 @@ if (!document.getElementById('char-scroll-style')) {
 
 function assetUrl(path: string): string {
   return `./character/${path}`
+}
+
+// ── Paleta leafnote ──────────────────────────────────────────
+const T = {
+  bg: 'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+  bgSolid: 'rgba(253,246,240,0.97)',
+  card: 'rgba(253,242,246,0.7)',
+  cardBorder: '1.5px solid rgba(232,160,176,0.3)',
+  border: 'rgba(232,160,176,0.4)',
+  borderDashed: '2px dashed rgba(232,160,176,0.4)',
+  shadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+  text: '#3d1a10',
+  textSub: 'rgba(61,26,16,0.5)',
+  textLabel: 'rgba(122,48,64,0.55)',
+  btnPrimary: 'rgba(232,160,176,0.55)',
+  btnDestructive: 'rgba(232,96,122,0.12)',
+  btnDestructiveText: '#e8607a',
+  btnIcon: 'rgba(200,120,140,0.15)',
+  selectedBg: 'rgba(232,160,176,0.2)',
+  selectedBorder: 'rgba(232,160,176,0.7)',
 }
 
 // ─────────────────────────────────────────────
@@ -87,114 +107,114 @@ interface Props {
 const TABS: Tab[] = [
   {
     id: 'corpo',
-    label: 'Corpo',
+    label: 'corpo',
     requiresBody: false,
     subTabs: [],
-    flatSections: [{ label: 'Corpo', category: 'body' }],
+    flatSections: [{ label: 'corpo', category: 'body' }],
   },
   {
     id: 'rosto',
-    label: 'Rosto',
+    label: 'rosto',
     requiresBody: true,
     subTabs: [],
     flatSections: [
-      { label: 'Pupila', category: 'pupils' },
-      { label: 'Boca', category: 'mouth' },
-      { label: 'Cílios', category: 'eyelashes' },
-      { label: 'Sobrancelha', category: 'eyebrows' },
+      { label: 'pupila', category: 'pupils' },
+      { label: 'boca', category: 'mouth' },
+      { label: 'cílios', category: 'eyelashes' },
+      { label: 'sobrancelha', category: 'eyebrows' },
     ],
   },
   {
     id: 'cabelo',
-    label: 'Cabelo',
+    label: 'cabelo',
     requiresBody: true,
     subTabs: [],
     flatSections: [
-      { label: 'Trás', category: 'hair_back' },
-      { label: 'Frente', category: 'hair', genderFilter: 'neutral' },
-      { label: 'Franja', category: 'bangs', genderFilter: 'neutral' },
-      { label: 'Enfeite', category: 'hair_bonus' },
-      { label: 'Franja extra', category: 'bangs', genderFilter: 'masc' },
-      { label: 'Frente extra', category: 'hair', genderFilter: 'masc' },
+      { label: 'trás', category: 'hair_back' },
+      { label: 'frente', category: 'hair', genderFilter: 'neutral' },
+      { label: 'franja', category: 'bangs', genderFilter: 'neutral' },
+      { label: 'enfeite', category: 'hair_bonus' },
+      { label: 'franja extra', category: 'bangs', genderFilter: 'masc' },
+      { label: 'frente extra', category: 'hair', genderFilter: 'masc' },
     ],
   },
   {
     id: 'roupas',
-    label: 'Roupas',
+    label: 'roupas',
     requiresBody: true,
     subTabs: [
       {
         id: 'padrao',
-        label: 'Padrão',
+        label: 'padrão',
         sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'chibi-basics' },
-          { label: 'Caguinha', category: 'bottom_over', packFilter: 'summer' },
-          { label: 'Vestido', category: 'dress', packFilter: 'chibi-basics' },
-          { label: 'Sapato', category: 'shoes', packFilter: 'chibi-basics' },
-          { label: 'Luva', category: 'gloves', packFilter: 'chibi-basics' },
+          { label: 'parte de cima', category: 'top', packFilter: 'chibi-basics' },
+          { label: 'caguinha', category: 'bottom_over', packFilter: 'summer' },
+          { label: 'vestido', category: 'dress', packFilter: 'chibi-basics' },
+          { label: 'sapato', category: 'shoes', packFilter: 'chibi-basics' },
+          { label: 'luva', category: 'gloves', packFilter: 'chibi-basics' },
         ],
       },
       {
         id: 'masculino',
-        label: 'Masculino',
+        label: 'masculino',
         sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'masc-misc' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'masc-misc' },
-          { label: 'Sapato', category: 'shoes', packFilter: 'masc-misc' },
+          { label: 'parte de cima', category: 'top', packFilter: 'masc-misc' },
+          { label: 'parte de baixo', category: 'bottom', packFilter: 'masc-misc' },
+          { label: 'sapato', category: 'shoes', packFilter: 'masc-misc' },
         ],
       },
       {
         id: 'casal',
-        label: 'Casal',
+        label: 'casal',
         sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'power-couples-1' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'power-couples-1' },
-          { label: 'Vestido', category: 'dress', packFilter: 'power-couples-1' },
-          { label: 'Sapato', category: 'shoes', packFilter: 'power-couples-1' },
-          { label: 'Luva', category: 'gloves', packFilter: 'power-couples-1' },
-          { label: 'Parte de cima (casal 2)', category: 'top', packFilter: 'power-couples-2' },
-          { label: 'Parte de baixo (casal 2)', category: 'bottom', packFilter: 'power-couples-2' },
-          { label: 'Saia (costas)', category: 'saia_costas', packFilter: 'power-couples-2' },
-          { label: 'Saia (topo)', category: 'saia_top', packFilter: 'power-couples-2' },
-          { label: 'Sapato (casal 2)', category: 'shoes', packFilter: 'power-couples-2' },
+          { label: 'parte de cima', category: 'top', packFilter: 'power-couples-1' },
+          { label: 'parte de baixo', category: 'bottom', packFilter: 'power-couples-1' },
+          { label: 'vestido', category: 'dress', packFilter: 'power-couples-1' },
+          { label: 'sapato', category: 'shoes', packFilter: 'power-couples-1' },
+          { label: 'luva', category: 'gloves', packFilter: 'power-couples-1' },
+          { label: 'parte de cima (casal 2)', category: 'top', packFilter: 'power-couples-2' },
+          { label: 'parte de baixo (casal 2)', category: 'bottom', packFilter: 'power-couples-2' },
+          { label: 'saia (costas)', category: 'saia_costas', packFilter: 'power-couples-2' },
+          { label: 'saia (topo)', category: 'saia_top', packFilter: 'power-couples-2' },
+          { label: 'sapato (casal 2)', category: 'shoes', packFilter: 'power-couples-2' },
         ],
       },
       {
         id: 'praia',
-        label: 'Praia',
+        label: 'praia',
         sections: [
-          { label: 'Parte de cima', category: 'top', packFilter: 'summer' },
-          { label: 'Parte de baixo', category: 'bottom', packFilter: 'summer' },
-          { label: 'Caguinha', category: 'bottom_over', packFilter: 'summer' },
-          { label: 'Maiô inteiro', category: 'dress', packFilter: 'summer' },
-          { label: 'Sandália', category: 'shoes', packFilter: 'summer' },
+          { label: 'parte de cima', category: 'top', packFilter: 'summer' },
+          { label: 'parte de baixo', category: 'bottom', packFilter: 'summer' },
+          { label: 'caguinha', category: 'bottom_over', packFilter: 'summer' },
+          { label: 'maiô inteiro', category: 'dress', packFilter: 'summer' },
+          { label: 'sandália', category: 'shoes', packFilter: 'summer' },
         ],
       },
     ],
   },
   {
     id: 'extras',
-    label: 'Extras',
+    label: 'extras',
     requiresBody: true,
     subTabs: [
-      { id: 'padrao-extras', label: 'Padrão', sections: [{ label: 'Barba', category: 'beard' }] },
+      { id: 'padrao-extras', label: 'padrão', sections: [{ label: 'barba', category: 'beard' }] },
       {
         id: 'casal-extras',
-        label: 'Casal',
+        label: 'casal',
         sections: [
-          { label: 'Jaqueta', category: 'jaqueta' },
-          { label: 'Acessório (casal 1)', category: 'accessory', packFilter: 'power-couples-1' },
-          { label: 'Acessório (casal 2)', category: 'accessory', packFilter: 'power-couples-2' },
-          { label: 'Tatuagem', category: 'tattoo', packFilter: 'power-couples-2' },
+          { label: 'jaqueta', category: 'jaqueta' },
+          { label: 'acessório (casal 1)', category: 'accessory', packFilter: 'power-couples-1' },
+          { label: 'acessório (casal 2)', category: 'accessory', packFilter: 'power-couples-2' },
+          { label: 'tatuagem', category: 'tattoo', packFilter: 'power-couples-2' },
         ],
       },
       {
         id: 'praia-extras',
-        label: 'Praia',
+        label: 'praia',
         sections: [
-          { label: 'Acessório praia', category: 'accessory_cima', packFilter: 'summer' },
-          { label: 'Acessório topo', category: 'accessory_topo', packFilter: 'summer' },
-          { label: 'Bronzeado', category: 'tattoo', packFilter: 'summer' },
+          { label: 'acessório praia', category: 'accessory_cima', packFilter: 'summer' },
+          { label: 'acessório topo', category: 'accessory_topo', packFilter: 'summer' },
+          { label: 'bronzeado', category: 'tattoo', packFilter: 'summer' },
         ],
       },
     ],
@@ -240,7 +260,7 @@ function PresetsPanel({
 
   const handleSave = async () => {
     if (saving) return
-    const trimmed = newName.trim() || 'Preset'
+    const trimmed = newName.trim() || 'preset'
 
     const currentSnapshot = JSON.stringify({
       ...currentConfig,
@@ -255,13 +275,13 @@ function PresetsPanel({
     )
 
     if (duplicateName) {
-      setDuplicateWarning(`Nome "${duplicateName.name}" já está em uso`)
+      setDuplicateWarning(`nome "${duplicateName.name}" já está em uso`)
       setTimeout(() => setDuplicateWarning(null), 2500)
       return
     }
 
     if (duplicateVisual) {
-      setDuplicateWarning(`Esse visual já está salvo como "${duplicateVisual.name}"`)
+      setDuplicateWarning(`esse visual já está salvo como "${duplicateVisual.name}"`)
       setTimeout(() => setDuplicateWarning(null), 2500)
       return
     }
@@ -281,40 +301,40 @@ function PresetsPanel({
   const canAdd = presets.length < MAX_FREE_PRESETS
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 12px 0' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: 'var(--color-leaf-700)',
+            fontSize: 9,
+            fontWeight: 800,
+            color: T.textLabel,
             fontFamily: 'Baloo 2, sans-serif',
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.8px',
           }}
         >
-          Presets ({presets.length}/{MAX_FREE_PRESETS})
+          presets ({presets.length}/{MAX_FREE_PRESETS})
         </span>
         {canAdd && (
           <button
             onClick={() => setSavingNew(true)}
-            title="Salvar preset atual"
+            title="salvar preset atual"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 3,
-              padding: '2px 8px',
+              gap: 4,
+              padding: '3px 10px',
               borderRadius: 8,
-              border: '1.5px solid var(--color-wood-300)',
-              background: 'var(--color-bark-100)',
-              color: 'var(--color-leaf-600)',
+              border: `1.5px solid ${T.border}`,
+              background: T.card,
+              color: T.text,
               fontSize: 11,
               fontFamily: 'Baloo 2, sans-serif',
-              fontWeight: 600,
+              fontWeight: 800,
               cursor: 'pointer',
             }}
           >
-            <Plus size={12} /> Salvar atual
+            <Plus size={11} strokeWidth={2.5} /> salvar atual
           </button>
         )}
       </div>
@@ -329,17 +349,17 @@ function PresetsPanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleSave()
             }}
-            placeholder="Nome do preset..."
+            placeholder="nome do preset..."
             maxLength={20}
             style={{
               flex: 1,
               padding: '4px 8px',
               borderRadius: 8,
-              border: '1.5px solid var(--color-wood-300)',
-              background: '#fff',
-              fontSize: 12,
+              border: `1.5px solid ${T.border}`,
+              background: T.card,
+              fontSize: 11,
               fontFamily: 'Baloo 2, sans-serif',
-              color: 'var(--color-soil-900)',
+              color: T.text,
               outline: 'none',
             }}
           />
@@ -350,15 +370,17 @@ function PresetsPanel({
               padding: '4px 10px',
               borderRadius: 8,
               border: 'none',
-              background: 'var(--color-leaf-600)',
-              color: '#fff',
+              background: T.btnPrimary,
+              color: T.text,
               fontSize: 11,
-              fontWeight: 700,
+              fontWeight: 800,
               fontFamily: 'Baloo 2, sans-serif',
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            <Check size={12} />
+            <Check size={12} strokeWidth={2.5} />
           </button>
           <button
             onClick={() => {
@@ -368,14 +390,16 @@ function PresetsPanel({
             style={{
               padding: '4px 8px',
               borderRadius: 8,
-              border: '1.5px solid var(--color-wood-300)',
+              border: `1.5px solid ${T.border}`,
               background: 'transparent',
-              color: 'var(--color-leaf-600)',
+              color: T.textSub,
               fontSize: 11,
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            <X size={12} />
+            <X size={12} strokeWidth={2.5} />
           </button>
         </div>
       )}
@@ -388,14 +412,14 @@ function PresetsPanel({
             gap: 6,
             padding: '5px 10px',
             borderRadius: 8,
-            background: 'var(--color-petal-200)',
-            border: '1.5px solid var(--color-petal-400)',
+            background: 'rgba(232,160,176,0.15)',
+            border: `1.5px solid ${T.border}`,
             fontSize: 11,
             fontFamily: 'Baloo 2, sans-serif',
-            color: 'var(--color-soil-900)',
+            color: T.text,
           }}
         >
-          <AlertCircle size={12} color="var(--color-petal-400)" style={{ flexShrink: 0 }} />
+          <AlertCircle size={12} color="rgba(200,120,140,0.7)" style={{ flexShrink: 0 }} />
           {duplicateWarning}
         </div>
       )}
@@ -419,12 +443,12 @@ function PresetsPanel({
               gridColumn: '1 / -1',
               textAlign: 'center',
               fontSize: 11,
-              color: 'var(--color-leaf-400)',
+              color: T.textSub,
               fontFamily: 'Baloo 2, sans-serif',
               padding: '12px 0',
             }}
           >
-            Nenhum preset salvo ainda
+            nenhum preset salvo ainda
           </div>
         )}
         {presets.map((preset) => (
@@ -433,13 +457,12 @@ function PresetsPanel({
             style={{
               position: 'relative',
               borderRadius: 10,
-              border: '1.5px solid var(--color-wood-300)',
-              background: 'rgba(255,255,255,0.6)',
+              border: `1.5px solid ${T.border}`,
+              background: T.card,
               overflow: 'hidden',
               cursor: 'pointer',
             }}
           >
-            {/* Miniatura clicável */}
             <div
               onClick={() => onApply(preset.config)}
               style={{
@@ -458,8 +481,8 @@ function PresetsPanel({
               <span
                 style={{
                   fontSize: 10,
-                  fontWeight: 600,
-                  color: 'var(--color-leaf-800)',
+                  fontWeight: 700,
+                  color: T.text,
                   fontFamily: 'Baloo 2, sans-serif',
                   textAlign: 'center',
                   whiteSpace: 'nowrap',
@@ -473,13 +496,12 @@ function PresetsPanel({
               </span>
             </div>
 
-            {/* Botão excluir */}
             {deleteConfirm === preset.id ? (
               <div
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'rgba(245,213,220,0.97)',
+                  background: 'rgba(253,242,246,0.97)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -488,14 +510,8 @@ function PresetsPanel({
                   borderRadius: 10,
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: 'var(--color-soil-900)',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
-                  Excluir?
+                <span style={{ fontSize: 10, color: T.text, fontFamily: 'Baloo 2, sans-serif' }}>
+                  apagar?
                 </span>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button
@@ -504,30 +520,30 @@ function PresetsPanel({
                       padding: '2px 8px',
                       borderRadius: 6,
                       border: 'none',
-                      background: 'var(--color-petal-400)',
-                      color: '#fff',
+                      background: T.btnDestructive,
+                      color: T.btnDestructiveText,
                       fontSize: 10,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       cursor: 'pointer',
                       fontFamily: 'Baloo 2, sans-serif',
                     }}
                   >
-                    Sim
+                    sim
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(null)}
                     style={{
                       padding: '2px 8px',
                       borderRadius: 6,
-                      border: '1px solid var(--color-wood-300)',
+                      border: `1.5px solid ${T.border}`,
                       background: 'transparent',
-                      color: 'var(--color-leaf-600)',
+                      color: T.textSub,
                       fontSize: 10,
                       cursor: 'pointer',
                       fontFamily: 'Baloo 2, sans-serif',
                     }}
                   >
-                    Não
+                    não
                   </button>
                 </div>
               </div>
@@ -542,8 +558,8 @@ function PresetsPanel({
                   height: 18,
                   borderRadius: 5,
                   border: 'none',
-                  background: 'rgba(232,160,176,0.7)',
-                  color: '#fff',
+                  background: T.btnIcon,
+                  color: T.textSub,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -551,17 +567,15 @@ function PresetsPanel({
                   padding: 0,
                 }}
               >
-                <X size={10} />
+                <X size={10} strokeWidth={2.5} color="rgba(122,48,64,0.6)" />
               </button>
             )}
           </div>
         ))}
       </div>
 
-      {/* Divisor */}
-      <div
-        style={{ height: 1, background: 'var(--color-wood-300)', borderRadius: 1, marginTop: 2 }}
-      />
+      {/* Separador dashed */}
+      <div style={{ borderTop: T.borderDashed, marginTop: 2 }} />
     </div>
   )
 }
@@ -608,14 +622,14 @@ function CharacterPreview({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--color-leaf-400)',
-            fontSize: 12,
+            color: T.textSub,
+            fontSize: 11,
             fontFamily: 'Baloo 2, sans-serif',
             textAlign: 'center',
             padding: '0 16px',
           }}
         >
-          Selecione um corpo para começar
+          selecione um corpo para começar
         </div>
       )}
       {layers.map(({ piece, src }) => (
@@ -687,9 +701,9 @@ function MiniGrid({
             gap: 4,
             flexWrap: 'wrap',
             padding: '5px 10px',
-            background: 'rgba(255,255,255,0.5)',
+            background: T.card,
             borderRadius: 10,
-            border: '1px solid var(--color-wood-300)',
+            border: T.cardBorder,
           }}
         >
           {COLOR_VARIANTS.map((v) => (
@@ -701,16 +715,15 @@ function MiniGrid({
                 borderRadius: 8,
                 border:
                   currentVariant === v
-                    ? '2px solid var(--color-petal-400)'
+                    ? `2px solid rgba(232,160,176,0.7)`
                     : '2px solid transparent',
-                background:
-                  currentVariant === v ? 'var(--color-petal-200)' : 'var(--color-wood-300)',
-                color: 'var(--color-soil-900)',
+                background: currentVariant === v ? T.selectedBg : 'rgba(232,160,176,0.12)',
+                color: T.text,
                 fontSize: 11,
                 fontFamily: 'Baloo 2, sans-serif',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
-                fontWeight: currentVariant === v ? 700 : 400,
+                fontWeight: currentVariant === v ? 800 : 600,
               }}
             >
               {COLOR_VARIANT_LABELS[v]}
@@ -735,19 +748,18 @@ function MiniGrid({
               borderRadius: 12,
               border:
                 selectedIds.length === 0
-                  ? '2px solid var(--color-petal-400)'
-                  : '2px solid var(--color-wood-300)',
-              background:
-                selectedIds.length === 0 ? 'var(--color-petal-200)' : 'var(--color-bark-100)',
+                  ? `2px solid rgba(232,160,176,0.7)`
+                  : `1.5px solid ${T.border}`,
+              background: selectedIds.length === 0 ? T.selectedBg : T.card,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               transition: 'all 0.15s',
-              color: 'var(--color-leaf-600)',
+              color: T.textSub,
             }}
           >
-            <Trash2 size={18} />
+            <Trash2 size={18} strokeWidth={1.8} />
           </button>
         )}
         {pieces.map((p) => {
@@ -762,10 +774,8 @@ function MiniGrid({
                 width: '100%',
                 aspectRatio: '3/4',
                 borderRadius: 12,
-                border: selected
-                  ? '2px solid var(--color-petal-400)'
-                  : '2px solid var(--color-wood-300)',
-                background: selected ? 'var(--color-petal-200)' : 'rgba(255,255,255,0.55)',
+                border: selected ? `2px solid rgba(232,160,176,0.7)` : `1.5px solid ${T.border}`,
+                background: selected ? T.selectedBg : T.card,
                 padding: 3,
                 cursor: 'pointer',
                 transition: 'all 0.15s',
@@ -799,14 +809,14 @@ function SectionsPanel({
   sections,
   config,
   colorVariants,
-  unlockedIds, // ← adiciona aqui
+  unlockedIds,
   onSelect,
   onColorChange,
 }: {
   sections: Section[]
   config: CharacterConfig
   colorVariants: Record<string, string>
-  unlockedIds: Set<string> // ← adiciona aqui
+  unlockedIds: Set<string>
   onSelect: (piece: CharacterPiece, category: CharacterCategory) => void
   onColorChange: (category: CharacterCategory, variant: string) => void
 }) {
@@ -835,26 +845,24 @@ function SectionsPanel({
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span
                 style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'var(--color-leaf-700)',
+                  fontSize: 9,
+                  fontWeight: 800,
+                  color: T.textLabel,
                   fontFamily: 'Baloo 2, sans-serif',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  letterSpacing: '0.8px',
                   whiteSpace: 'nowrap',
                 }}
               >
                 {section.label}
               </span>
-              <div
-                style={{ flex: 1, height: 1, background: 'var(--color-wood-300)', borderRadius: 1 }}
-              />
+              <div style={{ flex: 1, borderTop: T.borderDashed }} />
             </div>
             <MiniGrid
               section={section}
               config={config}
               colorVariants={colorVariants}
-              unlockedIds={unlockedIds} // ← adiciona essa linha
+              unlockedIds={unlockedIds}
               onSelect={onSelect}
               onColorChange={onColorChange}
             />
@@ -910,7 +918,6 @@ export default function CharacterModal({
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
-  // ✅ FIX: altura fixa para o botão limpar — sem layout shift
   const [clearState, setClearState] = useState<'idle' | 'confirm'>('idle')
   const [savedFeedback, setSavedFeedback] = useState(false)
 
@@ -926,7 +933,6 @@ export default function CharacterModal({
   const activeSections: Section[] =
     currentTab.flatSections ?? currentSubTab?.sections ?? currentTab.subTabs[0]?.sections ?? []
 
-  // ✅ FIX: pushHistory recebe os valores finais como parâmetro, sem depender de stale closures
   const pushHistory = useCallback(
     (newConfig: CharacterConfig, newColorVariants: Record<string, string>) => {
       const history = historyRef.current
@@ -977,8 +983,6 @@ export default function CharacterModal({
     setActiveSubTab(tab.subTabs[0]?.id ?? '')
   }
 
-  // ✅ FIX: handleSelect usa functional update para pegar config atualizado
-  // e passa os valores corretos para pushHistory de forma síncrona
   const handleSelect = useCallback(
     (piece: CharacterPiece, category: CharacterCategory) => {
       const prev = configRef.current
@@ -1009,7 +1013,6 @@ export default function CharacterModal({
     [pushHistory]
   )
 
-  // Ref para colorVariants — permite acessar valor atual dentro de setConfig sem stale closure
   const colorVariantsRef = useRef(colorVariants)
   colorVariantsRef.current = colorVariants
 
@@ -1017,7 +1020,6 @@ export default function CharacterModal({
     (category: CharacterCategory, variant: string) => {
       setColorVariants((prev) => {
         const next = { ...prev, [category]: variant }
-        // configRef para mesma razão
         pushHistory(configRef.current, next)
         return next
       })
@@ -1039,9 +1041,8 @@ export default function CharacterModal({
     [pushHistory]
   )
 
-  // ✅ FIX: Limpar tudo preserva o body
   const handleClearAll = () => {
-    const bodyId = config.body // preserva o corpo atual
+    const bodyId = config.body
     const cleared: CharacterConfig = { ...DEFAULT_CHARACTER_CONFIG, body: bodyId }
     setConfig(cleared)
     pushHistory(cleared, colorVariants)
@@ -1054,22 +1055,23 @@ export default function CharacterModal({
     setTimeout(() => setSavedFeedback(false), 2000)
   }
 
+  // Estilo dos botões de ação (desfazer/refazer)
   const actionBtnStyle = (enabled: boolean): React.CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    padding: '7px 12px',
+    padding: '6px 12px',
     borderRadius: 10,
-    border: `1.5px solid ${enabled ? 'var(--color-wood-400)' : 'var(--color-wood-200)'}`,
-    background: enabled ? 'var(--color-bark-50)' : 'transparent',
-    color: enabled ? 'var(--color-leaf-700)' : 'var(--color-leaf-300)',
-    fontSize: 12,
+    border: `1.5px solid ${enabled ? T.border : 'rgba(232,160,176,0.2)'}`,
+    background: enabled ? T.card : 'transparent',
+    color: enabled ? T.text : T.textSub,
+    fontSize: 11,
     fontFamily: 'Baloo 2, sans-serif',
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: enabled ? 'pointer' : 'not-allowed',
     transition: 'all 0.15s',
-    opacity: enabled ? 1 : 0.5,
+    opacity: enabled ? 1 : 0.4,
     flex: 1,
   })
 
@@ -1080,14 +1082,14 @@ export default function CharacterModal({
         inset: 0,
         top: 32,
         zIndex: 200,
-        background: 'var(--color-bark-100)',
+        background:
+          'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
-      {/* ── HEADER ─────────────────────────────────────── */}
-      {/* ✅ FIX: height fixa + alignItems center garante centralização vertical */}
+      {/* ── HEADER ────────────────────────────────────── */}
       <div
         style={{
           height: 56,
@@ -1096,9 +1098,8 @@ export default function CharacterModal({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 20px',
-          paddingTop: 8, // ← adiciona isso
-          borderBottom: '2px solid var(--color-wood-300)',
-          background: 'var(--color-bark-100)',
+          borderBottom: T.borderDashed,
+          background: 'rgba(253,246,240,0.8)',
           flexShrink: 0,
         }}
       >
@@ -1108,27 +1109,24 @@ export default function CharacterModal({
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            padding: '6px 14px 6px 10px',
+            padding: '5px 12px 5px 8px',
             borderRadius: 10,
-            border: '1.5px solid var(--color-wood-300)',
-            background: 'transparent',
-            color: 'var(--color-leaf-600)',
-            fontSize: 13,
-            fontWeight: 600,
+            border: `1.5px solid ${T.border}`,
+            background: T.btnIcon,
+            color: T.text,
+            fontSize: 12,
+            fontWeight: 800,
             fontFamily: 'Baloo 2, sans-serif',
             cursor: 'pointer',
           }}
         >
-          <ChevronLeft size={16} />
-          Voltar
+          <ChevronLeft size={15} strokeWidth={2.5} />
+          voltar
         </button>
 
-        {/* ✅ FIX: ícone Sparkles — muito mais bonito e legível */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Sparkles size={18} color="var(--color-petal-400)" />
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-leaf-800)' }}>
-            Meu Guarda-Roupa
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Sparkles size={15} color="rgba(200,120,140,0.7)" strokeWidth={2} />
+          <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>meu guarda-roupa</span>
         </div>
 
         <button
@@ -1140,24 +1138,24 @@ export default function CharacterModal({
             padding: '6px 18px',
             borderRadius: 10,
             border: 'none',
-            background: savedFeedback ? 'var(--color-leaf-400)' : 'var(--color-leaf-600)',
-            color: '#fff',
-            fontSize: 13,
-            fontWeight: 600,
+            background: savedFeedback ? 'rgba(74,122,74,0.55)' : T.btnPrimary,
+            color: T.text,
+            fontSize: 12,
+            fontWeight: 800,
             fontFamily: 'Baloo 2, sans-serif',
             cursor: 'pointer',
             transition: 'background 0.2s',
-            minWidth: 100,
+            minWidth: 90,
             justifyContent: 'center',
           }}
         >
           {savedFeedback ? (
             <>
-              <Check size={14} /> Salvo!
+              <Check size={13} strokeWidth={2.5} /> salvo!
             </>
           ) : (
             <>
-              <Save size={14} /> Salvar
+              <Save size={13} strokeWidth={2} /> salvar
             </>
           )}
         </button>
@@ -1166,15 +1164,14 @@ export default function CharacterModal({
       {/* ── BODY ────────────────────────────────────────── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* ── COLUNA ESQUERDA ──────────────────────────── */}
-        {/* ✅ FIX: largura 280, preview maior, borda menor */}
         <div
           style={{
             width: 280,
             flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
-            borderRight: '2px solid var(--color-wood-300)',
-            background: 'var(--color-leaf-100)',
+            borderRight: T.borderDashed,
+            background: 'rgba(253,242,246,0.5)',
             overflow: 'hidden',
           }}
         >
@@ -1187,7 +1184,8 @@ export default function CharacterModal({
             onSavePreset={onSavePreset}
             onDeletePreset={onDeletePreset}
           />
-          {/* Preview — flex 1, centralizado */}
+
+          {/* Preview */}
           <div
             style={{
               flex: 1,
@@ -1198,14 +1196,13 @@ export default function CharacterModal({
               minHeight: 0,
             }}
           >
-            {/* ✅ FIX: padding menor (8px), sem borda grossa, preview maior */}
             <div
               style={{
-                background: '#c9c9c9',
+                background: 'rgba(200,168,180,0.25)',
                 borderRadius: 20,
                 padding: 8,
-                boxShadow: '0 2px 16px rgba(74,122,74,0.10)',
-                border: '1.5px solid var(--color-wood-200)',
+                boxShadow: '0 2px 16px rgba(200,120,140,0.10)',
+                border: `1.5px solid ${T.border}`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -1232,24 +1229,23 @@ export default function CharacterModal({
               <button
                 onClick={handleUndo}
                 disabled={!canUndo}
-                title="Desfazer"
+                title="desfazer"
                 style={actionBtnStyle(canUndo)}
               >
-                <Undo2 size={13} /> Desfazer
+                <Undo2 size={12} strokeWidth={2} /> desfazer
               </button>
               <button
                 onClick={handleRedo}
                 disabled={!canRedo}
-                title="Refazer"
+                title="refazer"
                 style={actionBtnStyle(canRedo)}
               >
-                <Redo2 size={13} /> Refazer
+                <Redo2 size={12} strokeWidth={2} /> refazer
               </button>
             </div>
 
-            {/* ✅ FIX: altura fixa no container do botão limpar — sem layout shift */}
+            {/* Limpar tudo */}
             <div style={{ height: 58, position: 'relative' }}>
-              {/* Estado idle */}
               <div
                 style={{
                   position: 'absolute',
@@ -1270,22 +1266,21 @@ export default function CharacterModal({
                     gap: 6,
                     padding: '7px 12px',
                     borderRadius: 10,
-                    border: '1.5px solid var(--color-petal-300)',
+                    border: `1.5px solid rgba(232,96,122,0.25)`,
                     background: 'transparent',
-                    color: 'var(--color-petal-500)',
-                    fontSize: 12,
+                    color: T.btnDestructiveText,
+                    fontSize: 11,
                     fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 600,
+                    fontWeight: 800,
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                     width: '100%',
                   }}
                 >
-                  <Trash2 size={13} /> Limpar tudo
+                  <Trash2 size={12} strokeWidth={2} /> limpar tudo
                 </button>
               </div>
 
-              {/* Estado confirm — mesma altura, sem pulo */}
               <div
                 style={{
                   position: 'absolute',
@@ -1293,8 +1288,8 @@ export default function CharacterModal({
                   opacity: clearState === 'confirm' ? 1 : 0,
                   pointerEvents: clearState === 'confirm' ? 'auto' : 'none',
                   transition: 'opacity 0.15s',
-                  background: 'var(--color-petal-100)',
-                  border: '1.5px solid var(--color-petal-300)',
+                  background: 'rgba(253,242,246,0.7)',
+                  border: `1.5px solid ${T.border}`,
                   borderRadius: 10,
                   padding: '8px 10px',
                   display: 'flex',
@@ -1304,18 +1299,16 @@ export default function CharacterModal({
                   gap: 6,
                 }}
               >
-                {/* ✅ FIX: texto sem bold, menor, cor suave */}
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 400,
-                    color: 'var(--color-soil-700)',
+                    fontWeight: 600,
+                    color: T.textSub,
                     fontFamily: 'Baloo 2, sans-serif',
                     textAlign: 'center',
-                    lineHeight: 1.3,
                   }}
                 >
-                  Remover tudo?
+                  remover tudo?
                 </span>
                 <div style={{ display: 'flex', gap: 6, width: '100%' }}>
                   <button
@@ -1325,15 +1318,15 @@ export default function CharacterModal({
                       padding: '4px 0',
                       borderRadius: 8,
                       border: 'none',
-                      background: 'var(--color-petal-400)',
-                      color: '#fff',
+                      background: T.btnDestructive,
+                      color: T.btnDestructiveText,
                       fontSize: 11,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       fontFamily: 'Baloo 2, sans-serif',
                       cursor: 'pointer',
                     }}
                   >
-                    Sim
+                    sim
                   </button>
                   <button
                     onClick={() => setClearState('idle')}
@@ -1341,16 +1334,16 @@ export default function CharacterModal({
                       flex: 1,
                       padding: '4px 0',
                       borderRadius: 8,
-                      border: '1.5px solid var(--color-wood-300)',
+                      border: `1.5px solid ${T.border}`,
                       background: 'transparent',
-                      color: 'var(--color-leaf-600)',
+                      color: T.textSub,
                       fontSize: 11,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       fontFamily: 'Baloo 2, sans-serif',
                       cursor: 'pointer',
                     }}
                   >
-                    Não
+                    não
                   </button>
                 </div>
               </div>
@@ -1365,7 +1358,7 @@ export default function CharacterModal({
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            background: 'var(--color-leaf-100)',
+            background: 'rgba(253,246,240,0.4)',
             minHeight: '100%',
           }}
         >
@@ -1373,11 +1366,12 @@ export default function CharacterModal({
           <div
             style={{
               display: 'flex',
-              gap: 4,
+              gap: 6,
               padding: '10px 16px',
-              borderBottom: '2px solid var(--color-wood-300)',
-              background: 'var(--color-leaf-100)',
+              borderBottom: T.borderDashed,
+              background: 'rgba(253,242,246,0.5)',
               flexShrink: 0,
+              flexWrap: 'wrap',
             }}
           >
             {TABS.map((tab) => {
@@ -1387,26 +1381,21 @@ export default function CharacterModal({
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  title={locked ? 'Escolha um corpo primeiro' : undefined}
+                  title={locked ? 'escolha um corpo primeiro' : undefined}
                   style={{
-                    padding: '5px 18px',
+                    padding: '4px 16px',
                     borderRadius: 20,
                     border: isActive
-                      ? '2px solid var(--color-leaf-500)'
-                      : '2px solid var(--color-wood-300)',
-                    background: isActive ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
-                    color: locked
-                      ? 'var(--color-leaf-300)'
-                      : isActive
-                        ? '#fff'
-                        : 'var(--color-leaf-700)',
-                    fontSize: 13,
-                    fontWeight: isActive ? 700 : 500,
+                      ? `1.5px solid rgba(232,160,176,0.7)`
+                      : `1.5px solid ${T.border}`,
+                    background: isActive ? T.btnPrimary : T.btnIcon,
+                    color: locked ? T.textSub : T.text,
+                    fontSize: 12,
+                    fontWeight: isActive ? 800 : 600,
                     fontFamily: 'Baloo 2, sans-serif',
                     cursor: locked ? 'not-allowed' : 'pointer',
                     transition: 'all 0.15s',
-                    opacity: locked ? 0.5 : 1,
-                    boxShadow: isActive ? '0 2px 8px rgba(74,122,74,0.18)' : 'none',
+                    opacity: locked ? 0.45 : 1,
                   }}
                 >
                   {tab.label}
@@ -1424,17 +1413,17 @@ export default function CharacterModal({
                 gap: 8,
                 margin: '8px 16px 0',
                 padding: '8px 14px',
-                background: 'var(--color-petal-200)',
-                border: '1.5px solid var(--color-petal-400)',
+                background: 'rgba(232,160,176,0.15)',
+                border: `1.5px solid ${T.border}`,
                 borderRadius: 10,
-                color: 'var(--color-soil-900)',
-                fontSize: 13,
+                color: T.text,
+                fontSize: 12,
                 fontFamily: 'Baloo 2, sans-serif',
                 flexShrink: 0,
               }}
             >
-              <AlertCircle size={16} color="var(--color-petal-400)" style={{ flexShrink: 0 }} />
-              Escolha um corpo primeiro! Sem corpo as outras peças não aparecem corretamente.
+              <AlertCircle size={14} color="rgba(200,120,140,0.7)" style={{ flexShrink: 0 }} />
+              escolha um corpo primeiro! sem corpo as outras peças não aparecem corretamente.
             </div>
           )}
 
@@ -1445,8 +1434,8 @@ export default function CharacterModal({
                 display: 'flex',
                 gap: 6,
                 padding: '8px 16px',
-                borderBottom: '1px solid var(--color-wood-300)',
-                background: 'var(--color-leaf-100)',
+                borderBottom: `1px solid rgba(232,160,176,0.25)`,
+                background: 'rgba(253,242,246,0.3)',
                 flexShrink: 0,
                 flexWrap: 'wrap',
               }}
@@ -1458,18 +1447,18 @@ export default function CharacterModal({
                     key={sub.id}
                     onClick={() => setActiveSubTab(sub.id)}
                     style={{
-                      padding: '3px 16px',
+                      padding: '2px 14px',
                       borderRadius: 20,
                       border: active
-                        ? '2px solid var(--color-petal-400)'
-                        : '2px solid var(--color-wood-300)',
-                      background: active ? 'var(--color-petal-200)' : 'transparent',
-                      color: active ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
-                      fontSize: 12,
+                        ? `1.5px solid rgba(232,160,176,0.6)`
+                        : `1.5px solid ${T.border}`,
+                      background: active ? T.selectedBg : 'transparent',
+                      color: T.text,
+                      fontSize: 11,
                       fontFamily: 'Baloo 2, sans-serif',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
-                      fontWeight: active ? 700 : 400,
+                      fontWeight: active ? 800 : 600,
                     }}
                   >
                     {sub.label}
@@ -1479,15 +1468,14 @@ export default function CharacterModal({
             </div>
           )}
 
-          {/* Seções com scroll customizado */}
+          {/* Seções com scroll */}
           <div
             className="char-scroll"
             style={{
               flex: 1,
               minHeight: 0,
               overflowY: 'auto',
-              padding: '12px 16px',
-              background: 'var(--color-leaf-100)',
+              padding: '14px 16px',
               alignSelf: 'stretch',
             }}
           >
@@ -1495,7 +1483,7 @@ export default function CharacterModal({
               sections={activeSections}
               config={config}
               colorVariants={colorVariants}
-              unlockedIds={unlockedIds} // ← adiciona essa linha
+              unlockedIds={unlockedIds}
               onSelect={handleSelect}
               onColorChange={handleColorChange}
             />

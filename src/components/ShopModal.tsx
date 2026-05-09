@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Heart,
   Gift as GiftIcon,
+  Check,
 } from 'lucide-react'
 import {
   useShop,
@@ -40,6 +41,50 @@ import {
 } from '../assets/character/index'
 import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
 import { PiMoneyWavyLight } from 'react-icons/pi'
+
+// ── Scrollbar custom global ──────────────────────────────────
+const SCROLLBAR_CSS = `
+  .shop-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+  .shop-scroll::-webkit-scrollbar-track { background: transparent; }
+  .shop-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+  .shop-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+  .shop-scroll { scrollbar-width: thin; scrollbar-color: rgba(232,160,176,0.55) transparent; }
+`
+if (!document.getElementById('shop-scroll-style')) {
+  const s = document.createElement('style')
+  s.id = 'shop-scroll-style'
+  s.textContent = SCROLLBAR_CSS
+  document.head.appendChild(s)
+}
+
+// ── Paleta leafnote ──────────────────────────────────────────
+const T = {
+  bg: 'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+  bgSolid: 'rgba(253,246,240,0.97)',
+  card: 'rgba(253,242,246,0.7)',
+  cardBorder: '1.5px solid rgba(232,160,176,0.3)',
+  border: 'rgba(232,160,176,0.4)',
+  borderVal: '1.5px solid rgba(232,160,176,0.4)',
+  borderDashed: '2px dashed rgba(232,160,176,0.4)',
+  shadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+  text: '#3d1a10',
+  textSub: 'rgba(61,26,16,0.5)',
+  textLabel: 'rgba(122,48,64,0.55)',
+  btnPrimary: 'rgba(232,160,176,0.55)',
+  btnDestructive: 'rgba(232,96,122,0.12)',
+  btnDestructiveText: '#e8607a',
+  btnPositive: 'rgba(74,122,74,0.12)',
+  btnPositiveText: '#4A7A4A',
+  btnIcon: 'rgba(200,120,140,0.15)',
+  selectedBg: 'rgba(232,160,176,0.2)',
+  selectedBorder: 'rgba(232,160,176,0.7)',
+  ownedBg: 'rgba(74,122,74,0.12)',
+  ownedBorder: 'rgba(74,122,74,0.4)',
+  ownedText: '#4A7A4A',
+  cuteBg: 'rgba(180,140,220,0.1)',
+  cuteBorder: 'rgba(180,140,220,0.4)',
+  cuteText: 'rgba(120,60,160,0.8)',
+}
 
 // ─────────────────────────────────────────────
 // TIPOS
@@ -147,7 +192,7 @@ function getFloorSections(): ShopSection[] {
         .map((i) => i.id),
     },
     {
-      label: 'Cute Decor ✦',
+      label: 'Cute Decor',
       cute: true,
       ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'floor' && i.id.startsWith('floor_cute_'))
         .sort((a, b) => a.cost - b.cost)
@@ -207,7 +252,7 @@ function getWallSections(): ShopSection[] {
         .map((i) => i.id),
     },
     {
-      label: 'Cute Decor ✦',
+      label: 'Cute Decor',
       cute: true,
       ids: SHOP_HOUSE_ITEMS.filter((i) => i.category === 'wall' && i.id.startsWith('wall_cute_'))
         .sort((a, b) => a.cost - b.cost)
@@ -218,29 +263,29 @@ function getWallSections(): ShopSection[] {
 
 function getCharSections(): { label: string; key: string }[] {
   return [
-    { key: 'body', label: 'Corpo' },
-    { key: 'hair', label: 'Cabelo' },
-    { key: 'hair_back', label: 'Cabelo (trás)' },
-    { key: 'bangs', label: 'Franja' },
-    { key: 'mouth', label: 'Boca' },
-    { key: 'eyebrows', label: 'Sobrancelhas' },
-    { key: 'eyelashes', label: 'Cílios' },
-    { key: 'pupils', label: 'Pupilas' },
-    { key: 'top', label: 'Parte de cima' },
-    { key: 'bottom', label: 'Parte de baixo' },
-    { key: 'bottom_over', label: 'Caguinha' },
-    { key: 'dress', label: 'Vestido' },
-    { key: 'shoes', label: 'Sapatos' },
-    { key: 'jaqueta', label: 'Jaquetas' },
-    { key: 'gloves', label: 'Luvas' },
-    { key: 'accessory', label: 'Acessórios' },
-    { key: 'accessory_cima', label: 'Acessórios (cima)' },
-    { key: 'accessory_topo', label: 'Acessórios (topo)' },
-    { key: 'tattoo', label: 'Tattoo / Bronzeado' },
-    { key: 'beard', label: 'Barba' },
-    { key: 'hair_bonus', label: 'Enfeite de cabelo' },
-    { key: 'saia_costas', label: 'Saia (costas)' },
-    { key: 'saia_top', label: 'Saia (topo)' },
+    { key: 'body', label: 'corpo' },
+    { key: 'hair', label: 'cabelo' },
+    { key: 'hair_back', label: 'cabelo (trás)' },
+    { key: 'bangs', label: 'franja' },
+    { key: 'mouth', label: 'boca' },
+    { key: 'eyebrows', label: 'sobrancelhas' },
+    { key: 'eyelashes', label: 'cílios' },
+    { key: 'pupils', label: 'pupilas' },
+    { key: 'top', label: 'parte de cima' },
+    { key: 'bottom', label: 'parte de baixo' },
+    { key: 'bottom_over', label: 'caguinha' },
+    { key: 'dress', label: 'vestido' },
+    { key: 'shoes', label: 'sapatos' },
+    { key: 'jaqueta', label: 'jaquetas' },
+    { key: 'gloves', label: 'luvas' },
+    { key: 'accessory', label: 'acessórios' },
+    { key: 'accessory_cima', label: 'acessórios (cima)' },
+    { key: 'accessory_topo', label: 'acessórios (topo)' },
+    { key: 'tattoo', label: 'tattoo / bronzeado' },
+    { key: 'beard', label: 'barba' },
+    { key: 'hair_bonus', label: 'enfeite de cabelo' },
+    { key: 'saia_costas', label: 'saia (costas)' },
+    { key: 'saia_top', label: 'saia (topo)' },
   ]
 }
 
@@ -261,7 +306,7 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
           width: 56,
           height: 56,
           borderRadius: 8,
-          background: bgOption?.css ?? '#e5e7eb',
+          background: bgOption?.css ?? 'rgba(232,160,176,0.2)',
           flexShrink: 0,
           position: 'relative',
           overflow: 'hidden',
@@ -336,7 +381,7 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
         flexShrink: 0,
         borderRadius: 6,
         overflow: 'hidden',
-        background: 'repeating-linear-gradient(45deg,#e5e7eb 0,#e5e7eb 4px,#fff 0,#fff 8px)',
+        background: 'rgba(232,160,176,0.15)',
       }}
     >
       <div
@@ -357,7 +402,7 @@ function HouseThumbnail({ itemId, isFloor }: { itemId: string; isFloor: boolean 
 }
 
 // ─────────────────────────────────────────────
-// APPLY EXCLUSION — lógica de preview de roupas
+// APPLY EXCLUSION
 // ─────────────────────────────────────────────
 
 function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): CharacterPiece[] {
@@ -402,6 +447,7 @@ function applyExclusion(cart: CharacterPiece[], newPiece: CharacterPiece): Chara
   }
   return [...cart, newPiece]
 }
+
 // ─────────────────────────────────────────────
 // MANEQUIM
 // ─────────────────────────────────────────────
@@ -473,7 +519,7 @@ function Mannequin({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#c4b8a8',
+            color: T.textSub,
             fontSize: 11,
             fontFamily: 'Baloo 2, sans-serif',
             textAlign: 'center',
@@ -535,7 +581,6 @@ function ItemCard({
   tryOnVariants = {},
   isWishlisted,
   onToggleWishlist,
-
   onPreview,
   onAddCart,
 }: ItemCardProps) {
@@ -548,19 +593,23 @@ function ItemCard({
     discount,
   })
 
+  const borderColor = owned
+    ? T.ownedBorder
+    : selected
+      ? T.selectedBorder
+      : isCute
+        ? T.cuteBorder
+        : T.border
+
+  const bgColor = owned ? T.ownedBg : selected ? T.selectedBg : isCute ? T.cuteBg : T.card
+
   return (
     <div
       onClick={onPreview}
       style={{
-        border: selected
-          ? '2px solid #c478a8'
-          : owned
-            ? '2px solid var(--color-leaf-600, #5a9a5a)'
-            : isCute
-              ? '2px solid #d4aaee'
-              : '2px solid #e5ddd5',
+        border: `1.5px solid ${borderColor}`,
         borderRadius: 12,
-        background: selected ? '#fce8f5' : owned ? '#f0f7f0' : isCute ? '#faf5ff' : 'white',
+        background: bgColor,
         padding: '10px 10px 8px',
         display: 'flex',
         flexDirection: 'column',
@@ -573,13 +622,14 @@ function ItemCard({
       }}
       onMouseEnter={(e) => {
         ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'
-        ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.10)'
+        ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(200,120,140,0.15)'
       }}
       onMouseLeave={(e) => {
         ;(e.currentTarget as HTMLDivElement).style.transform = ''
         ;(e.currentTarget as HTMLDivElement).style.boxShadow = ''
       }}
     >
+      {/* Wishlist */}
       {onToggleWishlist && (
         <button
           onClick={(e) => {
@@ -588,8 +638,8 @@ function ItemCard({
           }}
           style={{
             position: 'absolute',
-            top: 6,
-            left: 3,
+            top: 5,
+            left: 4,
             background: 'none',
             border: 'none',
             cursor: 'pointer',
@@ -600,22 +650,25 @@ function ItemCard({
           }}
         >
           <Heart
-            size={14}
-            color={isWishlisted ? '#e85d8a' : '#d1c4b8'}
-            fill={isWishlisted ? '#e85d8a' : 'none'}
+            size={13}
+            color={isWishlisted ? '#e8607a' : 'rgba(200,120,140,0.4)'}
+            fill={isWishlisted ? '#e8607a' : 'none'}
+            strokeWidth={2}
           />
         </button>
       )}
+
+      {/* Badge desconto */}
       {discount && !owned && (
         <div
           style={{
             position: 'absolute',
-            top: -8,
-            right: -8,
-            background: '#ef4444',
+            top: -7,
+            right: -7,
+            background: '#e8607a',
             color: 'white',
-            fontSize: 10,
-            fontWeight: 700,
+            fontSize: 9,
+            fontWeight: 800,
             borderRadius: 20,
             padding: '2px 6px',
             fontFamily: 'Baloo 2, sans-serif',
@@ -624,25 +677,31 @@ function ItemCard({
           -{discount}%
         </div>
       )}
+
+      {/* Badge owned */}
       {owned && (
         <div
           style={{
             position: 'absolute',
-            top: -8,
-            right: -8,
-            background: 'var(--color-leaf-600, #5a9a5a)',
+            top: -7,
+            right: -7,
+            background: 'rgba(74,122,74,0.85)',
             color: 'white',
-            fontSize: 10,
-            fontWeight: 700,
+            fontSize: 9,
+            fontWeight: 800,
             borderRadius: 20,
-            padding: '2px 8px',
+            padding: '2px 7px',
             fontFamily: 'Baloo 2, sans-serif',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
           }}
         >
-          ✓
+          <Check size={9} strokeWidth={3} /> comprado
         </div>
       )}
 
+      {/* Imagem */}
       {isCharacter && piece ? (
         <div
           style={{
@@ -651,7 +710,7 @@ function ItemCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#c8bdb0',
+            background: 'rgba(200,168,180,0.25)',
             borderRadius: 8,
             overflow: 'hidden',
             position: 'relative',
@@ -706,10 +765,11 @@ function ItemCard({
         <HouseThumbnail itemId={id} isFloor={isFloor ?? true} />
       )}
 
+      {/* Label */}
       <span
         style={{
           fontSize: 11,
-          color: '#3d2408',
+          color: T.text,
           fontFamily: 'Baloo 2, sans-serif',
           fontWeight: 600,
           textAlign: 'center',
@@ -723,76 +783,67 @@ function ItemCard({
         {label}
       </span>
 
+      {/* Ação */}
       {owned ? (
         <span
           style={{
             fontSize: 10,
-            color: 'var(--color-leaf-600, #5a9a5a)',
+            color: T.ownedText,
             fontFamily: 'Baloo 2, sans-serif',
-            fontWeight: 700,
+            fontWeight: 800,
           }}
         >
-          ✓ Comprado
+          no guarda-roupa
         </span>
       ) : !available ? (
-        <span style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'Baloo 2, sans-serif' }}>
-          Indisponível
+        <span style={{ fontSize: 10, color: T.textSub, fontFamily: 'Baloo 2, sans-serif' }}>
+          indisponível
         </span>
       ) : (
-        <div
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onAddCart?.()
+          }}
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            width: '100%',
             alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            background: inCart ? 'rgba(74,122,74,0.15)' : T.btnIcon,
+            border: `1.5px solid ${inCart ? 'rgba(74,122,74,0.4)' : T.border}`,
+            borderRadius: 20,
+            padding: '4px 10px',
+            width: '100%',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
           }}
         >
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onAddCart?.()
-            }}
+          <ShoppingCart size={11} color={inCart ? T.ownedText : T.textLabel} strokeWidth={2} />
+          <span
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 5,
-              background: inCart ? '#e8f4e8' : '#f9f5f0',
-              border: `2px solid ${inCart ? 'var(--color-leaf-500, #6aaa6a)' : '#e0d8d0'}`,
-              borderRadius: 20,
-              padding: '5px 12px',
-              width: '100%',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
+              gap: 3,
+              fontSize: 11,
+              fontWeight: 800,
+              fontFamily: 'Baloo 2, sans-serif',
+              color: inCart ? T.ownedText : T.text,
             }}
           >
-            <ShoppingCart size={13} color={inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#a0998f'} />
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 3,
-                fontSize: 12,
-                fontWeight: 700,
-                fontFamily: 'Baloo 2, sans-serif',
-                color: inCart ? 'var(--color-leaf-600, #5a9a5a)' : '#7a7068',
-              }}
-            >
-              <PiMoneyWavyLight size={14} />
-              {discount ? (
-                <>
-                  <span style={{ textDecoration: 'line-through', opacity: 0.45, fontSize: 10 }}>
-                    {cost}
-                  </span>{' '}
-                  {finalCost}
-                </>
-              ) : (
-                finalCost
-              )}
-            </span>
-          </button>
-        </div>
+            <PiMoneyWavyLight size={13} />
+            {discount ? (
+              <>
+                <span style={{ textDecoration: 'line-through', opacity: 0.4, fontSize: 9 }}>
+                  {cost}
+                </span>{' '}
+                {finalCost}
+              </>
+            ) : (
+              finalCost
+            )}
+          </span>
+        </button>
       )}
     </div>
   )
@@ -813,26 +864,34 @@ function Section({
 }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 800,
-          fontFamily: 'Baloo 2, sans-serif',
-          color: cute ? '#9b5fd4' : '#8b6914',
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          marginBottom: 8,
-          paddingBottom: 4,
-          borderBottom: cute ? '1.5px solid #e8d5f5' : '1.5px solid #e5ddd5',
-        }}
-      >
-        {label}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span
+          style={{
+            fontSize: 9,
+            fontWeight: 800,
+            color: cute ? T.cuteText : T.textLabel,
+            fontFamily: 'Baloo 2, sans-serif',
+            textTransform: 'uppercase',
+            letterSpacing: '0.8px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {label}
+        </span>
+        <div
+          style={{
+            flex: 1,
+            borderTop: cute
+              ? '2px dashed rgba(180,140,220,0.35)'
+              : '2px dashed rgba(232,160,176,0.4)',
+          }}
+        />
       </div>
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-          gap: 10,
+          gap: 8,
         }}
       >
         {children}
@@ -878,147 +937,122 @@ function ConfirmModal({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 200,
-        background: 'rgba(0,0,0,0.45)',
+        zIndex: 300,
+        background: 'rgba(61,26,16,0.35)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        backdropFilter: 'blur(4px)',
       }}
       onClick={onCancel}
     >
       <div
         style={{
-          background: 'white',
-          borderRadius: 24,
+          background: T.bg,
+          borderRadius: 20,
           maxWidth: 300,
           width: '90%',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.22)',
+          boxShadow: T.shadow,
+          border: T.borderVal,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
           overflow: 'hidden',
+          fontFamily: 'Baloo 2, sans-serif',
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div
           style={{
-            background: canAfford
-              ? 'linear-gradient(135deg,#e8f5e8 0%,#f0faf0 100%)'
-              : 'linear-gradient(135deg,#fff3e0 0%,#fff8f0 100%)',
-            padding: '28px 24px 20px',
+            padding: '24px 20px 16px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 12,
-            borderBottom: '1.5px solid #f0ebe4',
+            gap: 10,
+            borderBottom: T.borderDashed,
           }}
         >
           <div
             style={{
-              width: 64,
-              height: 64,
+              width: 52,
+              height: 52,
               borderRadius: '50%',
-              background: canAfford ? '#d4edda' : '#ffe4c4',
+              background: canAfford ? 'rgba(74,122,74,0.15)' : 'rgba(232,96,122,0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 32,
             }}
           >
-            {canAfford ? '🛍️' : <PiMoneyWavyLight size={40} />}
+            {canAfford ? (
+              <ShoppingBag size={22} color={T.ownedText} strokeWidth={2} />
+            ) : (
+              <PiMoneyWavyLight size={26} color={T.btnDestructiveText} />
+            )}
           </div>
-          <div
+          <span
             style={{
-              fontFamily: 'Baloo 2, sans-serif',
+              fontSize: 15,
               fontWeight: 800,
-              fontSize: 17,
-              color: '#3d2408',
+              color: T.text,
               textAlign: 'center',
             }}
           >
             {canAfford
               ? giftMode
-                ? `Presentear ${label}?`
-                : `Comprar ${label}?`
-              : 'Moedas insuficientes'}
-          </div>
+                ? `presentear — ${label}?`
+                : `comprar — ${label}?`
+              : 'moedas insuficientes'}
+          </span>
         </div>
+
+        {/* Body */}
         <div
-          style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}
+          style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}
         >
+          {/* Custo */}
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              fontFamily: 'Baloo 2, sans-serif',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: T.card,
+              borderRadius: 10,
+              padding: '7px 12px',
+              border: T.cardBorder,
             }}
           >
-            <div
+            <span style={{ fontSize: 12, color: T.textSub, fontWeight: 600 }}>custo</span>
+            <span
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
                 alignItems: 'center',
-                background: canAfford ? '#f9f5f0' : '#fff3e0',
-                borderRadius: 10,
-                padding: '8px 12px',
+                gap: 4,
+                fontWeight: 800,
+                fontSize: 14,
+                color: T.text,
               }}
             >
-              <span style={{ fontSize: 13, color: '#6b7280' }}>Custo</span>
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  fontWeight: 800,
-                  fontSize: 15,
-                  color: '#3d2408',
-                }}
-              >
-                <PiMoneyWavyLight size={16} />
-                {cost}
-              </span>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                background: canAfford ? '#f9f5f0' : '#fff3e0',
-                borderRadius: 10,
-                padding: '8px 12px',
-              }}
-            >
-              <span style={{ fontSize: 13, color: '#6b7280' }}>Seu saldo</span>
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  fontWeight: 800,
-                  fontSize: 15,
-                  color: canAfford ? '#3d2408' : '#ef4444',
-                }}
-              >
-                <PiMoneyWavyLight size={16} />
-                {cost}
-              </span>
-            </div>
-            {!canAfford && (
-              <p
-                style={{
-                  margin: 0,
-                  textAlign: 'center',
-                  fontSize: 13,
-                  color: '#6b7280',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  lineHeight: 1.5,
-                }}
-              >
-                Continue cuidando do jardim para ganhar mais! 🌱
-              </p>
-            )}
+              <PiMoneyWavyLight size={15} />
+              {cost}
+            </span>
           </div>
+
+          {!canAfford && (
+            <p
+              style={{
+                margin: 0,
+                textAlign: 'center',
+                fontSize: 12,
+                color: T.textSub,
+                lineHeight: 1.5,
+              }}
+            >
+              continue cuidando do jardim para ganhar mais moedas
+            </p>
+          )}
+
+          {/* Modo presente */}
           {hasPartner && canAfford && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button
@@ -1026,21 +1060,21 @@ function ConfirmModal({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 12px',
+                  gap: 7,
+                  padding: '7px 12px',
                   borderRadius: 10,
-                  border: `2px solid ${giftMode ? '#e85d8a' : '#e5ddd5'}`,
-                  background: giftMode ? '#fff0f5' : 'white',
+                  border: `1.5px solid ${giftMode ? 'rgba(232,96,122,0.5)' : T.border}`,
+                  background: giftMode ? 'rgba(232,96,122,0.08)' : T.card,
                   cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 700,
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: giftMode ? '#e85d8a' : '#6b7280',
+                  color: giftMode ? '#e8607a' : T.textSub,
                   transition: 'all 0.15s',
                 }}
               >
-                <GiftIcon size={15} color={giftMode ? '#e85d8a' : '#6b7280'} />
-                Dar de presente
+                <GiftIcon size={13} color={giftMode ? '#e8607a' : T.textLabel} strokeWidth={2} />
+                dar de presente
               </button>
               {giftMode && (
                 <>
@@ -1053,16 +1087,18 @@ function ConfirmModal({
                       width: '100%',
                       padding: '8px 10px',
                       borderRadius: 10,
-                      border: '1.5px solid #e5ddd5',
+                      border: T.borderVal,
                       fontFamily: 'Baloo 2, sans-serif',
                       fontSize: 12,
-                      color: '#3d2408',
+                      fontWeight: 600,
+                      color: T.text,
+                      background: T.card,
                       resize: 'none',
                       outline: 'none',
                       boxSizing: 'border-box',
                     }}
                   />
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 4 }}>
+                  <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                     {(
                       [
                         { id: 'purple', color: '#9b59b6' },
@@ -1080,12 +1116,12 @@ function ConfirmModal({
                         key={c.id}
                         onClick={() => onGiftColorChange(c.id)}
                         style={{
-                          width: 22,
-                          height: 22,
+                          width: 20,
+                          height: 20,
                           borderRadius: '50%',
                           background: c.color,
                           border:
-                            giftColor === c.id ? '3px solid #3d2408' : '2px solid transparent',
+                            giftColor === c.id ? `3px solid ${T.text}` : '2px solid transparent',
                           cursor: 'pointer',
                           padding: 0,
                           outline: 'none',
@@ -1099,46 +1135,175 @@ function ConfirmModal({
               )}
             </div>
           )}
-          <div style={{ display: 'flex', gap: 10 }}>
+
+          {/* Botões */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
             <button
               onClick={onCancel}
               style={{
                 flex: 1,
-                padding: '11px 0',
-                borderRadius: 14,
-                border: '2px solid #e5ddd5',
-                background: 'white',
+                padding: '9px 0',
+                borderRadius: 12,
+                border: T.borderVal,
+                background: 'transparent',
                 fontFamily: 'Baloo 2, sans-serif',
-                fontWeight: 700,
-                fontSize: 14,
+                fontWeight: 800,
+                fontSize: 13,
                 cursor: 'pointer',
-                color: '#3d2408',
+                color: T.textSub,
               }}
             >
-              {canAfford ? 'Cancelar' : 'Fechar'}
+              {canAfford ? 'cancelar' : 'fechar'}
             </button>
             {canAfford && (
               <button
                 onClick={onConfirm}
                 style={{
                   flex: 1,
-                  padding: '11px 0',
-                  borderRadius: 14,
+                  padding: '9px 0',
+                  borderRadius: 12,
                   border: 'none',
-                  background: 'var(--color-leaf-600, #5a9a5a)',
+                  background: giftMode ? 'rgba(232,96,122,0.18)' : T.btnPrimary,
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 14,
+                  fontWeight: 800,
+                  fontSize: 13,
                   cursor: 'pointer',
-                  color: 'white',
+                  color: giftMode ? '#e8607a' : T.text,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 5,
                 }}
               >
-                {giftMode ? 'Presentear' : 'Comprar ✓'}
+                {giftMode ? (
+                  <>
+                    <GiftIcon size={12} strokeWidth={2} /> presentear
+                  </>
+                ) : (
+                  <>
+                    <Check size={12} strokeWidth={2.5} /> comprar
+                  </>
+                )}
               </button>
             )}
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+// PAINEL LATERAL (preview / carrinho)
+// ─────────────────────────────────────────────
+
+function SidePanel({
+  open,
+  children,
+  btnY,
+  onToggle,
+  onMouseDown,
+  icon,
+  label,
+}: {
+  open: boolean
+  children: React.ReactNode
+  btnY: number
+  onToggle: () => void
+  onMouseDown: (e: React.MouseEvent) => void
+  icon: React.ReactNode
+  label: string
+}) {
+  return (
+    <div style={{ position: 'relative', flexShrink: 0, zIndex: 51 }}>
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: btnY,
+          display: 'flex',
+          alignItems: 'stretch',
+          flexDirection: 'row',
+        }}
+      >
+        {open && (
+          <div
+            style={{
+              width: 260,
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.98) 0%, rgba(252,232,238,0.98) 100%)',
+              border: T.borderVal,
+              borderLeft: 'none',
+              borderRadius: '0 0 14px 0',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            {children}
+          </div>
+        )}
+        {/* Aba arrastável */}
+        <button
+          onClick={onToggle}
+          onMouseDown={onMouseDown}
+          style={{
+            width: 28,
+            height: 72,
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+            border: T.borderVal,
+            borderLeft: 'none',
+            borderRadius: '0 12px 12px 0',
+            cursor: 'grab',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: T.textLabel,
+            fontSize: 9,
+            fontFamily: 'Baloo 2, sans-serif',
+            fontWeight: 800,
+            writingMode: 'vertical-rl',
+            letterSpacing: '0.8px',
+            flexShrink: 0,
+            userSelect: 'none',
+            gap: 4,
+            textTransform: 'uppercase',
+          }}
+        >
+          {icon}
+          {label}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+// CARRINHO LABEL
+// ─────────────────────────────────────────────
+
+function CartHeader({ label }: { label: string }) {
+  return (
+    <div
+      style={{
+        padding: '5px 10px',
+        fontSize: 9,
+        fontWeight: 800,
+        color: T.textLabel,
+        textTransform: 'uppercase',
+        letterSpacing: '0.8px',
+        fontFamily: 'Baloo 2, sans-serif',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        borderTop: T.borderDashed,
+        background: 'rgba(232,160,176,0.08)',
+      }}
+    >
+      <ShoppingCart size={10} strokeWidth={2} />
+      {label}
     </div>
   )
 }
@@ -1189,17 +1354,13 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
     }
   }, [initialItemId])
 
-  // cart = preview do manequim (o que está sendo experimentado)
   const [cart, setCart] = useState<CharacterPiece[]>([])
-  // clothesCart = carrinho de compra de roupas
   const [clothesCart, setClothesCart] = useState<CharacterPiece[]>([])
-  // houseCart = carrinho de compra de itens da casinha
   const [houseCart, setHouseCart] = useState<ShopItem[]>([])
   const [tryOnVariants, setTryOnVariants] = useState<Record<string, string>>({})
   const tryOnVariant = tryOnVariants[charSubTab] ?? 'b'
   const setTryOnVariant = (v: string) => setTryOnVariants((prev) => ({ ...prev, [charSubTab]: v }))
 
-  // Painel preview casinha
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewScale, setPreviewScale] = useState(0.4)
   const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 })
@@ -1211,7 +1372,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   const btnDragging = useRef(false)
   const btnLastY = useRef(0)
 
-  // Painel provador roupas
   const [clothesPreviewOpen, setClothesPreviewOpen] = useState(false)
   const [clothesBtnY, setClothesBtnY] = useState(100)
   const clothesBtnDragging = useRef(false)
@@ -1257,7 +1417,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
     return () => el.removeEventListener('wheel', handler)
   }, [])
 
-  // ── Helpers de carrinho de roupas ──
   const addToClothesCart = (piece: CharacterPiece) => {
     if (clothesCart.find((p) => p.id === piece.id)) return
     setClothesCart((prev) => [...prev, piece])
@@ -1268,7 +1427,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   const clothesCartUnowned = clothesCart.filter((p) => !characterOwned.has(p.id))
   const clothesCartTotal = clothesCartUnowned.reduce((sum, p) => sum + (p.cost ?? 0), 0)
 
-  // ── Helpers de carrinho de casa ──
   const toggleHouseCart = (item: ShopItem) => {
     setHouseCart((prev) =>
       prev.find((i) => i.id === item.id) ? prev.filter((i) => i.id !== item.id) : [...prev, item]
@@ -1276,7 +1434,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   }
   const houseCartTotal = houseCart.reduce((sum, i) => sum + getDiscountedCost(i), 0)
 
-  // ── Preview tiles casinha ──
   const DEFAULT_FLOOR: TileOption = {
     id: 'preview-floor',
     label: '',
@@ -1355,7 +1512,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
     itemById[i.id] = i
   })
 
-  // ── Handlers de compra ──
   const handleBuyHouse = (item: ShopItem) => setConfirm({ item, piece: null, open: true })
   const handleBuyPiece = (piece: CharacterPiece) => setConfirm({ item: null, piece, open: true })
 
@@ -1409,7 +1565,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
     }
 
     if (isCart) {
-      // Carrinho de casinha
       let successCount = 0
       for (const i of houseCart) {
         const result = await buy(i as ShopItem)
@@ -1418,7 +1573,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       if (successCount > 0) {
         setHouseCart([])
         setFeedback({
-          msg: `✓ ${successCount} ${successCount === 1 ? 'item comprado' : 'itens comprados'}!`,
+          msg: `${successCount} ${successCount === 1 ? 'item comprado' : 'itens comprados'}!`,
         })
         setTimeout(() => setFeedback(null), 2500)
       }
@@ -1426,7 +1581,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
     }
 
     if (isClothesCart) {
-      // Carrinho de roupas
       const itemsToBuy = clothesCartUnowned.map((p) => ({
         id: p.id,
         label: p.label,
@@ -1442,20 +1596,19 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       if (successCount > 0) {
         setClothesCart([])
         setFeedback({
-          msg: `✓ ${successCount} ${successCount === 1 ? 'item comprado' : 'itens comprados'}!`,
+          msg: `${successCount} ${successCount === 1 ? 'item comprado' : 'itens comprados'}!`,
         })
         setTimeout(() => setFeedback(null), 2500)
       }
       return
     }
 
-    // Compra individual
     let result: BuyResult
-    let label = ''
+    let resultLabel = ''
 
     if (item) {
       result = await buy(item)
-      label = item.label
+      resultLabel = item.label
     } else if (piece) {
       const tempItem: ShopItem = {
         id: piece.id,
@@ -1465,11 +1618,11 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
         cost: piece.cost ?? 0,
       }
       result = await buy(tempItem)
-      label = piece.label
+      resultLabel = piece.label
     } else return
 
     if (result.success) {
-      setFeedback({ msg: `✓ ${label} comprado!` })
+      setFeedback({ msg: `${resultLabel} comprado!` })
       setTimeout(() => setFeedback(null), 2500)
     }
   }
@@ -1488,6 +1641,25 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       : (confirm.item?.label ?? confirm.piece?.label ?? '')
   const confirmCanAfford = coins >= confirmCost
 
+  // ── Estilo botão de carrinho/compra ──
+  const cartBtnStyle = (enabled: boolean, gift?: boolean): React.CSSProperties => ({
+    width: '100%',
+    padding: '6px 0',
+    borderRadius: 10,
+    border: 'none',
+    background: !enabled ? 'rgba(232,160,176,0.2)' : gift ? 'rgba(232,96,122,0.12)' : T.btnPrimary,
+    color: !enabled ? T.textSub : gift ? '#e8607a' : T.text,
+    fontFamily: 'Baloo 2, sans-serif',
+    fontWeight: 800,
+    fontSize: 11,
+    cursor: enabled ? 'pointer' : 'not-allowed',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    transition: 'all 0.15s',
+  })
+
   return (
     <div
       style={{
@@ -1495,7 +1667,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
         inset: 0,
         top: 32,
         zIndex: 100,
-        background: '#fdf6f0',
+        background: T.bg,
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'Baloo 2, sans-serif',
@@ -1510,9 +1682,8 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 20px',
-          paddingTop: 8,
-          borderBottom: '2px solid var(--color-wood-300)',
-          background: 'var(--color-bark-100)',
+          borderBottom: T.borderDashed,
+          background: 'rgba(253,246,240,0.8)',
           flexShrink: 0,
         }}
       >
@@ -1522,41 +1693,43 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            padding: '6px 14px 6px 10px',
+            padding: '5px 12px 5px 8px',
             borderRadius: 10,
-            border: '1.5px solid var(--color-wood-300)',
-            background: 'transparent',
-            color: 'var(--color-leaf-600)',
-            fontSize: 13,
-            fontWeight: 600,
+            border: T.borderVal,
+            background: T.btnIcon,
+            color: T.text,
+            fontSize: 12,
+            fontWeight: 800,
             fontFamily: 'Baloo 2, sans-serif',
             cursor: 'pointer',
           }}
         >
-          <ChevronLeft size={16} /> Voltar
+          <ChevronLeft size={15} strokeWidth={2.5} />
+          voltar
         </button>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <ShoppingBag size={18} color="var(--color-petal-400)" />
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-leaf-800)' }}>
-            Loja
-          </span>
+          <ShoppingBag size={15} color="rgba(200,120,140,0.7)" strokeWidth={2} />
+          <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>loja</span>
         </div>
+
+        {/* Moedas */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            background: 'white',
-            border: '1.5px solid var(--color-wood-300)',
+            gap: 5,
+            background: T.card,
+            border: T.borderVal,
             borderRadius: 20,
             padding: '4px 12px',
             fontWeight: 800,
-            fontSize: 15,
-            color: 'var(--color-leaf-800)',
-            fontFamily: 'Baloo 2, sans-serif',
+            fontSize: 14,
+            color: T.text,
           }}
         >
-          <PiMoneyWavyLight size={20} /> {coins}
+          <PiMoneyWavyLight size={17} />
+          {coins}
         </div>
       </div>
 
@@ -1564,457 +1737,349 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       <div
         style={{
           display: 'flex',
-          borderBottom: '2px solid #e5ddd5',
-          background: 'white',
+          gap: 6,
+          padding: '10px 16px',
+          borderBottom: T.borderDashed,
+          background: 'rgba(253,242,246,0.5)',
           flexShrink: 0,
         }}
       >
         {(
           [
-            { key: 'casa', label: 'Ambiente', icon: <Layers size={15} /> },
-            { key: 'roupas', label: 'Roupas', icon: <Shirt size={15} /> },
+            { key: 'casa', label: 'ambiente', icon: <Layers size={13} strokeWidth={2} /> },
+            { key: 'roupas', label: 'roupas', icon: <Shirt size={13} strokeWidth={2} /> },
           ] as { key: MainTab; label: string; icon: React.ReactNode }[]
-        ).map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setMainTab(tab.key)}
-            style={{
-              flex: 1,
-              padding: '10px 0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: 'Baloo 2, sans-serif',
-              fontWeight: 700,
-              fontSize: 14,
-              color: mainTab === tab.key ? 'var(--color-leaf-600, #5a9a5a)' : '#9ca3af',
-              borderBottom:
-                mainTab === tab.key
-                  ? '3px solid var(--color-leaf-600, #5a9a5a)'
-                  : '3px solid transparent',
-              transition: 'all 0.15s',
-            }}
-          >
-            {tab.icon} {tab.label}
-          </button>
-        ))}
+        ).map((tab) => {
+          const isActive = mainTab === tab.key
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setMainTab(tab.key)}
+              style={{
+                padding: '4px 16px',
+                borderRadius: 20,
+                border: isActive ? `1.5px solid ${T.selectedBorder}` : T.borderVal,
+                background: isActive ? T.btnPrimary : T.btnIcon,
+                color: T.text,
+                fontSize: 12,
+                fontWeight: isActive ? 800 : 600,
+                fontFamily: 'Baloo 2, sans-serif',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* ── CONTEÚDO ── */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {/* ───── ABA CASINHA ───── */}
+        {/* ───── ABA AMBIENTE ───── */}
         {mainTab === 'casa' && (
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-            {/* Botão flutuante de preview/carrinho */}
-            <div style={{ position: 'relative', flexShrink: 0, zIndex: 51 }}>
+            {/* Painel lateral preview */}
+            <SidePanel
+              open={previewOpen}
+              btnY={previewBtnY}
+              onToggle={() => setPreviewOpen((v) => !v)}
+              onMouseDown={(e) => {
+                btnDragging.current = true
+                btnLastY.current = e.clientY
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              icon={
+                houseCart.length > 0 ? (
+                  <ShoppingCart size={11} strokeWidth={2} />
+                ) : (
+                  <Eye size={11} strokeWidth={2} />
+                )
+              }
+              label={houseCart.length > 0 ? 'carrinho' : 'preview'}
+            >
+              {/* Cena */}
               <div
+                ref={previewSceneRef}
                 style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: previewBtnY,
-                  display: 'flex',
-                  alignItems: 'stretch',
-                  flexDirection: 'row',
+                  height: 280,
+                  flexShrink: 0,
+                  overflow: 'hidden',
+                  cursor: 'grab',
+                  position: 'relative',
+                  background: (BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0]).css,
+                }}
+                onMouseDown={(e) => {
+                  previewDragging.current = true
+                  previewLastPos.current = { x: e.clientX, y: e.clientY }
+                  e.stopPropagation()
+                }}
+                onMouseMove={(e) => {
+                  if (!previewDragging.current) return
+                  const dx = e.clientX - previewLastPos.current.x
+                  const dy = e.clientY - previewLastPos.current.y
+                  previewLastPos.current = { x: e.clientX, y: e.clientY }
+                  setPreviewOffset((o) => ({ x: o.x + dx, y: o.y + dy }))
+                  e.stopPropagation()
+                }}
+                onMouseUp={(e) => {
+                  previewDragging.current = false
+                  e.stopPropagation()
+                }}
+                onMouseLeave={() => {
+                  previewDragging.current = false
                 }}
               >
-                {previewOpen && (
-                  <div
-                    style={{
-                      width: 300,
-                      position: 'relative',
-                      border: '2px solid var(--color-wood-300)',
-                      borderRadius: '0 0 12px 0',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                    }}
-                  >
+                {(() => {
+                  const activeBg = BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0]
+                  return activeBg.svg ? (
                     <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: (BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0])
-                          .css,
-                        zIndex: 0,
-                      }}
+                      dangerouslySetInnerHTML={{ __html: activeBg.svg }}
+                      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}
                     />
-                    {(() => {
-                      const activeBg = BACKGROUNDS.find((b) => b.id === previewBg) ?? BACKGROUNDS[0]
-                      return activeBg.svg ? (
-                        <div
-                          dangerouslySetInnerHTML={{ __html: activeBg.svg }}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            pointerEvents: 'none',
-                            zIndex: 0,
-                          }}
-                        />
-                      ) : null
-                    })()}
-
-                    {/* Cena */}
-                    <div
-                      style={{
-                        height: 300,
-                        flexShrink: 0,
-                        overflow: 'hidden',
-                        cursor: 'grab',
-                        position: 'relative',
-                        zIndex: 1,
-                      }}
-                      onWheel={(e) => {
-                        setPreviewScale((s) => Math.min(1.5, Math.max(0.2, s - e.deltaY * 0.001)))
-                      }}
-                      onMouseDown={(e) => {
-                        previewDragging.current = true
-                        previewLastPos.current = { x: e.clientX, y: e.clientY }
-                        e.stopPropagation()
-                      }}
-                      onMouseMove={(e) => {
-                        if (!previewDragging.current) return
-                        const dx = e.clientX - previewLastPos.current.x
-                        const dy = e.clientY - previewLastPos.current.y
-                        previewLastPos.current = { x: e.clientX, y: e.clientY }
-                        setPreviewOffset((o) => ({ x: o.x + dx, y: o.y + dy }))
-                        e.stopPropagation()
-                      }}
-                      onMouseUp={(e) => {
-                        previewDragging.current = false
-                        e.stopPropagation()
-                      }}
-                      onMouseLeave={() => {
-                        previewDragging.current = false
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <div
-                          style={{
-                            transform: `translate(${previewOffset.x}px, ${previewOffset.y}px) scale(${previewScale})`,
-                            transformOrigin: 'center center',
-                            willChange: 'transform',
-                          }}
-                        >
-                          <HouseScene
-                            floorTile={previewFloor}
-                            wallTile={previewWall}
-                            wallRightTile={previewWall}
-                            overlap={0}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Carrinho de casinha */}
-                    {houseCart.length > 0 && (
-                      <div
-                        style={{
-                          background: 'rgba(255,255,255,0.92)',
-                          borderTop: '1.5px solid var(--color-wood-300)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          maxHeight: 280,
-                          flexShrink: 0,
-                          position: 'relative',
-                          zIndex: 1,
-                        }}
-                      >
-                        <div
-                          style={{
-                            background: 'var(--color-wood-300)',
-                            padding: '3px 8px',
-                            fontSize: 10,
-                            fontWeight: 800,
-                            color: '#3d2408',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            fontFamily: 'Baloo 2, sans-serif',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          <ShoppingCart size={11} />
-                          carrinho
-                        </div>
-                        <div
-                          style={{
-                            overflowY: 'auto',
-                            padding: '4px 8px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 3,
-                          }}
-                        >
-                          {houseCart.map((i) => (
-                            <div
-                              key={i.id}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                gap: 4,
-                                padding: '2px 0',
-                                borderBottom: '1px dashed #e5ddd5',
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  color: '#3d2408',
-                                  flex: 1,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                  fontFamily: 'Baloo 2, sans-serif',
-                                }}
-                              >
-                                {i.category === 'floor'
-                                  ? 'Pisos'
-                                  : i.category === 'wall'
-                                    ? 'Paredes'
-                                    : 'Fundos'}{' '}
-                                — {i.label}
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  color: '#3d2408',
-                                  flexShrink: 0,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 2,
-                                  fontFamily: 'Baloo 2, sans-serif',
-                                }}
-                              >
-                                <PiMoneyWavyLight size={12} />
-                                {getDiscountedCost(i)}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  setHouseCart((prev) => prev.filter((x) => x.id !== i.id))
-                                }
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  color: '#c4b8a8',
-                                  padding: 0,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <X size={11} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                        <div
-                          style={{
-                            padding: '4px 8px',
-                            borderTop: '1.5px solid var(--color-wood-300)',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 800,
-                              color: '#3d2408',
-                              fontFamily: 'Baloo 2, sans-serif',
-                            }}
-                          >
-                            Total
-                          </span>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 800,
-                              color: '#3d2408',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 3,
-                              fontFamily: 'Baloo 2, sans-serif',
-                            }}
-                          >
-                            <PiMoneyWavyLight size={14} />
-                            {houseCartTotal}
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            padding: '4px 8px 6px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 4,
-                          }}
-                        >
-                          <button
-                            onClick={() =>
-                              setConfirm({
-                                item: houseCart[0],
-                                piece: null,
-                                open: true,
-                                isCart: true,
-                              })
-                            }
-                            style={{
-                              width: '100%',
-                              padding: '5px 0',
-                              borderRadius: 8,
-                              border: 'none',
-                              background:
-                                coins >= houseCartTotal
-                                  ? 'var(--color-leaf-600, #5a9a5a)'
-                                  : '#d1d5db',
-                              color: 'white',
-                              fontFamily: 'Baloo 2, sans-serif',
-                              fontWeight: 700,
-                              fontSize: 11,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Comprar tudo
-                          </button>
-                          {partnerUid && (
-                            <button
-                              onClick={() => {
-                                setGiftMode(true)
-                                setConfirm({
-                                  item: houseCart[0],
-                                  piece: null,
-                                  open: true,
-                                  isCart: true,
-                                })
-                              }}
-                              style={{
-                                width: '100%',
-                                padding: '5px 0',
-                                borderRadius: 8,
-                                border: '1.5px solid #e85d8a',
-                                background: coins >= houseCartTotal ? '#fff0f5' : '#f5f5f5',
-                                color: coins >= houseCartTotal ? '#e85d8a' : '#9ca3af',
-                                fontFamily: 'Baloo 2, sans-serif',
-                                fontWeight: 700,
-                                fontSize: 11,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 4,
-                              }}
-                            >
-                              <GiftIcon size={11} /> Presentear
-                            </button>
-                          )}
-                        </div>
-                        <div style={{ padding: '0 8px 6px', textAlign: 'center' }}>
-                          <button
-                            onClick={() => setHouseCart([])}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: 10,
-                              color: '#9ca3af',
-                              fontFamily: 'Baloo 2, sans-serif',
-                              textDecoration: 'underline',
-                            }}
-                          >
-                            limpar
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/* Botão arrastável */}
-                <button
-                  onClick={() => setPreviewOpen((v) => !v)}
-                  onMouseDown={(e) => {
-                    btnDragging.current = true
-                    btnLastY.current = e.clientY
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}
+                  ) : null
+                })()}
+                <div
                   style={{
-                    width: 32,
-                    height: 80,
-                    background: 'var(--color-bark-100)',
-                    border: '2px solid var(--color-wood-300)',
-                    borderLeft: 'none',
-                    borderRadius: '0 12px 12px 0',
-                    cursor: 'grab',
+                    position: 'absolute',
+                    inset: 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'var(--color-leaf-600)',
-                    fontSize: 10,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 800,
-                    writingMode: 'vertical-rl',
-                    letterSpacing: '0.05em',
-                    flexShrink: 0,
-                    userSelect: 'none',
+                    zIndex: 1,
                   }}
                 >
-                  {houseCart.length > 0 ? <ShoppingCart size={13} /> : <Eye size={13} />}
-                  {houseCart.length > 0 ? 'Carrinho' : 'Preview'}
-                </button>
+                  <div
+                    style={{
+                      transform: `translate(${previewOffset.x}px, ${previewOffset.y}px) scale(${previewScale})`,
+                      transformOrigin: 'center center',
+                      willChange: 'transform',
+                    }}
+                  >
+                    <HouseScene
+                      floorTile={previewFloor}
+                      wallTile={previewWall}
+                      wallRightTile={previewWall}
+                      overlap={0}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+
+              {/* Carrinho de casinha */}
+              {houseCart.length > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    maxHeight: 260,
+                    flexShrink: 0,
+                  }}
+                >
+                  <CartHeader label="carrinho" />
+                  <div
+                    className="shop-scroll"
+                    style={{
+                      overflowY: 'auto',
+                      padding: '4px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 3,
+                    }}
+                  >
+                    {houseCart.map((i) => (
+                      <div
+                        key={i.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 4,
+                          padding: '3px 0',
+                          borderBottom: T.borderDashed,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: T.text,
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontFamily: 'Baloo 2, sans-serif',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {i.category === 'floor'
+                            ? 'piso'
+                            : i.category === 'wall'
+                              ? 'parede'
+                              : 'fundo'}{' '}
+                          — {i.label}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: T.text,
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          <PiMoneyWavyLight size={12} />
+                          {getDiscountedCost(i)}
+                        </span>
+                        <button
+                          onClick={() => setHouseCart((prev) => prev.filter((x) => x.id !== i.id))}
+                          style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            border: 'none',
+                            background: T.btnIcon,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <X size={10} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Total + botões */}
+                  <div
+                    style={{
+                      padding: '6px 10px',
+                      borderTop: T.borderDashed,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        color: T.textLabel,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.8px',
+                        fontFamily: 'Baloo 2, sans-serif',
+                      }}
+                    >
+                      total
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 800,
+                        color: T.text,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 3,
+                        fontFamily: 'Baloo 2, sans-serif',
+                      }}
+                    >
+                      <PiMoneyWavyLight size={14} />
+                      {houseCartTotal}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      padding: '0 10px 8px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 5,
+                    }}
+                  >
+                    <button
+                      onClick={() =>
+                        setConfirm({ item: houseCart[0], piece: null, open: true, isCart: true })
+                      }
+                      style={cartBtnStyle(coins >= houseCartTotal)}
+                    >
+                      <Check size={11} strokeWidth={2.5} /> comprar tudo
+                    </button>
+                    {partnerUid && (
+                      <button
+                        onClick={() => {
+                          setGiftMode(true)
+                          setConfirm({ item: houseCart[0], piece: null, open: true, isCart: true })
+                        }}
+                        style={cartBtnStyle(coins >= houseCartTotal, true)}
+                      >
+                        <GiftIcon size={11} strokeWidth={2} /> presentear
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setHouseCart([])}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: 10,
+                        color: T.textSub,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        textDecoration: 'underline',
+                        textAlign: 'center',
+                      }}
+                    >
+                      limpar carrinho
+                    </button>
+                  </div>
+                </div>
+              )}
+            </SidePanel>
 
             {/* Grid + sub-tabs */}
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0', flexShrink: 0 }}>
+              {/* Sub-tabs */}
+              <div style={{ display: 'flex', gap: 6, padding: '10px 16px 0', flexShrink: 0 }}>
                 {(
                   [
-                    { key: 'floor', label: 'Pisos' },
-                    { key: 'wall', label: 'Paredes' },
-                    { key: 'background', label: 'Fundos' },
+                    { key: 'floor', label: 'pisos' },
+                    { key: 'wall', label: 'paredes' },
+                    { key: 'background', label: 'fundos' },
                   ] as { key: HouseSubTab; label: string }[]
-                ).map((sub) => (
-                  <button
-                    key={sub.key}
-                    onClick={() => setHouseSubTab(sub.key)}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: 20,
-                      border: '2px solid',
-                      borderColor:
-                        houseSubTab === sub.key ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5',
-                      background:
-                        houseSubTab === sub.key ? 'var(--color-leaf-600, #5a9a5a)' : 'white',
-                      color: houseSubTab === sub.key ? 'white' : '#3d2408',
-                      fontFamily: 'Baloo 2, sans-serif',
-                      fontWeight: 700,
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {sub.label}
-                  </button>
-                ))}
+                ).map((sub) => {
+                  const active = houseSubTab === sub.key
+                  return (
+                    <button
+                      key={sub.key}
+                      onClick={() => setHouseSubTab(sub.key)}
+                      style={{
+                        padding: '4px 14px',
+                        borderRadius: 20,
+                        border: active ? `1.5px solid ${T.selectedBorder}` : T.borderVal,
+                        background: active ? T.selectedBg : 'transparent',
+                        color: T.text,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        fontWeight: active ? 800 : 600,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {sub.label}
+                    </button>
+                  )
+                })}
               </div>
 
               <div
-                className="char-scroll"
+                className="shop-scroll"
                 style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 24px' }}
               >
                 {houseSubTab === 'floor' &&
@@ -2102,7 +2167,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                   ))}
 
                 {houseSubTab === 'background' && (
-                  <Section label="Fundos">
+                  <Section label="fundos">
                     {SHOP_HOUSE_ITEMS.filter((i) => i.category === 'background')
                       .sort((a, b) => a.cost - b.cost)
                       .map((item) => {
@@ -2139,404 +2204,324 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
         {/* ───── ABA ROUPAS ───── */}
         {mainTab === 'roupas' && (
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex', height: '100%' }}>
-            {/* Botão flutuante de provador/carrinho */}
-            <div style={{ position: 'relative', flexShrink: 0, zIndex: 51 }}>
+            {/* Painel lateral provador */}
+            <SidePanel
+              open={clothesPreviewOpen}
+              btnY={clothesBtnY}
+              onToggle={() => setClothesPreviewOpen((v) => !v)}
+              onMouseDown={(e) => {
+                clothesBtnDragging.current = true
+                clothesBtnLastY.current = e.clientY
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              icon={
+                clothesCart.length > 0 ? (
+                  <ShoppingCart size={11} strokeWidth={2} />
+                ) : (
+                  <Eye size={11} strokeWidth={2} />
+                )
+              }
+              label={clothesCart.length > 0 ? 'carrinho' : 'provador'}
+            >
+              {/* Manequim */}
               <div
                 style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: clothesBtnY,
                   display: 'flex',
-                  alignItems: 'stretch',
-                  flexDirection: 'row',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  padding: '12px 8px 8px',
+                  gap: 8,
+                  background: 'rgba(200,168,180,0.18)',
+                  borderBottom: T.borderDashed,
+                  flexShrink: 0,
                 }}
               >
-                {clothesPreviewOpen && (
-                  <div
+                <Mannequin cart={cart} variants={tryOnVariants} />
+                {cart.length > 0 && (
+                  <button
+                    onClick={() => setCart([])}
                     style={{
-                      width: 240,
-                      background: 'var(--color-bark-100)',
-                      border: '2px solid var(--color-wood-300)',
-                      borderRadius: '0 0 12px 0',
                       display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
+                      alignItems: 'center',
+                      gap: 4,
+                      background: 'none',
+                      border: T.borderVal,
+                      borderRadius: 20,
+                      padding: '3px 10px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: 'Baloo 2, sans-serif',
+                      color: T.textSub,
+                      cursor: 'pointer',
                     }}
                   >
-                    {/* Manequim */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        padding: '10px 8px 6px',
-                        gap: 6,
-                        background: '#f5ede4',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Mannequin cart={cart} variants={tryOnVariants} />
-                      {cart.length > 0 && (
-                        <button
-                          onClick={() => setCart([])}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            background: 'none',
-                            border: '1.5px solid #e0d8d0',
-                            borderRadius: 20,
-                            padding: '3px 10px',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            fontFamily: 'Baloo 2, sans-serif',
-                            color: '#a0998f',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <X size={11} /> Tirar tudo
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Carrinho de roupas */}
-                    {clothesCart.length > 0 && (
-                      <div
-                        style={{
-                          background: 'rgba(255,255,255,0.95)',
-                          borderTop: '1.5px solid var(--color-wood-300)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          maxHeight: 260,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            background: 'var(--color-wood-300)',
-                            padding: '3px 8px',
-                            fontSize: 10,
-                            fontWeight: 800,
-                            color: '#3d2408',
-                            textTransform: 'uppercase' as const,
-                            letterSpacing: '0.05em',
-                            fontFamily: 'Baloo 2, sans-serif',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          <ShoppingCart size={11} />
-                          carrinho
-                        </div>
-                        <div
-                          style={{
-                            overflowY: 'auto',
-                            padding: '4px 8px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 3,
-                          }}
-                        >
-                          {clothesCart.map((p) => {
-                            const alreadyOwned = characterOwned.has(p.id)
-                            return (
-                              <div
-                                key={p.id}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  gap: 4,
-                                  padding: '2px 0',
-                                  borderBottom: '1px dashed #e5ddd5',
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: 10,
-                                    color: '#3d2408',
-                                    flex: 1,
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    fontFamily: 'Baloo 2, sans-serif',
-                                  }}
-                                >
-                                  {getCharSections().find((s) => s.key === p.category)?.label ??
-                                    p.category}{' '}
-                                  — {p.label}
-                                </span>
-                                <span
-                                  style={{
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    color: alreadyOwned ? 'var(--color-leaf-600)' : '#3d2408',
-                                    flexShrink: 0,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 2,
-                                    fontFamily: 'Baloo 2, sans-serif',
-                                  }}
-                                >
-                                  {alreadyOwned ? (
-                                    '✓'
-                                  ) : (
-                                    <>
-                                      <PiMoneyWavyLight size={12} />
-                                      {p.cost ?? 0}
-                                    </>
-                                  )}
-                                </span>
-                                <button
-                                  onClick={() => removeFromClothesCart(p.id)}
-                                  style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    color: '#c4b8a8',
-                                    padding: 0,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                  }}
-                                >
-                                  <X size={11} />
-                                </button>
-                              </div>
-                            )
-                          })}
-                        </div>
-                        {clothesCartUnowned.length > 0 && (
-                          <>
-                            <div
-                              style={{
-                                padding: '4px 8px',
-                                borderTop: '1.5px solid var(--color-wood-300)',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: 800,
-                                  color: '#3d2408',
-                                  fontFamily: 'Baloo 2, sans-serif',
-                                }}
-                              >
-                                Total
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  color: '#3d2408',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 3,
-                                  fontFamily: 'Baloo 2, sans-serif',
-                                }}
-                              >
-                                <PiMoneyWavyLight size={14} />
-                                {clothesCartTotal}
-                              </span>
-                            </div>
-                            <div
-                              style={{
-                                padding: '4px 8px 6px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 4,
-                              }}
-                            >
-                              <button
-                                onClick={() =>
-                                  setConfirm({
-                                    item: null,
-                                    piece: clothesCartUnowned[0],
-                                    open: true,
-                                    isClothesCart: true,
-                                  })
-                                }
-                                style={{
-                                  width: '100%',
-                                  padding: '5px 0',
-                                  borderRadius: 8,
-                                  border: 'none',
-                                  background:
-                                    coins >= clothesCartTotal
-                                      ? 'var(--color-leaf-600, #5a9a5a)'
-                                      : '#d1d5db',
-                                  color: 'white',
-                                  fontFamily: 'Baloo 2, sans-serif',
-                                  fontWeight: 700,
-                                  fontSize: 11,
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Comprar tudo
-                              </button>
-                              {partnerUid && (
-                                <button
-                                  onClick={() => {
-                                    setGiftMode(true)
-                                    setConfirm({
-                                      item: null,
-                                      piece: clothesCartUnowned[0],
-                                      open: true,
-                                      isClothesCart: true,
-                                    })
-                                  }}
-                                  style={{
-                                    width: '100%',
-                                    padding: '5px 0',
-                                    borderRadius: 8,
-                                    border: '1.5px solid #e85d8a',
-                                    background: coins >= clothesCartTotal ? '#fff0f5' : '#f5f5f5',
-                                    color: coins >= clothesCartTotal ? '#e85d8a' : '#9ca3af',
-                                    fontFamily: 'Baloo 2, sans-serif',
-                                    fontWeight: 700,
-                                    fontSize: 11,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 4,
-                                  }}
-                                >
-                                  <GiftIcon size={11} /> Presentear
-                                </button>
-                              )}
-                            </div>
-                          </>
-                        )}
-                        <div style={{ padding: '0 8px 6px', textAlign: 'center' }}>
-                          <button
-                            onClick={() => setClothesCart([])}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: 10,
-                              color: '#9ca3af',
-                              fontFamily: 'Baloo 2, sans-serif',
-                              textDecoration: 'underline',
-                            }}
-                          >
-                            limpar
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    <X size={10} strokeWidth={2.5} /> tirar tudo
+                  </button>
                 )}
+              </div>
 
-                {/* Botão arrastável */}
-                <button
-                  onClick={() => setClothesPreviewOpen((v) => !v)}
-                  onMouseDown={(e) => {
-                    clothesBtnDragging.current = true
-                    clothesBtnLastY.current = e.clientY
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}
+              {/* Carrinho de roupas */}
+              {clothesCart.length > 0 && (
+                <div
                   style={{
-                    width: 32,
-                    height: 80,
-                    background: 'var(--color-bark-100)',
-                    border: '2px solid var(--color-wood-300)',
-                    borderLeft: 'none',
-                    borderRadius: '0 12px 12px 0',
-                    cursor: 'grab',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-leaf-600)',
-                    fontSize: 10,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 800,
-                    writingMode: 'vertical-rl',
-                    letterSpacing: '0.05em',
+                    flexDirection: 'column',
+                    maxHeight: 260,
                     flexShrink: 0,
-                    userSelect: 'none',
                   }}
                 >
-                  {clothesCart.length > 0 ? <ShoppingCart size={13} /> : <Eye size={13} />}
-                  {clothesCart.length > 0 ? 'Carrinho' : 'Provador'}
-                </button>
-              </div>
-            </div>
+                  <CartHeader label="carrinho" />
+                  <div
+                    className="shop-scroll"
+                    style={{
+                      overflowY: 'auto',
+                      padding: '4px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 3,
+                    }}
+                  >
+                    {clothesCart.map((p) => {
+                      const alreadyOwned = characterOwned.has(p.id)
+                      return (
+                        <div
+                          key={p.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 4,
+                            padding: '3px 0',
+                            borderBottom: T.borderDashed,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: T.text,
+                              flex: 1,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              fontFamily: 'Baloo 2, sans-serif',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {getCharSections().find((s) => s.key === p.category)?.label ??
+                              p.category}{' '}
+                            — {p.label}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 800,
+                              color: alreadyOwned ? T.ownedText : T.text,
+                              flexShrink: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              fontFamily: 'Baloo 2, sans-serif',
+                            }}
+                          >
+                            {alreadyOwned ? (
+                              <Check size={11} strokeWidth={2.5} />
+                            ) : (
+                              <>
+                                <PiMoneyWavyLight size={12} />
+                                {p.cost ?? 0}
+                              </>
+                            )}
+                          </span>
+                          <button
+                            onClick={() => removeFromClothesCart(p.id)}
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              border: 'none',
+                              background: T.btnIcon,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: 0,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <X size={10} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {clothesCartUnowned.length > 0 && (
+                    <>
+                      <div
+                        style={{
+                          padding: '6px 10px',
+                          borderTop: T.borderDashed,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: T.textLabel,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.8px',
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          total
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 800,
+                            color: T.text,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          <PiMoneyWavyLight size={14} />
+                          {clothesCartTotal}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: '0 10px 8px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 5,
+                        }}
+                      >
+                        <button
+                          onClick={() =>
+                            setConfirm({
+                              item: null,
+                              piece: clothesCartUnowned[0],
+                              open: true,
+                              isClothesCart: true,
+                            })
+                          }
+                          style={cartBtnStyle(coins >= clothesCartTotal)}
+                        >
+                          <Check size={11} strokeWidth={2.5} /> comprar tudo
+                        </button>
+                        {partnerUid && (
+                          <button
+                            onClick={() => {
+                              setGiftMode(true)
+                              setConfirm({
+                                item: null,
+                                piece: clothesCartUnowned[0],
+                                open: true,
+                                isClothesCart: true,
+                              })
+                            }}
+                            style={cartBtnStyle(coins >= clothesCartTotal, true)}
+                          >
+                            <GiftIcon size={11} strokeWidth={2} /> presentear
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  <div style={{ padding: '0 10px 8px', textAlign: 'center' }}>
+                    <button
+                      onClick={() => setClothesCart([])}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: 10,
+                        color: T.textSub,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      limpar carrinho
+                    </button>
+                  </div>
+                </div>
+              )}
+            </SidePanel>
 
             {/* Área direita: sub-tabs + grid */}
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flexShrink: 0 }}>
-                {/* Seletor de cor — aparece só quando a categoria tem hasColor */}
-                {charPieces.some((p) => p.hasColor) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 4,
-                      flexWrap: 'wrap',
-                      padding: '6px 16px',
-                      background: 'rgba(255,255,255,0.5)',
-                      borderBottom: '1px solid var(--color-wood-300)',
-                    }}
-                  >
-                    {COLOR_VARIANTS.map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => setTryOnVariant(v)}
-                        style={{
-                          padding: '2px 10px',
-                          borderRadius: 8,
-                          border:
-                            tryOnVariant === v
-                              ? '2px solid var(--color-petal-400)'
-                              : '2px solid transparent',
-                          background:
-                            tryOnVariant === v ? 'var(--color-petal-200)' : 'var(--color-wood-300)',
-                          color: 'var(--color-soil-900)',
-                          fontSize: 11,
-                          fontFamily: 'Baloo 2, sans-serif',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s',
-                          fontWeight: tryOnVariant === v ? 700 : 400,
-                        }}
-                      >
-                        {COLOR_VARIANT_LABELS[v]}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              {/* Seletor de cor */}
+              {charPieces.some((p) => p.hasColor) && (
                 <div
-                  className="char-scroll"
                   style={{
                     display: 'flex',
-                    gap: 8,
-                    padding: '10px 16px 0',
-                    overflowX: 'auto',
+                    gap: 4,
+                    flexWrap: 'wrap',
+                    padding: '7px 16px',
+                    background: 'rgba(253,242,246,0.5)',
+                    borderBottom: T.borderDashed,
                     flexShrink: 0,
                   }}
                 >
-                  {charSections.map((cat) => (
+                  {COLOR_VARIANTS.map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setTryOnVariant(v)}
+                      style={{
+                        padding: '2px 10px',
+                        borderRadius: 8,
+                        border:
+                          tryOnVariant === v
+                            ? `2px solid ${T.selectedBorder}`
+                            : '2px solid transparent',
+                        background: tryOnVariant === v ? T.selectedBg : 'rgba(232,160,176,0.12)',
+                        color: T.text,
+                        fontSize: 11,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        fontWeight: tryOnVariant === v ? 800 : 600,
+                      }}
+                    >
+                      {COLOR_VARIANT_LABELS[v]}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-tabs de categoria */}
+              <div
+                className="shop-scroll"
+                style={{
+                  display: 'flex',
+                  gap: 6,
+                  padding: '10px 16px 0',
+                  overflowX: 'auto',
+                  flexShrink: 0,
+                }}
+              >
+                {charSections.map((cat) => {
+                  const active = charSubTab === cat.key
+                  return (
                     <button
                       key={cat.key}
                       onClick={() => setCharSubTab(cat.key)}
                       style={{
-                        padding: '6px 14px',
+                        padding: '4px 14px',
                         borderRadius: 20,
                         whiteSpace: 'nowrap',
-                        border: '2px solid',
-                        borderColor:
-                          charSubTab === cat.key ? 'var(--color-leaf-600, #5a9a5a)' : '#e5ddd5',
-                        background:
-                          charSubTab === cat.key ? 'var(--color-leaf-600, #5a9a5a)' : 'white',
-                        color: charSubTab === cat.key ? 'white' : '#3d2408',
+                        border: active ? `1.5px solid ${T.selectedBorder}` : T.borderVal,
+                        background: active ? T.btnPrimary : T.btnIcon,
+                        color: T.text,
                         fontFamily: 'Baloo 2, sans-serif',
-                        fontWeight: 700,
-                        fontSize: 13,
+                        fontWeight: active ? 800 : 600,
+                        fontSize: 12,
                         cursor: 'pointer',
                         flexShrink: 0,
                         transition: 'all 0.15s',
@@ -2544,32 +2529,34 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                     >
                       {cat.label}
                     </button>
-                  ))}
-                </div>
-              </div>{' '}
-              {/* fecha div externo seletor de cor + sub-tabs */}
+                  )
+                })}
+              </div>
+
+              {/* Grid de peças */}
               <div
-                className="char-scroll"
+                className="shop-scroll"
                 style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 24px' }}
               >
                 {charPieces.length === 0 ? (
                   <div
                     style={{
                       textAlign: 'center',
-                      color: '#9ca3af',
+                      color: T.textSub,
                       fontFamily: 'Baloo 2, sans-serif',
-                      fontSize: 14,
+                      fontSize: 13,
+                      fontWeight: 600,
                       padding: '40px 0',
                     }}
                   >
-                    Nenhum item nesta categoria
+                    nenhum item nesta categoria
                   </div>
                 ) : (
                   <div
                     style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-                      gap: 10,
+                      gap: 8,
                     }}
                   >
                     {charPieces
@@ -2616,17 +2603,17 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
             bottom: 24,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#3d2408',
+            background: T.text,
             color: 'white',
-            padding: '10px 20px',
+            padding: '9px 20px',
             borderRadius: 20,
             fontFamily: 'Baloo 2, sans-serif',
-            fontWeight: 700,
-            fontSize: 14,
-            zIndex: 300,
+            fontWeight: 800,
+            fontSize: 13,
+            zIndex: 400,
             pointerEvents: 'none',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-            animation: 'fadeInUp 0.2s ease',
+            boxShadow: T.shadow,
+            animation: 'shopFadeUp 0.2s ease',
           }}
         >
           {feedback.msg}
@@ -2658,7 +2645,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       )}
 
       <style>{`
-        @keyframes fadeInUp {
+        @keyframes shopFadeUp {
           from { opacity: 0; transform: translateX(-50%) translateY(8px); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
