@@ -1543,6 +1543,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         {showCalendar && (
           <WeekCalendar
             displayName={displayName}
+            myUid={uid}
+            partnerUid={partnerUid}
+            myNick={displayName}
+            partnerNick={otherName}
             isNana={isNana}
             onClose={() => setShowCalendar(false)}
             onPinToBoard={(entry, dateKey) => setPinColorPicker({ entry, dateKey })}

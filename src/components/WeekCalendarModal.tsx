@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CalendarEvent, CalendarTheme, THEME_COLORS, MONTH_NAMES, DAY_NAMES } from '../lib/calendar'
-import { X, Pin, Clock, Plus } from 'lucide-react'
+import { X, Pin, Clock, Plus, Heart } from 'lucide-react'
 
 interface Props {
   dateKey: string
@@ -171,97 +171,126 @@ export default function WeekCalendarModal({
               </span>
             </div>
           )}
-          {entries.map((entry) => (
-            <div
-              key={entry.id}
-              style={{
-                background: 'rgba(253,242,246,0.7)',
-                border: '1.5px solid rgba(232,160,176,0.3)',
-                borderRadius: 12,
-                padding: '12px 14px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: 10,
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {entry.time && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Clock size={11} color={t.accent} strokeWidth={2.5} />
+          {entries.map((entry) => {
+            const isSpecial = entry.id.startsWith('special::')
+            return (
+              <div
+                key={entry.id}
+                style={{
+                  background: isSpecial ? 'rgba(232,160,176,0.13)' : 'rgba(253,242,246,0.7)',
+                  border: isSpecial
+                    ? '1.5px solid rgba(232,160,176,0.5)'
+                    : '1.5px solid rgba(232,160,176,0.3)',
+                  borderRadius: 12,
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {entry.time && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Clock size={11} color={t.accent} strokeWidth={2.5} />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: t.accent,
+                          fontFamily: 'Baloo 2, sans-serif',
+                        }}
+                      >
+                        {entry.time}
+                      </span>
+                    </div>
+                  )}
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: '#3d1a10',
+                      fontFamily: 'Baloo 2, sans-serif',
+                    }}
+                  >
+                    {entry.text}
+                  </span>
+                  {isSpecial ? (
                     <span
                       style={{
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: t.accent,
+                        fontSize: 10,
+                        color: 'rgba(180,80,110,0.6)',
+                        fontFamily: 'Baloo 2, sans-serif',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 3,
+                      }}
+                    >
+                      <Heart
+                        size={9}
+                        color="rgba(180,80,110,0.6)"
+                        strokeWidth={2}
+                        fill="rgba(180,80,110,0.4)"
+                      />
+                      data especial
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: 10,
+                        color: 'rgba(61,26,16,0.4)',
                         fontFamily: 'Baloo 2, sans-serif',
                       }}
                     >
-                      {entry.time}
+                      por {entry.createdBy}
                     </span>
-                  </div>
-                )}
-                <span
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#3d1a10',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
-                  {entry.text}
-                </span>
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: 'rgba(61,26,16,0.4)',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
-                  por {entry.createdBy}
-                </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: 5, flexShrink: 0, marginTop: 2 }}>
+                  {!isSpecial && (
+                    <button
+                      onClick={() => onPinToBoard(entry, dateKey)}
+                      title="fixar no mural"
+                      style={{
+                        background: 'rgba(74,122,74,0.12)',
+                        border: 'none',
+                        borderRadius: 8,
+                        width: 28,
+                        height: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                    >
+                      <Pin size={12} color="#4A7A4A" strokeWidth={2} />
+                    </button>
+                  )}
+                  {!isSpecial && entry.createdBy === currentUser && (
+                    <button
+                      onClick={() => onRemove(entry.id)}
+                      style={{
+                        background: 'rgba(232,96,122,0.12)',
+                        border: 'none',
+                        borderRadius: 8,
+                        width: 28,
+                        height: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                    >
+                      <X size={12} color="#e8607a" strokeWidth={2.5} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 5, flexShrink: 0, marginTop: 2 }}>
-                <button
-                  onClick={() => onPinToBoard(entry, dateKey)}
-                  title="fixar no mural"
-                  style={{
-                    background: 'rgba(74,122,74,0.12)',
-                    border: 'none',
-                    borderRadius: 8,
-                    width: 28,
-                    height: 28,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    padding: 0,
-                  }}
-                >
-                  <Pin size={12} color="#4A7A4A" strokeWidth={2} />
-                </button>
-                {entry.createdBy === currentUser && (
-                  <button
-                    onClick={() => onRemove(entry.id)}
-                    style={{
-                      background: 'rgba(232,96,122,0.12)',
-                      border: 'none',
-                      borderRadius: 8,
-                      width: 28,
-                      height: 28,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      padding: 0,
-                    }}
-                  >
-                    <X size={12} color="#e8607a" strokeWidth={2.5} />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* input */}
@@ -274,7 +303,6 @@ export default function WeekCalendarModal({
           }}
         >
           <div style={{ display: 'flex', gap: 8 }}>
-            {/* horário customizado com picker */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <div
                 onClick={() => setShowTimePicker((v) => !v)}
@@ -340,7 +368,6 @@ export default function WeekCalendarModal({
                   </span>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {/* horas */}
                     <div
                       style={{
                         display: 'flex',
@@ -420,7 +447,6 @@ export default function WeekCalendarModal({
                       :
                     </span>
 
-                    {/* minutos */}
                     <div
                       style={{
                         display: 'flex',
@@ -489,7 +515,6 @@ export default function WeekCalendarModal({
                       </button>
                     </div>
 
-                    {/* atalhos */}
                     <div
                       style={{ display: 'flex', flexDirection: 'column', gap: 4, marginLeft: 4 }}
                     >

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import useCalendar from '../hooks/useCalendar'
+import { subscribeSpecialDates, getSpecialDateEventsForYear } from '../lib/specialDates'
+import type { SpecialDates } from '../lib/specialDates'
 import { THEME_COLORS, DAY_NAMES, MONTH_NAMES, CalendarTheme, toDateKey } from '../lib/calendar'
 import WeekCalendarModal from './WeekCalendarModal'
 import { subscribeAllCycles } from '../lib/cycle'
@@ -19,6 +21,10 @@ import type { CalendarEvent } from '../lib/calendar'
 
 interface Props {
   displayName: string
+  myUid: string
+  partnerUid: string
+  myNick: string
+  partnerNick: string
   isNana: boolean
   onClose: () => void
   onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
@@ -28,6 +34,10 @@ interface Props {
 
 export default function WeekCalendar({
   displayName,
+  myUid,
+  partnerUid,
+  myNick,
+  partnerNick,
   isNana,
   onClose,
   onPinToBoard,
@@ -57,8 +67,13 @@ export default function WeekCalendar({
   const dateButtonRef = useRef<HTMLButtonElement>(null)
   const themeButtonRef = useRef<HTMLButtonElement>(null)
 
-  const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
+  const [specialDates, setSpecialDates] = useState<SpecialDates | null>(null)
+  useEffect(() => {
+    const unsub = subscribeSpecialDates(setSpecialDates)
+    return unsub
+  }, [])
 
+  const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
   useEffect(() => {
     const unsub = subscribeAllCycles(setAllCycles)
     return unsub
@@ -85,6 +100,10 @@ export default function WeekCalendar({
     return 'tpm'
   }
 
+  const specialEvents = specialDates
+    ? getSpecialDateEventsForYear(specialDates, viewYear, myUid, partnerUid, myNick, partnerNick)
+    : {}
+
   const today = new Date()
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate())
 
@@ -108,7 +127,9 @@ export default function WeekCalendar({
   ]
   while (cells.length % 7 !== 0) cells.push(null)
 
-  const selectedEntries = selectedDateKey ? (dayEntries[selectedDateKey] ?? []) : []
+  const selectedVirtual = selectedDateKey ? (specialEvents[selectedDateKey] ?? []) : []
+  const selectedReal = selectedDateKey ? (dayEntries[selectedDateKey] ?? []) : []
+  const selectedEntries = [...selectedVirtual, ...selectedReal]
 
   return (
     <div
@@ -315,7 +336,6 @@ export default function WeekCalendar({
         </div>
 
         {/* ── GRID DE DIAS ── */}
-        {/* ── GRID DE DIAS ── */}
         <style>{`
           .cal-scroll::-webkit-scrollbar { width: 4px; }
           .cal-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -334,7 +354,9 @@ export default function WeekCalendar({
 
               const dateKey = toDateKey(viewYear, viewMonth, day)
               const isToday = dateKey === todayKey
-              const entries = dayEntries[dateKey] ?? []
+              const realEntries = dayEntries[dateKey] ?? []
+              const virtualEntries = specialEvents[dateKey] ?? []
+              const entries = [...virtualEntries, ...realEntries]
               const cycleState = getCycleDayState(dateKey)
 
               return (
@@ -410,18 +432,15 @@ export default function WeekCalendar({
                         key={entry.id}
                         className="rounded-md truncate"
                         style={{
-                          background: `${t.accent}28`,
+                          background: entry.id.startsWith('special::')
+                            ? 'rgba(232,160,176,0.3)'
+                            : `${t.accent}28`,
                           color: t.text,
                           fontSize: 10,
                           fontFamily: 'Baloo 2, sans-serif',
                           padding: '2px 6px',
                         }}
                       >
-                        {entry.time && (
-                          <span className="font-bold" style={{ color: t.accent, marginRight: 6 }}>
-                            {entry.time}
-                          </span>
-                        )}
                         {entry.text}
                       </div>
                     ))}
