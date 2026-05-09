@@ -43,6 +43,44 @@ import {
   type TileOption,
 } from './HouseSceneShared'
 
+// ── Scrollbar custom global ──────────────────────────────────
+const SCROLLBAR_CSS = `
+  .house-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+  .house-scroll::-webkit-scrollbar-track { background: transparent; }
+  .house-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+  .house-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+  .house-scroll { scrollbar-width: thin; scrollbar-color: rgba(232,160,176,0.55) transparent; }
+`
+if (!document.getElementById('house-scroll-style')) {
+  const s = document.createElement('style')
+  s.id = 'house-scroll-style'
+  s.textContent = SCROLLBAR_CSS
+  document.head.appendChild(s)
+}
+
+// ── Paleta leafnote ──────────────────────────────────────────
+const T = {
+  bg: 'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+  card: 'rgba(253,242,246,0.7)',
+  cardBorder: '1.5px solid rgba(232,160,176,0.3)',
+  border: 'rgba(232,160,176,0.4)',
+  borderVal: '1.5px solid rgba(232,160,176,0.4)',
+  borderDashed: '2px dashed rgba(232,160,176,0.4)',
+  shadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+  text: '#3d1a10',
+  textSub: 'rgba(61,26,16,0.5)',
+  textLabel: 'rgba(122,48,64,0.55)',
+  btnPrimary: 'rgba(232,160,176,0.55)',
+  btnDestructiveText: '#e8607a',
+  btnIcon: 'rgba(200,120,140,0.15)',
+  selectedBg: 'rgba(232,160,176,0.2)',
+  selectedBorder: 'rgba(232,160,176,0.7)',
+  ownedText: '#4A7A4A',
+  cuteText: 'rgba(120,60,160,0.8)',
+  cuteBorder: 'rgba(180,140,220,0.5)',
+  cuteBg: 'rgba(180,140,220,0.12)',
+}
+
 // ─────────────────────────────────────────────
 // CONSTANTES
 // ─────────────────────────────────────────────
@@ -116,7 +154,6 @@ function ChestSprite({
   const [frame, setFrame] = useState(0)
   const [animating, setAnimating] = useState(false)
   const col = CHEST_COLOR_COL[color]
-
   const idleFrames = [0, 1, 2, 1]
   const openFrames = [3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 7, 7]
 
@@ -166,11 +203,15 @@ function ChestSprite({
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         cursor: canOpen && !animating ? 'pointer' : 'default',
-        filter: canOpen ? 'drop-shadow(0 0 6px rgba(255,220,100,0.7))' : 'brightness(0.7)',
+        filter: canOpen ? 'drop-shadow(0 0 6px rgba(232,160,176,0.8))' : 'brightness(0.7)',
       }}
     />
   )
 }
+
+// ─────────────────────────────────────────────
+// MODAL PRINCIPAL
+// ─────────────────────────────────────────────
 
 export default function HouseModal({
   myUid,
@@ -234,18 +275,15 @@ export default function HouseModal({
     const unsub = subscribeHouseInventory(setHouseOwned)
     return unsub
   }, [])
-
   useEffect(() => {
     const unsub = subscribeWishlist(myUid, setMyWishlist)
     return unsub
   }, [myUid])
-
   useEffect(() => {
     if (!partnerUid) return
     const unsub = subscribeWishlist(partnerUid, setPartnerWishlist)
     return unsub
   }, [partnerUid])
-
   useEffect(() => {
     const unsub = subscribeGifts(setGifts)
     return unsub
@@ -259,11 +297,8 @@ export default function HouseModal({
     setNewItems((prev) => {
       const next = new Set(prev)
       houseOwned.forEach((id) => {
-        if (!initialInventoryRef.current!.has(id) && !seenItems.has(id)) {
-          next.add(id)
-        }
+        if (!initialInventoryRef.current!.has(id) && !seenItems.has(id)) next.add(id)
       })
-      // remove itens já vistos
       seenItems.forEach((id) => next.delete(id))
       return next
     })
@@ -298,7 +333,6 @@ export default function HouseModal({
     e.preventDefault()
     setScale((s) => Math.min(2, Math.max(0.4, s - e.deltaY * 0.001)))
   }
-
   const handleMouseDown = (e: React.MouseEvent) => {
     dragging.current = true
     lastPos.current = { x: e.clientX, y: e.clientY }
@@ -316,7 +350,6 @@ export default function HouseModal({
 
   const activeWallGroupIdx = wallSide === 'left' ? activeWallGroup : activeWallRightGroup
   const setActiveWallGroupIdx = wallSide === 'left' ? setActiveWallGroup : setActiveWallRightGroup
-
   const groups = tab === 'floor' ? FLOOR_GROUPS : WALL_GROUPS
   const activeGroup = tab === 'floor' ? activeFloorGroup : activeWallGroupIdx
   const setActiveGroup = tab === 'floor' ? setActiveFloorGroup : setActiveWallGroupIdx
@@ -359,11 +392,10 @@ export default function HouseModal({
 
   const currentOverlap =
     tab === 'floor' ? (FLOOR_GROUPS.find((g) => g.sheet === config.floor.sheet)?.overlap ?? 0) : 0
-
   const editingWallConfig = wallSide === 'left' ? config.wall : config.wallRight
   const setEditingWallConfig = (val: { sheet: string; col: number; row: number }) => {
-    if (wallSide === 'left') setConfig((c: HouseConfig) => ({ ...c, wall: val }))
-    else setConfig((c: HouseConfig) => ({ ...c, wallRight: val }))
+    if (wallSide === 'left') setConfig((c) => ({ ...c, wall: val }))
+    else setConfig((c) => ({ ...c, wallRight: val }))
   }
 
   const activeBg =
@@ -376,24 +408,23 @@ export default function HouseModal({
         inset: 0,
         top: 32,
         zIndex: 200,
-        background: 'var(--color-bark-100)',
+        background: T.bg,
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
-      {/* HEADER */}
+      {/* ── HEADER ── */}
       <div
         style={{
           height: 56,
           minHeight: 56,
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
           alignItems: 'center',
-          justifyContent: 'space-between',
           padding: '0 20px',
-          paddingTop: 8,
-          borderBottom: '2px solid var(--color-wood-300)',
-          background: 'var(--color-bark-100)',
+          borderBottom: T.borderDashed,
+          background: 'rgba(253,246,240,0.8)',
           flexShrink: 0,
         }}
       >
@@ -403,47 +434,46 @@ export default function HouseModal({
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            padding: '6px 14px 6px 10px',
+            padding: '5px 12px 5px 8px',
             borderRadius: 10,
-            border: '1.5px solid var(--color-wood-300)',
-            background: 'transparent',
-            color: 'var(--color-leaf-600)',
-            fontSize: 13,
-            fontWeight: 600,
+            border: T.borderVal,
+            background: T.btnIcon,
+            color: T.text,
+            fontSize: 12,
+            fontWeight: 800,
             fontFamily: 'Baloo 2, sans-serif',
             cursor: 'pointer',
+            justifySelf: 'start',
           }}
         >
-          <ChevronLeft size={16} /> Voltar
+          <ChevronLeft size={15} strokeWidth={2.5} /> voltar
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Home size={18} color="var(--color-leaf-600)" />
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-leaf-800)' }}>
-            Nossa Casinha
-          </span>
+          <Home size={15} color="rgba(200,120,140,0.7)" strokeWidth={2} />
+          <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>nossa casinha</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end' }}>
           {onOpenShop && (
             <button
               onClick={() => onOpenShop?.()}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '6px 14px',
+                gap: 5,
+                padding: '5px 12px',
                 borderRadius: 10,
-                border: '1.5px solid var(--color-wood-300)',
-                background: 'transparent',
-                color: 'var(--color-leaf-600)',
-                fontSize: 13,
-                fontWeight: 600,
+                border: T.borderVal,
+                background: T.btnIcon,
+                color: T.text,
+                fontSize: 12,
+                fontWeight: 800,
                 fontFamily: 'Baloo 2, sans-serif',
                 cursor: 'pointer',
               }}
             >
-              <ShoppingBag size={14} /> Loja
+              <ShoppingBag size={13} strokeWidth={2} /> loja
             </button>
           )}
 
@@ -452,23 +482,25 @@ export default function HouseModal({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '6px 14px',
+              gap: 5,
+              padding: '5px 12px',
               borderRadius: 10,
-              border: '1.5px solid #e85d8a',
-              background: wishlistOpen ? '#fce8f0' : 'transparent',
-              color: '#e85d8a',
-              fontSize: 13,
-              fontWeight: 600,
+              border: `1.5px solid rgba(232,96,122,0.4)`,
+              background: wishlistOpen ? 'rgba(232,96,122,0.1)' : T.btnIcon,
+              color: wishlistOpen ? T.btnDestructiveText : T.text,
+              fontSize: 12,
+              fontWeight: 800,
               fontFamily: 'Baloo 2, sans-serif',
               cursor: 'pointer',
             }}
           >
             <Heart
-              size={14}
-              fill={myWishlist.size > 0 || partnerWishlist.size > 0 ? '#e85d8a' : 'none'}
+              size={13}
+              strokeWidth={2}
+              fill={myWishlist.size > 0 || partnerWishlist.size > 0 ? '#e8607a' : 'none'}
+              color="#e8607a"
             />
-            Desejos
+            desejos
           </button>
 
           <button
@@ -476,35 +508,35 @@ export default function HouseModal({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '6px 18px',
+              gap: 5,
+              padding: '5px 18px',
               borderRadius: 10,
               border: 'none',
-              background: savedFeedback ? 'var(--color-leaf-400)' : 'var(--color-leaf-600)',
-              color: '#fff',
-              fontSize: 13,
-              fontWeight: 600,
+              background: savedFeedback ? 'rgba(74,122,74,0.55)' : T.btnPrimary,
+              color: T.text,
+              fontSize: 12,
+              fontWeight: 800,
               fontFamily: 'Baloo 2, sans-serif',
               cursor: 'pointer',
               transition: 'background 0.2s',
-              minWidth: 100,
+              minWidth: 90,
               justifyContent: 'center',
             }}
           >
             {savedFeedback ? (
               <>
-                <Check size={14} /> Salvo!
+                <Check size={13} strokeWidth={2.5} /> salvo!
               </>
             ) : (
               <>
-                <Save size={14} /> Salvar
+                <Save size={13} strokeWidth={2} /> salvar
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* BODY */}
+      {/* ── BODY ── */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {/* CENA */}
         <div
@@ -512,7 +544,6 @@ export default function HouseModal({
             position: 'absolute',
             inset: 0,
             background: activeBg.css,
-            backgroundSize: '10px 10px',
             cursor: dragging.current ? 'grabbing' : 'grab',
             overflow: 'hidden',
           }}
@@ -576,7 +607,7 @@ export default function HouseModal({
           </div>
         </div>
 
-        {/* PAINEL ESQUERDO RETRÁTIL */}
+        {/* ── PAINEL ESQUERDO RETRÁTIL ── */}
         <div
           style={{
             position: 'absolute',
@@ -600,8 +631,9 @@ export default function HouseModal({
               style={{
                 width: 300,
                 height: '100%',
-                background: 'var(--color-bark-100)',
-                borderRight: '2px solid var(--color-wood-300)',
+                background:
+                  'linear-gradient(160deg, rgba(253,246,240,0.98) 0%, rgba(252,232,238,0.98) 100%)',
+                borderRight: T.borderVal,
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
@@ -611,16 +643,28 @@ export default function HouseModal({
               <div
                 style={{
                   display: 'flex',
-                  gap: 4,
+                  gap: 5,
                   padding: '10px 12px',
-                  borderBottom: '1px solid var(--color-wood-300)',
+                  borderBottom: T.borderDashed,
                   flexShrink: 0,
                 }}
               >
                 {[
-                  { id: 'floor' as const, icon: <Layers size={14} />, label: 'Chão' },
-                  { id: 'wall' as const, icon: <PaintRoller size={14} />, label: 'Parede' },
-                  { id: 'background' as const, icon: <ImageIcon size={14} />, label: 'Fundo' },
+                  {
+                    id: 'floor' as const,
+                    icon: <Layers size={13} strokeWidth={2} />,
+                    label: 'chão',
+                  },
+                  {
+                    id: 'wall' as const,
+                    icon: <PaintRoller size={13} strokeWidth={2} />,
+                    label: 'parede',
+                  },
+                  {
+                    id: 'background' as const,
+                    icon: <ImageIcon size={13} strokeWidth={2} />,
+                    label: 'fundo',
+                  },
                 ].map((t) => {
                   const hasNew = [...newItems].some((id) => {
                     if (t.id === 'background') return id.startsWith('bg_')
@@ -640,6 +684,7 @@ export default function HouseModal({
                       )
                     return false
                   })
+                  const isActive = tab === t.id
                   return (
                     <button
                       key={t.id}
@@ -650,16 +695,13 @@ export default function HouseModal({
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: 5,
-                        padding: '6px 4px',
+                        padding: '5px 4px',
                         borderRadius: 10,
-                        border:
-                          tab === t.id
-                            ? '2px solid var(--color-leaf-500)'
-                            : '2px solid var(--color-wood-300)',
-                        background: tab === t.id ? 'var(--color-leaf-600)' : 'var(--color-bark-50)',
-                        color: tab === t.id ? '#fff' : 'var(--color-leaf-700)',
-                        fontSize: 12,
-                        fontWeight: tab === t.id ? 700 : 500,
+                        border: isActive ? `1.5px solid ${T.selectedBorder}` : T.borderVal,
+                        background: isActive ? T.btnPrimary : T.btnIcon,
+                        color: T.text,
+                        fontSize: 11,
+                        fontWeight: isActive ? 800 : 600,
                         fontFamily: 'Baloo 2, sans-serif',
                         cursor: 'pointer',
                         transition: 'all 0.15s',
@@ -686,21 +728,22 @@ export default function HouseModal({
                 })}
               </div>
 
-              {/* Sub-tabs Esquerda / Direita */}
+              {/* Sub-tabs esquerda / direita (parede) */}
               {tab === 'wall' && (
                 <div
                   style={{
                     display: 'flex',
-                    gap: 4,
-                    padding: '6px 12px',
-                    borderBottom: '1px solid var(--color-wood-300)',
+                    gap: 5,
+                    padding: '7px 12px',
+                    borderBottom: T.borderDashed,
                     flexShrink: 0,
                   }}
                 >
                   {[
-                    { id: 'left' as const, label: 'Esquerda' },
-                    { id: 'right' as const, label: 'Direita' },
+                    { id: 'left' as const, label: 'esquerda' },
+                    { id: 'right' as const, label: 'direita' },
                   ].map((s) => {
+                    const active = wallSide === s.id
                     const sideHasNew = [...newItems].some((id) => {
                       const info = HOUSE_TILE_MAP[id]
                       if (!info) return false
@@ -717,16 +760,12 @@ export default function HouseModal({
                         style={{
                           flex: 1,
                           padding: '4px 8px',
-                          borderRadius: 8,
-                          border:
-                            wallSide === s.id
-                              ? '2px solid var(--color-petal-400)'
-                              : '2px solid var(--color-wood-300)',
-                          background: wallSide === s.id ? 'var(--color-petal-200)' : 'transparent',
-                          color:
-                            wallSide === s.id ? 'var(--color-soil-900)' : 'var(--color-leaf-600)',
-                          fontSize: 12,
-                          fontWeight: wallSide === s.id ? 700 : 400,
+                          borderRadius: 20,
+                          border: active ? `1.5px solid ${T.selectedBorder}` : T.borderVal,
+                          background: active ? T.selectedBg : 'transparent',
+                          color: T.text,
+                          fontSize: 11,
+                          fontWeight: active ? 800 : 600,
                           fontFamily: 'Baloo 2, sans-serif',
                           cursor: 'pointer',
                           transition: 'all 0.15s',
@@ -754,25 +793,26 @@ export default function HouseModal({
                 </div>
               )}
 
-              {/* Lista de grupos + grid de tiles */}
+              {/* Lista de grupos */}
               {tab !== 'background' && (
                 <>
                   <div
-                    className="char-scroll"
+                    className="house-scroll"
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 3,
                       padding: '8px 10px',
-                      borderBottom: '1px solid var(--color-wood-300)',
+                      borderBottom: T.borderDashed,
                       flexShrink: 0,
                       overflowY: 'auto',
                       maxHeight: 180,
                     }}
                   >
                     {groups.map((g, i) => {
-                      const isCute = g.label === 'Cute Decor ✦'
+                      const isCute = g.label.includes('Cute')
                       const groupHasNew = groupHasNewItem(g)
+                      const isActive = activeGroup === i
                       return (
                         <button
                           key={g.label}
@@ -782,34 +822,21 @@ export default function HouseModal({
                             alignItems: 'center',
                             gap: 7,
                             padding: '5px 10px',
-                            borderRadius: 8,
+                            borderRadius: 10,
                             textAlign: 'left',
-                            background:
-                              activeGroup === i
-                                ? isCute
-                                  ? '#e8d5f5'
-                                  : 'var(--color-petal-200)'
-                                : isCute
-                                  ? '#f5eeff'
-                                  : 'transparent',
-                            color:
-                              activeGroup === i
-                                ? isCute
-                                  ? '#6b3fa0'
-                                  : 'var(--color-soil-900)'
-                                : isCute
-                                  ? '#9b5fd4'
-                                  : 'var(--color-leaf-600)',
-                            border:
-                              activeGroup === i
-                                ? isCute
-                                  ? '2px solid #b57bee'
-                                  : '2px solid var(--color-petal-400)'
-                                : isCute
-                                  ? '2px solid #d4aaee'
-                                  : '2px solid transparent',
+                            border: isActive
+                              ? `1.5px solid ${isCute ? T.cuteBorder : T.selectedBorder}`
+                              : `1.5px solid ${isCute ? T.cuteBorder : 'transparent'}`,
+                            background: isActive
+                              ? isCute
+                                ? T.cuteBg
+                                : T.selectedBg
+                              : isCute
+                                ? 'rgba(180,140,220,0.06)'
+                                : 'transparent',
+                            color: isCute ? T.cuteText : T.text,
                             fontSize: 12,
-                            fontWeight: activeGroup === i ? 700 : 400,
+                            fontWeight: isActive ? 800 : 600,
                             fontFamily: 'Baloo 2, sans-serif',
                             cursor: 'pointer',
                             transition: 'all 0.15s',
@@ -839,11 +866,11 @@ export default function HouseModal({
 
                   {/* Grid de tiles */}
                   <div
-                    className="char-scroll"
+                    className="house-scroll"
                     style={{
                       display: 'flex',
                       flexWrap: 'wrap',
-                      gap: 8,
+                      gap: 7,
                       padding: '10px 12px',
                       overflowY: 'auto',
                       alignContent: 'flex-start',
@@ -868,11 +895,11 @@ export default function HouseModal({
                       return (
                         <button
                           key={tile.id}
-                          title={owned ? tile.label : `🔒 ${tile.label} — compre na loja`}
+                          title={owned ? tile.label : `bloqueado — ${tile.label}`}
                           onClick={() => {
                             if (!owned) return
                             if (isFloor)
-                              setConfig((c: HouseConfig) => ({
+                              setConfig((c) => ({
                                 ...c,
                                 floor: { sheet: tile.sheet, col: tile.col, row: tile.row },
                               }))
@@ -894,22 +921,15 @@ export default function HouseModal({
                           style={{
                             padding: 0,
                             position: 'relative',
-                            border: isSelected
-                              ? '2.5px solid var(--color-petal-400)'
-                              : owned
-                                ? '2px solid var(--color-wood-300)'
-                                : '2px solid #e5e7eb',
-                            borderRadius: 8,
-                            background: isSelected
-                              ? 'var(--color-petal-200)'
-                              : 'repeating-linear-gradient(45deg,#d0cdc8 0px,#d0cdc8 3px,#f0ede8 3px,#f0ede8 9px)',
+                            border: isSelected ? `2px solid ${T.selectedBorder}` : T.borderVal,
+                            borderRadius: 10,
+                            background: isSelected ? T.selectedBg : T.card,
                             cursor: owned ? 'pointer' : 'not-allowed',
                             overflow: 'hidden',
                             transition: 'all 0.15s',
-                            outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
+                            outline: isSelected ? `2px solid rgba(232,160,176,0.3)` : 'none',
                             outlineOffset: 2,
-                            boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
-                            opacity: owned ? 1 : 0.55,
+                            opacity: owned ? 1 : 0.5,
                           }}
                         >
                           <div style={{ overflow: 'hidden', width: displayW, height: displayH }}>
@@ -929,11 +949,11 @@ export default function HouseModal({
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                background: 'rgba(255,255,255,0.45)',
-                                borderRadius: 6,
+                                background: 'rgba(253,242,246,0.55)',
+                                borderRadius: 8,
                               }}
                             >
-                              <Lock size={12} color="#6b7280" />
+                              <Lock size={11} color={T.textSub} />
                             </div>
                           )}
                           {tileIsNew && (
@@ -963,22 +983,22 @@ export default function HouseModal({
                           display: 'flex',
                           alignItems: 'center',
                           gap: 6,
-                          padding: '6px 8px',
-                          borderRadius: 8,
-                          background: 'var(--color-petal-200)',
-                          border: '1.5px solid var(--color-petal-400)',
+                          padding: '6px 10px',
+                          borderRadius: 10,
+                          background: T.selectedBg,
+                          border: T.borderVal,
                         }}
                       >
-                        <Lock size={11} color="var(--color-soil-900)" />
+                        <Lock size={11} color={T.textLabel} />
                         <span
                           style={{
                             fontSize: 11,
-                            color: 'var(--color-soil-900)',
+                            color: T.textSub,
                             fontFamily: 'Baloo 2, sans-serif',
                             flex: 1,
                           }}
                         >
-                          Tiles bloqueados
+                          tiles bloqueados
                         </span>
                         <button
                           onClick={() => onOpenShop?.()}
@@ -986,18 +1006,18 @@ export default function HouseModal({
                             display: 'flex',
                             alignItems: 'center',
                             gap: 4,
-                            background: 'var(--color-leaf-600)',
-                            color: 'white',
+                            background: T.btnPrimary,
+                            color: T.text,
                             border: 'none',
-                            borderRadius: 6,
-                            padding: '3px 8px',
+                            borderRadius: 8,
+                            padding: '3px 10px',
                             fontSize: 10,
-                            fontWeight: 700,
+                            fontWeight: 800,
                             fontFamily: 'Baloo 2, sans-serif',
                             cursor: 'pointer',
                           }}
                         >
-                          <ShoppingBag size={10} /> Loja
+                          <ShoppingBag size={10} strokeWidth={2} /> loja
                         </button>
                       </div>
                     )}
@@ -1008,15 +1028,14 @@ export default function HouseModal({
               {/* Grid de fundos */}
               {tab === 'background' && (
                 <div
-                  className="char-scroll"
+                  className="house-scroll"
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 8,
-                    padding: '12px',
+                    gap: 6,
+                    padding: '10px 12px',
                     overflowY: 'auto',
                     flex: 1,
-                    alignContent: 'flex-start',
                   }}
                 >
                   {BACKGROUNDS.map((bg) => {
@@ -1029,7 +1048,7 @@ export default function HouseModal({
                         key={bg.id}
                         onClick={() => {
                           if (!owned) return
-                          setConfig((c: HouseConfig) => ({ ...c, background: bg.id }))
+                          setConfig((c) => ({ ...c, background: bg.id }))
                           const bgItemId = bgToItemId(bg.id)
                           setSeenItems((prev) => new Set([...prev, bgItemId]))
                           setNewItems((prev) => {
@@ -1041,45 +1060,25 @@ export default function HouseModal({
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 12,
+                          gap: 10,
                           padding: '8px 10px',
-                          borderRadius: 10,
-                          border: isSelected
-                            ? '2.5px solid var(--color-petal-400)'
-                            : '2px solid var(--color-wood-300)',
-                          background: isSelected
-                            ? 'var(--color-petal-200)'
-                            : 'var(--color-bark-50)',
+                          borderRadius: 12,
+                          border: isSelected ? `2px solid ${T.selectedBorder}` : T.borderVal,
+                          background: isSelected ? T.selectedBg : T.card,
                           cursor: owned ? 'pointer' : 'not-allowed',
-                          opacity: owned ? 1 : 0.6,
+                          opacity: owned ? 1 : 0.55,
                           transition: 'all 0.15s',
-                          outline: isSelected ? '2px solid var(--color-petal-300)' : 'none',
-                          outlineOffset: 2,
-                          boxShadow: isSelected ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
                           position: 'relative',
                         }}
                       >
                         <div
                           style={{
-                            width: 64,
-                            height: 40,
-                            borderRadius: 7,
-                            flexShrink: 0,
-                            background:
-                              bg.id === 'garden'
-                                ? `radial-gradient(circle, #c8e8d0 1.5px, transparent 1.5px) 0 0 / 10px 10px, #f0f8f2`
-                                : bg.css,
-                            border: '1.5px solid rgba(0,0,0,0.08)',
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: 64,
-                            height: 40,
+                            width: 56,
+                            height: 36,
                             borderRadius: 7,
                             flexShrink: 0,
                             background: bg.css,
-                            border: '1.5px solid rgba(0,0,0,0.08)',
+                            border: T.borderVal,
                             overflow: 'hidden',
                             position: 'relative',
                           }}
@@ -1093,22 +1092,22 @@ export default function HouseModal({
                         </div>
                         <span
                           style={{
-                            fontSize: 13,
-                            fontWeight: isSelected ? 700 : 500,
-                            color: isSelected ? 'var(--color-soil-900)' : 'var(--color-leaf-700)',
+                            fontSize: 12,
+                            fontWeight: isSelected ? 800 : 600,
+                            color: T.text,
                             fontFamily: 'Baloo 2, sans-serif',
                             flex: 1,
                           }}
                         >
                           {bg.label}
                         </span>
-                        {!owned && <Lock size={13} color="#9ca3af" />}
+                        {!owned && <Lock size={12} color={T.textSub} />}
                         {bgIsNew && (
                           <span
                             style={{
                               position: 'absolute',
-                              top: 6,
-                              right: 6,
+                              top: 5,
+                              right: 5,
                               width: 7,
                               height: 7,
                               borderRadius: '50%',
@@ -1125,32 +1124,37 @@ export default function HouseModal({
             </div>
           </div>
 
-          {/* Botão toggle */}
+          {/* Botão toggle painel */}
           <button
             onClick={() => setPanelOpen((v) => !v)}
             style={{
               pointerEvents: 'auto',
               alignSelf: 'center',
-              width: 24,
+              width: 22,
               height: 48,
-              background: 'var(--color-bark-100)',
-              border: '2px solid var(--color-wood-300)',
-              borderLeft: panelOpen ? 'none' : '2px solid var(--color-wood-300)',
-              borderRadius: panelOpen ? '0 8px 8px 0' : '8px',
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+              border: T.borderVal,
+              borderLeft: panelOpen ? 'none' : T.borderVal,
+              borderRadius: panelOpen ? '0 10px 10px 0' : 10,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--color-leaf-600)',
+              color: T.textLabel,
               transition: 'all 0.25s',
             }}
           >
-            {panelOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+            {panelOpen ? (
+              <ChevronLeft size={13} strokeWidth={2.5} />
+            ) : (
+              <ChevronRight size={13} strokeWidth={2.5} />
+            )}
           </button>
         </div>
       </div>
 
-      {/* MODAL WISHLIST */}
+      {/* ── MODAL WISHLIST ── */}
       {wishlistOpen && (
         <div
           onClick={() => setWishlistOpen(false)}
@@ -1158,16 +1162,17 @@ export default function HouseModal({
             position: 'fixed',
             inset: 0,
             zIndex: 300,
-            background: 'rgba(0,0,0,0.4)',
+            background: 'rgba(61,26,16,0.35)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            backdropFilter: 'blur(4px)',
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#fdf6f0',
+              background: T.bg,
               borderRadius: 20,
               width: 480,
               maxWidth: '95vw',
@@ -1175,86 +1180,94 @@ export default function HouseModal({
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              boxShadow: '0 16px 48px rgba(0,0,0,0.25)',
-              border: '2px solid var(--color-wood-300)',
+              boxShadow: T.shadow,
+              border: T.borderVal,
             }}
           >
+            {/* Header */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '16px 20px',
-                borderBottom: '1.5px solid var(--color-wood-300)',
-                background: 'var(--color-bark-100)',
+                padding: '14px 18px',
+                borderBottom: T.borderDashed,
                 flexShrink: 0,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Heart size={16} color="#e85d8a" fill="#e85d8a" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Heart size={14} color="#e8607a" fill="#e8607a" strokeWidth={2} />
                 <span
                   style={{
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: 800,
-                    color: '#3d2408',
+                    color: T.text,
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
                 >
-                  Lista de desejos
+                  lista de desejos
                 </span>
               </div>
               <button
                 onClick={() => setWishlistOpen(false)}
                 style={{
-                  background: 'none',
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
                   border: 'none',
+                  background: T.btnIcon,
                   cursor: 'pointer',
-                  color: '#a0998f',
                   display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
                 }}
               >
-                <X size={18} />
+                <X size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
               </button>
             </div>
 
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               {[
-                { label: myName || 'Você', wishlist: myWishlist },
-                { label: partnerName || 'Parceiro(a)', wishlist: partnerWishlist },
-              ].map((col) => (
+                { label: myName || 'você', wishlist: myWishlist },
+                { label: partnerName || 'parceiro(a)', wishlist: partnerWishlist },
+              ].map((col, ci) => (
                 <div
                   key={col.label}
                   style={{
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    borderRight: '1.5px solid var(--color-wood-300)',
+                    borderRight: ci === 0 ? T.borderDashed : 'none',
                     overflow: 'hidden',
                   }}
                 >
                   <div
                     style={{
-                      padding: '8px 14px',
-                      fontSize: 11,
+                      padding: '7px 14px',
+                      fontSize: 9,
                       fontWeight: 800,
-                      color: '#e85d8a',
+                      color: T.textLabel,
                       textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
+                      letterSpacing: '0.8px',
                       fontFamily: 'Baloo 2, sans-serif',
-                      borderBottom: '1px solid var(--color-wood-300)',
-                      background: '#fff5f8',
+                      borderBottom: T.borderDashed,
+                      background: 'rgba(232,160,176,0.08)',
                       flexShrink: 0,
                     }}
                   >
                     {col.label}
                   </div>
-                  <div style={{ overflowY: 'auto', flex: 1, padding: '8px 0' }}>
+                  <div
+                    className="house-scroll"
+                    style={{ overflowY: 'auto', flex: 1, padding: '6px 0' }}
+                  >
                     {col.wishlist.size === 0 ? (
                       <div
                         style={{
-                          padding: '24px 16px',
+                          padding: '20px 14px',
                           textAlign: 'center',
-                          color: '#c4b8a8',
+                          color: T.textSub,
                           fontSize: 12,
                           fontFamily: 'Baloo 2, sans-serif',
                         }}
@@ -1269,27 +1282,28 @@ export default function HouseModal({
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 8,
+                            gap: 7,
                             width: '100%',
-                            padding: '7px 14px',
+                            padding: '6px 14px',
                             background: 'none',
                             border: 'none',
-                            borderBottom: '1px dashed #e5ddd5',
+                            borderBottom: T.borderDashed,
                             cursor: onOpenShop ? 'pointer' : 'default',
                             textAlign: 'left',
                             fontFamily: 'Baloo 2, sans-serif',
                           }}
                         >
                           <Heart
-                            size={11}
-                            color="#e85d8a"
-                            fill="#e85d8a"
+                            size={10}
+                            color="#e8607a"
+                            fill="#e8607a"
                             style={{ flexShrink: 0 }}
                           />
                           <span
                             style={{
                               fontSize: 12,
-                              color: '#3d2408',
+                              fontWeight: 600,
+                              color: T.text,
                               flex: 1,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -1311,7 +1325,7 @@ export default function HouseModal({
         </div>
       )}
 
-      {/* MODAL IR PARA LOJA */}
+      {/* ── MODAL IR PARA LOJA ── */}
       {goToShopConfirm && (
         <div
           onClick={() => setGoToShopConfirm(null)}
@@ -1319,52 +1333,66 @@ export default function HouseModal({
             position: 'fixed',
             inset: 0,
             zIndex: 400,
-            background: 'rgba(0,0,0,0.45)',
+            background: 'rgba(61,26,16,0.35)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            backdropFilter: 'blur(4px)',
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'white',
+              background: T.bg,
               borderRadius: 20,
-              padding: '28px 28px 24px',
+              padding: '24px 24px 20px',
               maxWidth: 300,
               width: '90%',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 16,
-              boxShadow: '0 16px 48px rgba(0,0,0,0.25)',
+              gap: 14,
+              boxShadow: T.shadow,
+              border: T.borderVal,
               fontFamily: 'Baloo 2, sans-serif',
             }}
           >
-            <Heart size={32} color="#e85d8a" fill="#e85d8a" />
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#3d2408', textAlign: 'center' }}>
-              Ir para a loja?
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                background: 'rgba(232,96,122,0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Heart size={20} color="#e8607a" fill="#e8607a" strokeWidth={2} />
             </div>
-            <div style={{ fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
-              Você será redirecionada para a loja para comprar este item.
-            </div>
-            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+            <span style={{ fontSize: 14, fontWeight: 800, color: T.text, textAlign: 'center' }}>
+              ir para a loja?
+            </span>
+            <span style={{ fontSize: 12, color: T.textSub, textAlign: 'center', lineHeight: 1.5 }}>
+              você será redirecionada para a loja para comprar este item.
+            </span>
+            <div style={{ display: 'flex', gap: 8, width: '100%' }}>
               <button
                 onClick={() => setGoToShopConfirm(null)}
                 style={{
                   flex: 1,
-                  padding: '10px 0',
+                  padding: '9px 0',
                   borderRadius: 12,
-                  border: '2px solid #e5ddd5',
-                  background: 'white',
+                  border: T.borderVal,
+                  background: 'transparent',
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   fontSize: 13,
                   cursor: 'pointer',
-                  color: '#3d2408',
+                  color: T.textSub,
                 }}
               >
-                Cancelar
+                cancelar
               </button>
               <button
                 onClick={() => {
@@ -1374,31 +1402,34 @@ export default function HouseModal({
                 }}
                 style={{
                   flex: 1,
-                  padding: '10px 0',
+                  padding: '9px 0',
                   borderRadius: 12,
                   border: 'none',
-                  background: '#e85d8a',
+                  background: 'rgba(232,96,122,0.18)',
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   fontSize: 13,
                   cursor: 'pointer',
-                  color: 'white',
+                  color: '#e8607a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 5,
                 }}
               >
-                Ir à loja
+                <ShoppingBag size={12} strokeWidth={2} /> ir à loja
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL DE REVELAÇÃO DO PRESENTE */}
+      {/* ── MODAL PRESENTE ── */}
       {activeGift && giftPhase && (
         <div
           onClick={() => {
-            if (giftPhase !== 'reveal') {
+            if (giftPhase !== 'reveal')
               setChestResetKeys((k) => ({ ...k, [activeGift.id]: (k[activeGift.id] ?? 0) + 1 }))
-            }
             setActiveGift(null)
             setGiftPhase(null)
           }}
@@ -1406,35 +1437,37 @@ export default function HouseModal({
             position: 'fixed',
             inset: 0,
             zIndex: 500,
-            background: 'rgba(0,0,0,0.5)',
+            background: 'rgba(61,26,16,0.4)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            backdropFilter: 'blur(6px)',
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'white',
-              borderRadius: 24,
+              background: T.bg,
+              borderRadius: 20,
               maxWidth: 320,
               width: '90%',
-              boxShadow: '0 24px 60px rgba(0,0,0,0.25)',
+              boxShadow: T.shadow,
+              border: T.borderVal,
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'stretch',
             }}
           >
+            {/* Header */}
             <div
               style={{
-                background: 'linear-gradient(135deg, #fff0f5 0%, #fce8f0 100%)',
-                padding: '28px 24px 20px',
+                padding: '24px 20px 16px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: 12,
-                borderBottom: '1.5px solid #f0ebe4',
+                gap: 10,
+                borderBottom: T.borderDashed,
               }}
             >
               <ChestSprite
@@ -1443,12 +1476,12 @@ export default function HouseModal({
                 resetKey={0}
                 onClick={() => {}}
               />
-              <div
+              <span
                 style={{
                   fontFamily: 'Baloo 2, sans-serif',
                   fontWeight: 800,
-                  fontSize: 15,
-                  color: '#3d2408',
+                  fontSize: 14,
+                  color: T.text,
                   textAlign: 'center',
                   display: 'flex',
                   alignItems: 'center',
@@ -1456,21 +1489,21 @@ export default function HouseModal({
                 }}
               >
                 {giftPhase === 'message' ? (
-                  <>{`presente de ${activeGift.fromName}`}</>
+                  `presente de ${activeGift.fromName}`
                 ) : (
                   <>
-                    <Sparkles size={16} color="#e85d8a" /> seus itens
+                    <Sparkles size={14} color="#e8607a" strokeWidth={2} /> seus itens
                   </>
                 )}
-              </div>
+              </span>
             </div>
 
             <div
               style={{
-                padding: '20px 24px 24px',
+                padding: '16px 20px 20px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 14,
+                gap: 12,
                 fontFamily: 'Baloo 2, sans-serif',
               }}
             >
@@ -1479,13 +1512,14 @@ export default function HouseModal({
                   {activeGift.message && (
                     <div
                       style={{
-                        background: '#fdf6f0',
+                        background: T.card,
                         borderRadius: 12,
-                        padding: '12px 14px',
+                        padding: '10px 14px',
                         fontSize: 13,
-                        color: '#3d2408',
+                        fontWeight: 600,
+                        color: T.text,
                         lineHeight: 1.6,
-                        border: '1.5px solid #e5ddd5',
+                        border: T.cardBorder,
                         fontStyle: 'italic',
                       }}
                     >
@@ -1498,33 +1532,34 @@ export default function HouseModal({
                       setGiftPhase('reveal')
                     }}
                     style={{
-                      padding: '12px 0',
-                      borderRadius: 14,
+                      padding: '11px 0',
+                      borderRadius: 12,
                       border: 'none',
-                      background: '#e85d8a',
-                      color: 'white',
+                      background: T.btnPrimary,
+                      color: T.text,
                       fontFamily: 'Baloo 2, sans-serif',
-                      fontWeight: 700,
-                      fontSize: 14,
+                      fontWeight: 800,
+                      fontSize: 13,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 8,
+                      gap: 7,
                     }}
                   >
-                    <Gift size={16} /> Abrir presente
+                    <Gift size={14} strokeWidth={2} /> abrir presente
                   </button>
                 </>
               )}
 
               {giftPhase === 'reveal' && (
                 <div
+                  className="house-scroll"
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 6,
-                    maxHeight: 200,
+                    maxHeight: 220,
                     overflowY: 'auto',
                   }}
                 >
@@ -1540,22 +1575,22 @@ export default function HouseModal({
                           alignItems: 'center',
                           gap: 8,
                           padding: '8px 12px',
-                          borderRadius: 10,
-                          background: '#f9f5f0',
-                          border: '1.5px solid #e5ddd5',
+                          borderRadius: 12,
+                          background: T.card,
+                          border: T.cardBorder,
                           fontSize: 13,
-                          color: '#3d2408',
                           fontWeight: 600,
+                          color: T.text,
                         }}
                       >
                         {cat === 'floor' ? (
-                          <Layers size={15} color="#c4956a" />
+                          <Layers size={14} color={T.textLabel} strokeWidth={2} />
                         ) : cat === 'wall' ? (
-                          <Wallpaper size={15} color="#c4956a" />
+                          <Wallpaper size={14} color={T.textLabel} strokeWidth={2} />
                         ) : cat === 'background' ? (
-                          <ImageIcon size={15} color="#c4956a" />
+                          <ImageIcon size={14} color={T.textLabel} strokeWidth={2} />
                         ) : (
-                          <Shirt size={15} color="#c4956a" />
+                          <Shirt size={14} color={T.textLabel} strokeWidth={2} />
                         )}
                         <span style={{ flex: 1 }}>{item.itemLabel}</span>
                         <button
@@ -1564,7 +1599,6 @@ export default function HouseModal({
                             setGiftPhase(null)
                             setPanelOpen(true)
                             setTab(targetTab)
-                            // Marca só esse item como visto
                             setSeenItems((prev) => new Set([...prev, item.itemId]))
                             setNewItems((prev) => {
                               const next = new Set(prev)
@@ -1576,18 +1610,18 @@ export default function HouseModal({
                             display: 'flex',
                             alignItems: 'center',
                             gap: 4,
-                            background: 'var(--color-leaf-600, #5a9a5a)',
-                            color: 'white',
-                            border: 'none',
+                            background: 'rgba(74,122,74,0.15)',
+                            color: T.ownedText,
+                            border: '1.5px solid rgba(74,122,74,0.35)',
                             borderRadius: 8,
-                            padding: '4px 10px',
+                            padding: '3px 10px',
                             fontSize: 11,
-                            fontWeight: 700,
+                            fontWeight: 800,
                             fontFamily: 'Baloo 2, sans-serif',
                             cursor: 'pointer',
                           }}
                         >
-                          ver <ArrowRight size={11} />
+                          ver <ArrowRight size={10} strokeWidth={2.5} />
                         </button>
                       </div>
                     )
