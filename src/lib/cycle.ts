@@ -168,4 +168,9 @@ export function subscribeAllCycles(
   return () => off(r)
 }
 
+export async function deleteCycle(key: string): Promise<void> {
+  const { remove } = await import('firebase/database')
+  await remove(ref(db, `cycle/${key}`))
+}
+
 export { addDays, diffDays, todayStr }

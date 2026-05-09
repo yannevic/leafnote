@@ -23,11 +23,18 @@ function getStatus(days: number): {
   barColor: string
   icon: 'clock' | 'triangle'
 } {
-  if (days <= 0)
+  if (days === 0)
     return {
       label: 'é hoje!',
       color: '#c87090',
       barColor: 'linear-gradient(90deg, #c87090, #e8607a)',
+      icon: 'clock',
+    }
+  if (days < 0)
+    return {
+      label: `há ${Math.abs(days)} ${Math.abs(days) === 1 ? 'dia' : 'dias'}`,
+      color: 'rgba(61,26,16,0.35)',
+      barColor: 'linear-gradient(90deg, rgba(200,160,176,0.4), rgba(180,140,160,0.4))',
       icon: 'clock',
     }
   if (days <= 3)
@@ -132,15 +139,17 @@ export default function CountdownPin({ item, zIndex, onUpdate, onDelete, onFocus
             marginBottom: 4,
           }}
         >
-          {isToday
-            ? 'hoje'
-            : days === 1
-              ? 'amanhã'
-              : days <= 3
-                ? 'quase lá'
-                : days <= 7
-                  ? '1 semana'
-                  : 'em breve'}
+          {days < 0
+            ? 'passou'
+            : days === 0
+              ? 'hoje'
+              : days === 1
+                ? 'amanhã'
+                : days <= 3
+                  ? 'quase lá'
+                  : days <= 7
+                    ? '1 semana'
+                    : 'em breve'}
         </div>
 
         {/* título */}

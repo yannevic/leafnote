@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useBoard } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useNotifications } from '../hooks/useNotifications'
 import { auth } from '../lib/firebase'
 import { updateProfile } from 'firebase/auth'
 import HouseModal from '../components/HouseModal'
-import { House, ShoppingBag } from 'lucide-react'
+import { House, ShoppingBag, X } from 'lucide-react'
 
 import {
   BoardItemType,
@@ -62,6 +62,8 @@ import CharacterModal from '../components/CharacterModal'
 import { useCharacter } from '../hooks/useCharacter'
 import { ShopModal } from '../components/ShopModal'
 import type { CyclePinItem as CyclePinItemType } from '../types/board'
+import { subscribeAllCycles, computeCycleState } from '../lib/cycle'
+import type { CycleData } from '../lib/cycle'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -158,6 +160,14 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [shopInitialItem, setShopInitialItem] = useState<string | undefined>()
   const [expandedMenu, setExpandedMenu] = useState(false)
   const [cycleToast, setCycleToast] = useState<string | null>(null)
+  const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
+  const [cyclePicker, setCyclePicker] = useState<{ key: string; data: CycleData }[] | null>(null)
+
+  useEffect(() => {
+    const unsub = subscribeAllCycles(setAllCycles)
+    return unsub
+  }, [])
+
   function showCycleToast(msg: string) {
     setCycleToast(msg)
     setTimeout(() => setCycleToast(null), 3000)
@@ -1545,6 +1555,21 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                 showCycleToast('o ciclo já está fixado no mural 🌸')
                 return
               }
+              const today = new Date().toISOString().slice(0, 10)
+              const thisMonth = today.slice(0, 7)
+              const lastMonthDate = new Date(new Date(today + 'T12:00:00').setDate(0))
+              const lastMonth = lastMonthDate.toISOString().slice(0, 7)
+              const candidates = [thisMonth, lastMonth]
+                .map((k) => (allCycles[k] ? { key: k, data: allCycles[k] } : null))
+                .filter((c): c is { key: string; data: CycleData } => {
+                  if (!c) return false
+                  const { state } = computeCycleState(c.data)
+                  return state !== 'none' && state !== 'ended'
+                })
+              if (candidates.length > 1) {
+                setCyclePicker(candidates)
+                return
+              }
               const item: CyclePinItemType = {
                 id: makeId(),
                 type: 'cycle-pin',
@@ -1745,6 +1770,152 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           </div>
         )}
       </div>
+
+      {cyclePicker && (
+        <div
+          onClick={() => setCyclePicker(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999999,
+            background: 'rgba(44,20,8,0.35)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+              border: '1.5px solid rgba(232,160,176,0.4)',
+              borderRadius: 20,
+              padding: '24px 28px',
+              minWidth: 280,
+              boxShadow: '0 8px 40px rgba(200,120,140,0.2)',
+              fontFamily: 'Baloo 2, sans-serif',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 15, fontWeight: 800, color: '#3d1a10' }}>
+                qual ciclo fixar?
+              </span>
+              <button
+                onClick={() => setCyclePicker(null)}
+                style={{
+                  background: 'rgba(200,120,140,0.15)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {cyclePicker.map(({ key, data }) => {
+                const { state, label } = computeCycleState(data)
+                const stateLabel: Record<string, string> = {
+                  chegando: 'vem aí',
+                  tpm: 'tpm',
+                  active: 'menstruada',
+                }
+                const stateColor: Record<string, string> = {
+                  chegando: '#c87090',
+                  tpm: '#9B7FD4',
+                  active: '#D94F4F',
+                }
+                const [y, m] = key.split('-')
+                const monthName = [
+                  'jan',
+                  'fev',
+                  'mar',
+                  'abr',
+                  'mai',
+                  'jun',
+                  'jul',
+                  'ago',
+                  'set',
+                  'out',
+                  'nov',
+                  'dez',
+                ][parseInt(m) - 1]
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      const item: CyclePinItemType = {
+                        id: makeId(),
+                        type: 'cycle-pin',
+                        x: 300,
+                        y: 200,
+                        width: 210,
+                        height: 80,
+                        createdBy: uid,
+                        updatedBy: uid,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        zOrder: nextZOrder(),
+                        cycleKey: key,
+                      }
+                      setItems((prev) => [...prev, item as unknown as AnyBoardItem])
+                      saveItem(item as unknown as AnyBoardItem)
+                      setCyclePicker(null)
+                      setShowCalendar(false)
+                    }}
+                    style={{
+                      background: 'rgba(253,242,246,0.7)',
+                      border: '1.5px solid rgba(232,160,176,0.3)',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 800,
+                        color: 'rgba(122,48,64,0.55)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.8px',
+                      }}
+                    >
+                      {monthName} {y}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 800,
+                        color: stateColor[state] ?? '#c87090',
+                      }}
+                    >
+                      {stateLabel[state] ?? state}
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(61,26,16,0.5)' }}>
+                      {label}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {pinColorPicker && (
         <div

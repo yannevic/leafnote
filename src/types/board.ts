@@ -91,6 +91,7 @@ export interface CountdownPinItem extends BoardItem {
 
 export interface CyclePinItem extends BoardItem {
   type: 'cycle-pin'
+  cycleKey?: string
 }
 
 export interface SpecialLetterItem extends BoardItem {

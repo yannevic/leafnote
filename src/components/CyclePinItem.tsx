@@ -2,6 +2,7 @@ import { useRef, useCallback } from 'react'
 import { X, CloudRain, AlertTriangle } from 'lucide-react'
 import type { CyclePinItem as CyclePinItemType } from '../types/board'
 import { useCycle } from '../hooks/useCycle'
+import { computeCycleState } from '../lib/cycle'
 
 interface Props {
   item: CyclePinItemType
@@ -44,7 +45,11 @@ const STATE_CONFIG = {
 
 export default function CyclePinItem({ item, zIndex, onUpdate, onDelete, onFocus }: Props) {
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
-  const { currentCycle } = useCycle()
+  const { currentCycle, allCycles } = useCycle()
+  const cycleData = item.cycleKey ? allCycles[item.cycleKey] : null
+  const resolvedCycle = cycleData
+    ? { ...computeCycleState(cycleData), key: item.cycleKey!, data: cycleData }
+    : currentCycle
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -77,11 +82,11 @@ export default function CyclePinItem({ item, zIndex, onUpdate, onDelete, onFocus
     [item.x, item.y, item.id, onUpdate, onFocus]
   )
 
-  if (!currentCycle || currentCycle.state === 'none' || currentCycle.state === 'ended') {
+  if (!resolvedCycle || resolvedCycle.state === 'none' || resolvedCycle.state === 'ended') {
     return null
   }
 
-  const config = STATE_CONFIG[currentCycle.state]
+  const config = STATE_CONFIG[resolvedCycle.state]
   if (!config) return null
 
   return (
@@ -135,9 +140,9 @@ export default function CyclePinItem({ item, zIndex, onUpdate, onDelete, onFocus
             paddingRight: 20,
           }}
         >
-          {currentCycle.state === 'tpm'
+          {resolvedCycle.state === 'tpm'
             ? 'semana de tpm'
-            : currentCycle.state === 'active'
+            : resolvedCycle.state === 'active'
               ? 'menstruada'
               : 'vem aí'}
         </div>
@@ -158,7 +163,7 @@ export default function CyclePinItem({ item, zIndex, onUpdate, onDelete, onFocus
           )}
           {config.icon === 'cloud' && <CloudRain size={13} color={config.color} strokeWidth={2} />}
           {config.icon === 'droplet' && <DropletFilled color={config.color} />}
-          {currentCycle.label}
+          {resolvedCycle.label}
         </div>
       </div>
 
