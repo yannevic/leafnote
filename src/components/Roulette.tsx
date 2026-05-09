@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { RotateCcw, Dices, Plus, X } from 'lucide-react'
 
 const COLORS = [
   '#e8a0b0',
@@ -33,12 +34,12 @@ export default function Roulette() {
       if (options.length === 0) {
         ctx.beginPath()
         ctx.arc(cx, cy, r, 0, Math.PI * 2)
-        ctx.fillStyle = '#eaf5ea'
+        ctx.fillStyle = 'rgba(253,242,246,0.7)'
         ctx.fill()
-        ctx.strokeStyle = '#a8d8a8'
+        ctx.strokeStyle = 'rgba(232,160,176,0.5)'
         ctx.lineWidth = 3
         ctx.stroke()
-        ctx.fillStyle = '#4a7a4a'
+        ctx.fillStyle = '#7a3040'
         ctx.font = 'bold 13px "Baloo 2", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
@@ -76,7 +77,7 @@ export default function Roulette() {
       ctx.arc(cx, cy, 18, 0, Math.PI * 2)
       ctx.fillStyle = '#fff'
       ctx.fill()
-      ctx.strokeStyle = '#c4956a'
+      ctx.strokeStyle = 'rgba(232,160,176,0.8)'
       ctx.lineWidth = 3
       ctx.stroke()
     },
@@ -184,18 +185,22 @@ export default function Roulette() {
       {result !== null && (
         <div
           style={{
-            background: '#fdf6f0',
-            border: '1.5px solid #e8a0b0',
+            background: 'rgba(232,160,176,0.13)',
+            border: '1.5px solid rgba(232,160,176,0.5)',
             borderRadius: 12,
             padding: '8px 24px',
             fontSize: 15,
             fontWeight: 800,
-            color: '#5a1028',
+            color: '#3d1a10',
             textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
             animation: 'resultPop 0.3s ease-out',
           }}
         >
-          {result} 🎉
+          <Dices size={14} color="rgba(122,48,64,0.7)" strokeWidth={2} />
+          {result}
         </div>
       )}
 
@@ -205,18 +210,22 @@ export default function Roulette() {
           type="button"
           onClick={handleRemoveResult}
           style={{
-            padding: '5px 16px',
+            padding: '5px 14px',
             borderRadius: 10,
-            border: '1.5px solid #e8a0b0',
-            background: '#fdf6f0',
-            color: '#7a3040',
+            border: '1.5px solid rgba(232,160,176,0.4)',
+            background: 'rgba(253,242,246,0.7)',
+            color: '#3d1a10',
             fontFamily: "'Baloo 2', sans-serif",
             fontWeight: 700,
             fontSize: 11,
             cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
           }}
         >
-          remover e girar dnv 🔄
+          <RotateCcw size={11} strokeWidth={2.5} />
+          remover e girar dnv
         </button>
       )}
 
@@ -226,23 +235,25 @@ export default function Roulette() {
         onClick={handleSpin}
         disabled={spinning || options.length < 2}
         style={{
-          padding: '9px 32px',
+          padding: '9px 28px',
           borderRadius: 12,
           border: 'none',
           cursor: spinning || options.length < 2 ? 'not-allowed' : 'pointer',
           background:
-            spinning || options.length < 2
-              ? 'var(--color-leaf-400, #7fb87f)'
-              : 'var(--color-leaf-600, #4a7a4a)',
-          color: '#fff',
-          fontSize: 14,
+            spinning || options.length < 2 ? 'rgba(232,160,176,0.3)' : 'rgba(232,160,176,0.55)',
+          color: '#3d1a10',
+          fontSize: 13,
           fontFamily: "'Baloo 2', sans-serif",
-          fontWeight: 700,
-          boxShadow: spinning ? 'none' : '0 3px 8px rgba(74,122,74,0.35)',
+          fontWeight: 800,
+          boxShadow: spinning ? 'none' : '0 3px 8px rgba(200,120,140,0.2)',
           transition: 'all 0.15s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
         }}
       >
-        {spinning ? 'girando...' : 'girar 🎲'}
+        <Dices size={14} strokeWidth={2} />
+        {spinning ? 'girando...' : 'girar'}
       </button>
 
       {/* lista de opções */}
@@ -270,11 +281,12 @@ export default function Roulette() {
                 flex: 1,
                 padding: '5px 10px',
                 borderRadius: 8,
-                border: '1.5px solid #a8d8a8',
-                background: '#eaf5ea',
-                color: '#2d4a2d',
+                border: '1.5px solid rgba(232,160,176,0.35)',
+                background: 'rgba(253,242,246,0.7)',
+                color: '#3d1a10',
                 fontFamily: "'Baloo 2', sans-serif",
                 fontSize: 12,
+                fontWeight: 600,
                 outline: 'none',
               }}
             />
@@ -285,18 +297,19 @@ export default function Roulette() {
                 width: 26,
                 height: 26,
                 borderRadius: 8,
-                border: '1.5px solid #e8a0b0',
-                background: '#fdf6f0',
-                color: '#7a3040',
+                border: '1.5px solid rgba(232,96,122,0.25)',
+                background: 'rgba(232,96,122,0.08)',
+                color: '#e8607a',
                 fontSize: 13,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
+                padding: 0,
               }}
             >
-              ×
+              <X size={11} strokeWidth={2.5} color="#e8607a" />
             </button>
           </div>
         ))}
@@ -307,18 +320,23 @@ export default function Roulette() {
         onClick={handleAddOption}
         style={{
           width: '100%',
-          padding: '6px',
-          borderRadius: 8,
-          border: '1.5px dashed #a8d8a8',
+          padding: '7px',
+          borderRadius: 10,
+          border: '1.5px dashed rgba(232,160,176,0.5)',
           background: 'transparent',
-          color: '#4a7a4a',
+          color: 'rgba(122,48,64,0.7)',
           fontFamily: "'Baloo 2', sans-serif",
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 800,
           cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
         }}
       >
-        + adicionar opção
+        <Plus size={12} strokeWidth={2.5} />
+        adicionar opção
       </button>
 
       <style>{`

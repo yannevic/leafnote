@@ -1194,66 +1194,76 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              background: 'rgba(44,20,8,0.35)',
+              backdropFilter: 'blur(4px)',
             }}
             onClick={() => setShowWidgets(false)}
           >
             <div
               style={{
-                background: 'linear-gradient(160deg, #fdf6f0 0%, #f5ecd7 100%)',
-                border: '2px solid #c4956a',
+                background:
+                  'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+                border: '1.5px solid rgba(232,160,176,0.4)',
                 borderRadius: 20,
-                boxShadow: '0 8px 32px rgba(44,24,16,0.35)',
-                padding: '20px 20px 24px',
-                minWidth: 300,
-                maxWidth: 360,
-                fontFamily: 'Baloo 2, sans-serif',
+                boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+                backdropFilter: 'blur(18px) saturate(1.4)',
+                width: 340,
+                maxWidth: '92vw',
                 maxHeight: '80vh',
+                fontFamily: 'Baloo 2, sans-serif',
                 display: 'flex',
                 flexDirection: 'column',
+                overflow: 'hidden',
               }}
               onClick={(e) => e.stopPropagation()}
               data-modal="true"
             >
+              {/* header */}
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: 16,
+                  padding: '16px 20px',
+                  borderBottom: '2px dashed rgba(232,160,176,0.4)',
+                  flexShrink: 0,
                 }}
               >
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#2d4a2d' }}>🎮 widgets</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: '#3d1a10' }}>widgets</span>
                 <button
                   type="button"
                   onClick={() => setShowWidgets(false)}
                   style={{
-                    background: 'none',
+                    background: 'rgba(200,120,140,0.15)',
                     border: 'none',
-                    fontSize: 18,
+                    borderRadius: '50%',
+                    width: 28,
+                    height: 28,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     cursor: 'pointer',
-                    color: '#8b6914',
-                    padding: 4,
+                    padding: 0,
                   }}
                 >
-                  ✕
+                  <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
                 </button>
               </div>
+
+              {/* tabs */}
               <div
                 style={{
                   display: 'flex',
-                  gap: 8,
-                  marginBottom: 16,
-                  background: '#f5ecd7',
-                  borderRadius: 12,
-                  padding: 4,
-                  border: '1px solid #d4aa80',
+                  gap: 6,
+                  padding: '12px 20px 0',
+                  flexShrink: 0,
                 }}
               >
                 {(
                   [
-                    { id: 'dice', label: '🎲 dados' },
-                    { id: 'timer', label: '⏱ timer' },
-                    { id: 'roulette', label: '🎡 roleta' },
+                    { id: 'dice', label: 'dados' },
+                    { id: 'timer', label: 'timer' },
+                    { id: 'roulette', label: 'roleta' },
                   ] as const
                 ).map((w) => (
                   <button
@@ -1262,15 +1272,16 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                     onClick={() => setActiveWidget(w.id)}
                     style={{
                       flex: 1,
-                      padding: '6px 0',
-                      borderRadius: 8,
+                      padding: '7px 0',
+                      borderRadius: 10,
                       border: 'none',
                       cursor: 'pointer',
-                      fontSize: 13,
+                      fontSize: 12,
                       fontFamily: 'Baloo 2, sans-serif',
-                      fontWeight: 700,
-                      background: activeWidget === w.id ? '#c4956a' : 'transparent',
-                      color: activeWidget === w.id ? '#fff' : '#8b6914',
+                      fontWeight: 800,
+                      background:
+                        activeWidget === w.id ? 'rgba(232,160,176,0.55)' : 'rgba(232,160,176,0.15)',
+                      color: '#3d1a10',
                       transition: 'all 0.15s',
                     }}
                   >
@@ -1278,25 +1289,27 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   </button>
                 ))}
               </div>
-              <div style={{ overflowY: 'auto', flex: 1 }}>
+
+              {/* conteúdo */}
+              <div style={{ overflowY: 'auto', flex: 1, padding: '14px 20px 20px' }}>
                 {activeWidget === 'dice' && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
                     <button
                       type="button"
                       onClick={() => setSharedDice((v) => !v)}
                       style={{
                         fontSize: 11,
                         fontFamily: 'Baloo 2, sans-serif',
-                        fontWeight: 700,
+                        fontWeight: 800,
                         cursor: 'pointer',
-                        padding: '3px 10px',
+                        padding: '4px 12px',
                         borderRadius: 20,
-                        border: '1.5px solid #c4956a',
-                        background: sharedDice ? '#c4956a' : 'transparent',
-                        color: sharedDice ? '#fff' : '#8b6914',
+                        border: '1.5px solid rgba(232,160,176,0.5)',
+                        background: sharedDice ? 'rgba(232,160,176,0.55)' : 'transparent',
+                        color: '#3d1a10',
                       }}
                     >
-                      {sharedDice ? '🌐 compartilhado' : '🔒 só eu'}
+                      {sharedDice ? 'compartilhado' : 'só eu'}
                     </button>
                   </div>
                 )}

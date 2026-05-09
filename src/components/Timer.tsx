@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Play, Pause, RotateCcw, Timer as TimerIcon, Hourglass } from 'lucide-react'
 
 const PRESETS = [
   { label: '1 min', seconds: 60 },
@@ -15,8 +16,6 @@ function formatTime(totalSeconds: number): { mm: string; ss: string } {
   return { mm: String(m).padStart(2, '0'), ss: String(s).padStart(2, '0') }
 }
 
-// elapsed = segundos acumulados antes do último start
-// startedAt = timestamp ms quando começou (0 se parado)
 export interface TimerState {
   mode: TimerMode
   running: boolean
@@ -54,7 +53,6 @@ export default function Timer({ state, onChange }: TimerProps) {
   const [customMin, setCustomMin] = useState(String(Math.floor(target / 60)))
   const [customSec, setCustomSec] = useState(String(target % 60).padStart(2, '0'))
 
-  // Tick visual — só pra forçar re-render a cada segundo
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (!running) return
@@ -64,14 +62,13 @@ export default function Timer({ state, onChange }: TimerProps) {
     }
   }, [running])
 
-  // Detecta fim do countdown
   useEffect(() => {
     if (!running || mode !== 'countdown') return
     const currentElapsed = elapsed + Math.floor((Date.now() - state.startedAt) / 1000)
     if (currentElapsed >= target) {
       onChange({ ...state, running: false, elapsed: target, startedAt: 0, finished: true })
     }
-  }, [tick])
+  }, [tick]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleStart() {
     onChange({ ...state, running: true, startedAt: Date.now(), finished: false })
@@ -125,6 +122,9 @@ export default function Timer({ state, onChange }: TimerProps) {
   const isUrgent = mode === 'countdown' && displaySeconds <= 10 && displaySeconds > 0 && running
   const { mm, ss } = formatTime(displaySeconds)
 
+  const accentColor = isUrgent ? '#e8607a' : 'rgba(232,160,176,0.8)'
+  const trackColor = 'rgba(232,160,176,0.2)'
+
   return (
     <div
       style={{
@@ -133,67 +133,76 @@ export default function Timer({ state, onChange }: TimerProps) {
         alignItems: 'center',
         gap: 20,
         padding: '24px 16px',
-        fontFamily: "'Baloo 2',sans-serif",
+        fontFamily: "'Baloo 2', sans-serif",
       }}
     >
       <style>{`
-        @keyframes urgentPulse{0%,100%{opacity:1}50%{opacity:0.6}}
-        @keyframes finishBounce{0%{transform:scale(1)}30%{transform:scale(1.12)}60%{transform:scale(0.95)}80%{transform:scale(1.05)}100%{transform:scale(1)}}
+        @keyframes urgentPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+        @keyframes finishBounce { 0%{transform:scale(1)} 30%{transform:scale(1.12)} 60%{transform:scale(0.95)} 80%{transform:scale(1.05)} 100%{transform:scale(1)} }
       `}</style>
 
-      {/* Toggle modo */}
+      {/* toggle modo */}
       <div
         style={{
           display: 'flex',
-          background: 'var(--color-bark-100)',
+          background: 'rgba(232,160,176,0.1)',
           borderRadius: 12,
           padding: 4,
-          border: '1px solid var(--color-wood-300)',
+          border: '1.5px solid rgba(232,160,176,0.3)',
           gap: 4,
         }}
       >
-        {(['stopwatch', 'countdown'] as const).map((m) => (
+        {(
+          [
+            { id: 'stopwatch', label: 'cronômetro', Icon: TimerIcon },
+            { id: 'countdown', label: 'contagem', Icon: Hourglass },
+          ] as const
+        ).map(({ id, label, Icon }) => (
           <button
-            key={m}
+            key={id}
             type="button"
-            onClick={() => handleSetMode(m)}
+            onClick={() => handleSetMode(id)}
             style={{
-              padding: '6px 16px',
+              padding: '6px 14px',
               borderRadius: 8,
               border: 'none',
               cursor: 'pointer',
-              fontSize: 13,
-              fontFamily: "'Baloo 2',sans-serif",
-              fontWeight: 600,
-              background: mode === m ? 'var(--color-leaf-600)' : 'transparent',
-              color: mode === m ? '#fff' : 'var(--color-leaf-800)',
+              fontSize: 12,
+              fontFamily: "'Baloo 2', sans-serif",
+              fontWeight: 800,
+              background: mode === id ? 'rgba(232,160,176,0.55)' : 'transparent',
+              color: '#3d1a10',
               transition: 'all 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
             }}
           >
-            {m === 'stopwatch' ? '⏱ Cronômetro' : '⏳ Contagem'}
+            <Icon size={12} strokeWidth={2} />
+            {label}
           </button>
         ))}
       </div>
 
-      {/* Presets countdown */}
+      {/* presets countdown */}
       {mode === 'countdown' && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
             {PRESETS.map((p) => (
               <button
                 key={p.seconds}
                 type="button"
                 onClick={() => applyPreset(p.seconds)}
                 style={{
-                  padding: '5px 14px',
+                  padding: '4px 12px',
                   borderRadius: 20,
                   cursor: 'pointer',
-                  border: `1.5px solid ${target === p.seconds ? 'var(--color-leaf-600)' : 'var(--color-wood-300)'}`,
-                  background: target === p.seconds ? 'var(--color-leaf-100)' : 'transparent',
-                  color: target === p.seconds ? 'var(--color-leaf-800)' : 'var(--color-leaf-600)',
-                  fontSize: 13,
-                  fontFamily: "'Baloo 2',sans-serif",
-                  fontWeight: 600,
+                  border: `1.5px solid ${target === p.seconds ? 'rgba(232,160,176,0.7)' : 'rgba(232,160,176,0.3)'}`,
+                  background: target === p.seconds ? 'rgba(232,160,176,0.2)' : 'transparent',
+                  color: '#3d1a10',
+                  fontSize: 12,
+                  fontFamily: "'Baloo 2', sans-serif",
+                  fontWeight: 700,
                 }}
               >
                 {p.label}
@@ -219,17 +228,17 @@ export default function Timer({ state, onChange }: TimerProps) {
                 height: 34,
                 textAlign: 'center',
                 fontSize: 15,
-                fontFamily: "'Baloo 2',sans-serif",
+                fontFamily: "'Baloo 2', sans-serif",
                 fontWeight: 700,
                 borderRadius: 8,
-                border: '1.5px solid var(--color-wood-300)',
-                background: running ? 'var(--color-bark-100)' : '#fff',
-                color: 'var(--color-leaf-950)',
+                border: '1.5px solid rgba(232,160,176,0.35)',
+                background: running ? 'rgba(232,160,176,0.08)' : 'rgba(253,242,246,0.7)',
+                color: '#3d1a10',
                 outline: 'none',
                 opacity: running ? 0.5 : 1,
               }}
             />
-            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-leaf-600)' }}>:</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: 'rgba(122,48,64,0.5)' }}>:</span>
             <input
               type="text"
               inputMode="numeric"
@@ -252,24 +261,24 @@ export default function Timer({ state, onChange }: TimerProps) {
                 height: 34,
                 textAlign: 'center',
                 fontSize: 15,
-                fontFamily: "'Baloo 2',sans-serif",
+                fontFamily: "'Baloo 2', sans-serif",
                 fontWeight: 700,
                 borderRadius: 8,
-                border: '1.5px solid var(--color-wood-300)',
-                background: running ? 'var(--color-bark-100)' : '#fff',
-                color: 'var(--color-leaf-950)',
+                border: '1.5px solid rgba(232,160,176,0.35)',
+                background: running ? 'rgba(232,160,176,0.08)' : 'rgba(253,242,246,0.7)',
+                color: '#3d1a10',
                 outline: 'none',
                 opacity: running ? 0.5 : 1,
               }}
             />
-            <span style={{ fontSize: 11, color: 'var(--color-leaf-600)', fontWeight: 500 }}>
+            <span style={{ fontSize: 11, color: 'rgba(122,48,64,0.5)', fontWeight: 600 }}>
               min : seg
             </span>
           </div>
         </div>
       )}
 
-      {/* Display circular */}
+      {/* display circular */}
       <div
         style={{
           position: 'relative',
@@ -287,21 +296,13 @@ export default function Timer({ state, onChange }: TimerProps) {
             height="140"
             style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}
           >
+            <circle cx="70" cy="70" r="54" fill="none" stroke={trackColor} strokeWidth="5" />
             <circle
               cx="70"
               cy="70"
               r="54"
               fill="none"
-              stroke="var(--color-wood-300)"
-              strokeWidth="5"
-              opacity="0.4"
-            />
-            <circle
-              cx="70"
-              cy="70"
-              r="54"
-              fill="none"
-              stroke={isUrgent ? 'var(--color-petal-400)' : 'var(--color-leaf-600)'}
+              stroke={accentColor}
               strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray={circumference}
@@ -315,13 +316,13 @@ export default function Timer({ state, onChange }: TimerProps) {
             width: mode === 'countdown' ? 112 : 140,
             height: mode === 'countdown' ? 112 : 140,
             borderRadius: '50%',
-            background: finished ? 'var(--color-leaf-100)' : 'var(--color-bark-100)',
-            border: `2px solid ${finished ? 'var(--color-leaf-400)' : 'var(--color-wood-300)'}`,
+            background: finished ? 'rgba(232,160,176,0.15)' : 'rgba(253,242,246,0.7)',
+            border: `2px solid ${finished ? 'rgba(232,160,176,0.6)' : 'rgba(232,160,176,0.35)'}`,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(44,24,16,0.12), inset 0 1px 0 rgba(255,255,255,0.5)',
+            boxShadow: '0 4px 12px rgba(200,120,140,0.15), inset 0 1px 0 rgba(255,255,255,0.6)',
             transition: 'background 0.3s, border-color 0.3s',
             animation: isUrgent ? 'urgentPulse 1s ease-in-out infinite' : 'none',
           }}
@@ -334,70 +335,65 @@ export default function Timer({ state, onChange }: TimerProps) {
               lineHeight: 1,
               fontVariantNumeric: 'tabular-nums',
               transition: 'color 0.3s',
-              color: finished
-                ? 'var(--color-leaf-600)'
-                : isUrgent
-                  ? 'var(--color-petal-400)'
-                  : 'var(--color-leaf-950)',
+              color: finished ? 'rgba(122,48,64,0.7)' : isUrgent ? '#e8607a' : '#3d1a10',
             }}
           >
             {mm}:{ss}
           </div>
           {finished && (
             <div
-              style={{
-                fontSize: 11,
-                color: 'var(--color-leaf-600)',
-                fontWeight: 600,
-                marginTop: 2,
-              }}
+              style={{ fontSize: 11, color: 'rgba(122,48,64,0.6)', fontWeight: 700, marginTop: 2 }}
             >
-              pronto! 🌸
+              pronto!
             </div>
           )}
         </div>
       </div>
 
-      {/* Botões */}
-      <div style={{ display: 'flex', gap: 10 }}>
+      {/* botões */}
+      <div style={{ display: 'flex', gap: 8 }}>
         <button
           type="button"
           onClick={running ? handlePause : handleStart}
           style={{
-            padding: '10px 28px',
+            padding: '10px 24px',
             borderRadius: 12,
             border: 'none',
             cursor: 'pointer',
-            background: running ? 'var(--color-petal-400)' : 'var(--color-leaf-600)',
-            color: '#fff',
-            fontSize: 15,
-            fontFamily: "'Baloo 2',sans-serif",
-            fontWeight: 700,
+            background: running ? 'rgba(232,96,122,0.15)' : 'rgba(232,160,176,0.55)',
+            color: running ? '#e8607a' : '#3d1a10',
+            fontSize: 13,
+            fontFamily: "'Baloo 2', sans-serif",
+            fontWeight: 800,
             transition: 'all 0.15s',
-            boxShadow: running
-              ? '0 3px 8px rgba(232,160,176,0.4)'
-              : '0 3px 8px rgba(74,122,74,0.35)',
+            boxShadow: '0 3px 8px rgba(200,120,140,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
           }}
         >
-          {running ? '⏸ Pausar' : elapsed > 0 && !finished ? '▶ Continuar' : '▶ Iniciar'}
+          {running ? <Pause size={14} strokeWidth={2.5} /> : <Play size={14} strokeWidth={2.5} />}
+          {running ? 'pausar' : elapsed > 0 && !finished ? 'continuar' : 'iniciar'}
         </button>
         <button
           type="button"
           onClick={handleReset}
           style={{
-            padding: '10px 16px',
+            padding: '10px 14px',
             borderRadius: 12,
-            border: '1.5px solid var(--color-wood-300)',
+            border: '1.5px solid rgba(232,160,176,0.35)',
             cursor: 'pointer',
             background: 'transparent',
-            color: 'var(--color-bark-700)',
-            fontSize: 15,
-            fontFamily: "'Baloo 2',sans-serif",
+            color: 'rgba(122,48,64,0.6)',
+            fontSize: 13,
+            fontFamily: "'Baloo 2', sans-serif",
             fontWeight: 600,
             transition: 'all 0.15s',
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
-          ↺
+          <RotateCcw size={14} strokeWidth={2} />
         </button>
       </div>
     </div>
