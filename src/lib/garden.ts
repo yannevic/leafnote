@@ -187,7 +187,10 @@ export async function waterPlant(
   const rarity = FLOWERS[plant.flowerType].rarity
   const daysNeeded = DAYS_PER_STAGE[rarity]
   const newDaysWatered = plant.daysWatered + 1
-  const calculatedStage = Math.min(5, Math.floor(newDaysWatered / daysNeeded) + 1)
+  // estágio calculado pela quantidade de dias regados: a cada daysNeeded dias completos sobe 1 estágio
+  // começa no estágio 1, então: stage = floor(daysWatered / daysNeeded) + 1, máx 5
+  // não usa + 1 extra para não inflar — ex: incomum, 8 dias → floor(8/3)+1 = 3 (errado com +1 extra)
+  const calculatedStage = Math.min(5, Math.floor((newDaysWatered - 1) / daysNeeded) + 1)
   const newStage = Math.min(plant.stage + 1, calculatedStage)
 
   await update(plantRef, {
