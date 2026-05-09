@@ -15,7 +15,7 @@ interface Props {
 }
 
 const RARITY_COLORS = {
-  comum: '#7fb87f',
+  comum: '#3d7a3d',
   incomum: '#c4956a',
   rara: '#c87090',
   epica: '#7a3040',
@@ -30,12 +30,30 @@ const Section = ({
   title: string
   children: React.ReactNode
 }) => (
-  <div style={{ marginBottom: 18 }}>
+  <div style={{ marginBottom: 16 }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
       {icon}
-      <span style={{ fontSize: 13, fontWeight: 800, color: '#1A2A1A' }}>{title}</span>
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 800,
+          color: '#3d1a10',
+          fontFamily: 'Baloo 2, sans-serif',
+        }}
+      >
+        {title}
+      </span>
     </div>
-    <div style={{ fontSize: 12, color: '#8E6D1A', lineHeight: 1.7, paddingLeft: 25 }}>
+    <div
+      style={{
+        fontSize: 12,
+        fontWeight: 600,
+        color: 'rgba(61,26,16,0.6)',
+        lineHeight: 1.7,
+        paddingLeft: 24,
+        fontFamily: 'Baloo 2, sans-serif',
+      }}
+    >
       {children}
     </div>
   </div>
@@ -47,7 +65,8 @@ export default function GardenGuideModal({ onClose }: Props) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.5)',
+        background: 'rgba(44,20,8,0.35)',
+        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -55,17 +74,26 @@ export default function GardenGuideModal({ onClose }: Props) {
       }}
       onClick={onClose}
     >
+      <style>{`
+        .garden-guide-scroll::-webkit-scrollbar { width: 4px; }
+        .garden-guide-scroll::-webkit-scrollbar-track { background: transparent; }
+        .garden-guide-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+        .garden-guide-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+      `}</style>
+
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#F5ECD7',
-          border: '2px solid #C59F78',
-          borderRadius: 16,
+          background:
+            'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+          border: '1.5px solid rgba(232,160,176,0.4)',
+          borderRadius: 20,
           width: 480,
           maxWidth: '95vw',
           maxHeight: '85vh',
           fontFamily: 'Baloo 2, sans-serif',
-          boxShadow: '0 12px 48px rgba(0,0,0,0.22)',
+          boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(18px) saturate(1.4)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -77,85 +105,91 @@ export default function GardenGuideModal({ onClose }: Props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '18px 20px 14px',
+            padding: '20px 24px 16px',
+            borderBottom: '2px dashed rgba(232,160,176,0.4)',
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 17, fontWeight: 800, color: '#1A2A1A' }}>Guia do Jardim</span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#3d1a10' }}>guia do jardim</span>
           <button
             onClick={onClose}
             style={{
-              background: 'none',
+              background: 'rgba(200,120,140,0.15)',
               border: 'none',
+              borderRadius: '50%',
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               cursor: 'pointer',
-              color: '#C59F78',
-              padding: 2,
+              padding: 0,
             }}
           >
-            <X size={18} />
+            <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Scroll */}
-        <style>{`
-          .garden-guide-scroll::-webkit-scrollbar { width: 6px; }
-          .garden-guide-scroll::-webkit-scrollbar-track { background: #FCE8F0; border-radius: 4px; }
-          .garden-guide-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.5); border-radius: 4px; }
-        `}</style>
-
         <div
           className="garden-guide-scroll"
-          style={{ overflowY: 'auto', padding: '0 20px 20px', flex: 1 }}
+          style={{ overflowY: 'auto', padding: '20px 24px 24px', flex: 1 }}
         >
-          <Section icon={<Droplets size={15} color="#5b9bd5" />} title="Como regar">
-            Os dois precisam regar a mesma planta uma vez por dia. A cada 3 dias regados juntos, a
-            planta sobe um estágio. Só é possível plantar uma semente por dia.
+          <Section icon={<Droplets size={14} color="#5b9bd5" strokeWidth={2} />} title="como regar">
+            os dois precisam regar a mesma planta uma vez por dia. a cada 3 dias regados juntos, a
+            planta sobe um estágio. só é possível plantar uma semente por dia.
           </Section>
 
-          <Section icon={<FlameKindling size={15} color="#c0392b" />} title="Modo pânico">
-            Se o parceiro não estiver disponível, ative o Modo Pânico — você rega pelos dois. Use
+          <Section
+            icon={<FlameKindling size={14} color="#c0392b" strokeWidth={2} />}
+            title="modo pânico"
+          >
+            se o parceiro não estiver disponível, ative o modo pânico — você rega pelos dois. use
             com moderação!
           </Section>
 
-          <Section icon={<AlertTriangle size={15} color="#e67e22" />} title="Murcha">
-            Se a planta ficar 48 horas sem ser regada, ela murcha. Cada dia seguinte sem rega remove
-            mais um dia de progresso, até zerar no estágio atual. Não deixe murchar!
+          <Section
+            icon={<AlertTriangle size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="murcha"
+          >
+            se a planta ficar 48 horas sem ser regada, ela murcha. cada dia seguinte sem rega remove
+            mais um dia de progresso, até zerar no estágio atual. não deixe murchar!
           </Section>
 
-          <Section icon={<Dices size={15} color="#8b6914" />} title="Como ganhar sementes">
-            Sempre que uma planta sobe de estágio, os dois rolam um dado. A soma determina a semente
+          <Section
+            icon={<Dices size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="como ganhar sementes"
+          >
+            sempre que uma planta sobe de estágio, os dois rolam um dado. a soma determina a semente
             ganha — quanto maior a soma, mais rara:
             <div
               style={{
                 marginTop: 8,
-                background: '#FFF8F0',
-                border: '1.5px solid #C59F78',
-                borderRadius: 8,
+                background: 'rgba(253,242,246,0.7)',
+                border: '1.5px solid rgba(232,160,176,0.3)',
+                borderRadius: 10,
                 padding: '10px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 6,
               }}
             >
               {[
                 {
-                  label: 'Rosa, Margarida, Peônia, Papoula, Lavanda',
+                  label: 'rosa, margarida, peônia, papoula, lavanda',
                   rarity: 'comum',
                   value: 'soma 2–8',
                 },
                 {
-                  label: 'Tulipa, Girassol, Jasmim, Violeta',
+                  label: 'tulipa, girassol, jasmim, violeta',
                   rarity: 'incomum',
                   value: 'soma 9–11',
                 },
-                { label: 'Orquídea, Lírio', rarity: 'rara', value: 'soma 12 (duplo 6!)' },
-                { label: 'Flor Especial', rarity: 'epica', value: 'streak de 30 dias' },
+                { label: 'orquídea, lírio', rarity: 'rara', value: 'soma 12 (duplo 6!)' },
+                { label: 'flor especial', rarity: 'epica', value: 'streak de 30 dias' },
               ].map((row) => (
                 <div
                   key={row.label}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: 4,
-                    alignItems: 'center',
-                  }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                 >
                   <span
                     style={{
@@ -164,46 +198,59 @@ export default function GardenGuideModal({ onClose }: Props) {
                     }}
                   >
                     {row.label}
-                    <span style={{ fontWeight: 400, fontSize: 10, marginLeft: 5, opacity: 0.8 }}>
+                    <span style={{ fontWeight: 400, fontSize: 10, marginLeft: 5, opacity: 0.7 }}>
                       ({row.rarity})
                     </span>
                   </span>
-                  <span style={{ fontSize: 11, color: '#8E6D1A', opacity: 0.85 }}>{row.value}</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: 'rgba(61,26,16,0.45)',
+                      flexShrink: 0,
+                      marginLeft: 8,
+                    }}
+                  >
+                    {row.value}
+                  </span>
                 </div>
               ))}
             </div>
           </Section>
 
-          <Section icon={<Sprout size={15} color="#4F7E4E" />} title="Estágios da planta">
-            Cada planta tem 5 estágios. No estágio 5 ela está completamente crescida e não precisa
-            mais ser regada. A cada subida de estágio vocês ganham uma semente nova!
+          <Section
+            icon={<Sprout size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="estágios da planta"
+          >
+            cada planta tem 5 estágios. no estágio 5 ela está completamente crescida e não precisa
+            mais ser regada. a cada subida de estágio vocês ganham uma semente nova!
           </Section>
 
-          <Section icon={<ArrowLeftRight size={15} color="#4F7E4E" />} title="Troca de sementes">
-            Acumulou sementes repetidas? Junte sementes do mesmo tier e troque por uma diferente —
-            do mesmo tier ou um acima. A quantidade necessária aumenta conforme a raridade:
+          <Section
+            icon={<ArrowLeftRight size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="troca de sementes"
+          >
+            acumulou sementes repetidas? junte sementes do mesmo tier e troque por uma diferente —
+            do mesmo tier ou um acima. a quantidade necessária aumenta conforme a raridade:
             <div
               style={{
                 marginTop: 8,
-                background: '#FFF8F0',
-                border: '1.5px solid #C59F78',
-                borderRadius: 8,
+                background: 'rgba(253,242,246,0.7)',
+                border: '1.5px solid rgba(232,160,176,0.3)',
+                borderRadius: 10,
                 padding: '10px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 6,
               }}
             >
               {[
-                { rarity: 'comum', label: 'Comum' },
-                { rarity: 'incomum', label: 'Incomum' },
-                { rarity: 'rara', label: 'Rara' },
+                { rarity: 'comum', label: 'comum' },
+                { rarity: 'incomum', label: 'incomum' },
+                { rarity: 'rara', label: 'rara' },
               ].map((row) => (
                 <div
                   key={row.rarity}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: 4,
-                    alignItems: 'center',
-                  }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                 >
                   <span
                     style={{
@@ -213,17 +260,20 @@ export default function GardenGuideModal({ onClose }: Props) {
                   >
                     {row.label}
                   </span>
-                  <span style={{ fontSize: 11, color: '#8E6D1A', opacity: 0.85 }}>
+                  <span style={{ fontSize: 11, color: 'rgba(61,26,16,0.45)' }}>
                     {EXCHANGE_COST[row.rarity as keyof typeof EXCHANGE_COST]} sementes
                   </span>
                 </div>
               ))}
             </div>
-            Orquídeas e Lírios podem ser trocados entre si.
+            orquídeas e lírios podem ser trocados entre si.
           </Section>
 
-          <Section icon={<Coins size={15} color="#c59f78" />} title="Moedinhas (em breve)">
-            Em breve será possível vender sementes por moedinhas e usá-las para comprar móveis e
+          <Section
+            icon={<Coins size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="moedinhas (em breve)"
+          >
+            em breve será possível vender sementes por moedinhas e usá-las para comprar móveis e
             roupinhas para a casinha de vocês!
           </Section>
         </div>

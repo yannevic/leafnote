@@ -43,7 +43,6 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
     loading,
     coins,
     water,
-    plant,
     alreadyWatered,
     partnerWatered,
     canPlant,
@@ -65,7 +64,6 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
   const [showSeedModal, setShowSeedModal] = useState(false)
   const [plantingSeed, setPlantingSeed] = useState<SeedData | null>(null)
-  // Guarda o id do evento que o usuário fechou — para avançar para o próximo
   const [closedEventIds, setClosedEventIds] = useState<string[]>([])
   const [showExchangeModal, setShowExchangeModal] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
@@ -75,17 +73,30 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
   const selectedPlant = plants.find((p) => p.id === selectedPlantId) ?? null
 
+  const hasSpace = plants.length < MAX_PLANTS
+
+  // Label e estado do botão plantar
+  const plantBtnDisabled = seeds.length === 0 || !hasSpace || !canPlant
+  const plantBtnLabel = !hasSpace
+    ? 'sem espaços disponíveis'
+    : !canPlant
+      ? 'você já plantou hoje'
+      : 'plantar'
+
   const handleWater = async () => {
     if (!selectedPlantId) return
     await water(selectedPlantId)
   }
 
   const handlePlant = async () => {
-    if (!plantingSeed || !canPlant) return
+    if (!plantingSeed || !hasSpace || !canPlant) return
     await plant(plantingSeed.id, plantingSeed.flowerType)
     setPlantingSeed(null)
     setShowSeedModal(false)
   }
+
+  // plant vem do hook mas não estava desestruturado — adicionamos aqui
+  const { plant } = useGarden(uid, partnerUid)
 
   const [confirmSellSeed, setConfirmSellSeed] = useState<SeedData | null>(null)
 
@@ -114,9 +125,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
     setSelectedPlantId(null)
   }
 
-  // Modal de roll ativo: welcome ou evento de estágio
   const showWelcomeRoll = welcomePending
-  // Filtra eventos que o usuário já fechou nesta sessão
   const showEventRoll =
     !showWelcomeRoll && currentEvent != null && !closedEventIds.includes(currentEvent.id)
 
@@ -132,7 +141,8 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.5)',
+          background: 'rgba(44,20,8,0.35)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -143,122 +153,161 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            background: 'var(--color-bark-100)',
-            border: '2px solid var(--color-wood-300)',
-            borderRadius: 24,
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+            border: '1.5px solid rgba(232,160,176,0.4)',
+            borderRadius: 20,
             width: 600,
             maxWidth: '95vw',
-            padding: '28px 24px 24px',
+            padding: '24px 24px 20px',
             fontFamily: 'Baloo 2, sans-serif',
-            boxShadow: '0 12px 48px rgba(0,0,0,0.22)',
+            boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+            backdropFilter: 'blur(18px) saturate(1.4)',
             position: 'relative',
           }}
         >
           {/* Cabeçalho */}
-          <div className="flex items-center justify-between mb-5">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 7,
+            }}
+          >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <h2
                 style={{
                   margin: 0,
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: 'var(--color-leaf-950)',
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: '#3d1a10',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
+                  fontFamily: 'Baloo 2, sans-serif',
                 }}
               >
-                <Leaf size={20} style={{ color: 'var(--color-leaf-600)' }} /> Jardim
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#8b6914' }}>
+                <Leaf size={16} strokeWidth={2} style={{ color: 'rgba(122,48,64,0.6)' }} /> jardim
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: 'rgba(122,48,64,0.45)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.6px',
+                  }}
+                >
                   {plants.length}/{MAX_PLANTS}
                 </span>
               </h2>
             </div>
+
+            {/* Botões do cabeçalho: guia, troca, pânico, fechar, moedas */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={() => setShowGuideModal(true)}
+                title="como funciona o jardim?"
+                style={{
+                  background: 'rgba(200,120,140,0.15)',
+                  border: 'none',
+                  borderRadius: 8,
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                <HelpCircle size={13} color="rgba(122,48,64,0.6)" strokeWidth={2} />
+              </button>
+
+              <button
+                onClick={() => setShowExchangeModal(true)}
+                title="trocar sementes"
+                style={{
+                  background: 'rgba(200,120,140,0.15)',
+                  border: 'none',
+                  borderRadius: 8,
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                <ArrowLeftRight size={13} color="rgba(122,48,64,0.6)" strokeWidth={2} />
+              </button>
+
+              <button
+                onClick={togglePanic}
+                title={
+                  panicMode ? 'modo pânico ativo — clique para desativar' : 'ativar modo pânico'
+                }
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  border: 'none',
+                  background: 'rgba(200,120,140,0.15)',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                <AlertTriangle
+                  size={13}
+                  strokeWidth={2}
+                  color={panicMode ? '#e8607a' : 'rgba(122,48,64,0.6)'}
+                />
+              </button>
+
+              {/* Moedas — último item */}
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 4,
-                  fontWeight: 800,
-                  marginRight: 4,
-                  color: '#8b6914',
+                  background: 'rgba(253,242,246,0.7)',
+                  border: '1.5px solid rgba(232,160,176,0.35)',
+                  borderRadius: 10,
+                  padding: '4px 10px',
                 }}
               >
-                <PiMoneyWavyLight size={20} />
-                <span style={{ fontSize: 15, fontWeight: 800, marginTop: 4 }}>{coins}</span>
+                <PiMoneyWavyLight size={15} color="rgba(122,48,64,0.6)" />
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: '#3d1a10',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  {coins}
+                </span>
               </div>
-              <button
-                onClick={() => setShowGuideModal(true)}
-                title="Como funciona o jardim?"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  color: '#8b6914',
-                }}
-              >
-                <HelpCircle size={15} />
-              </button>
-              <button
-                onClick={() => setShowExchangeModal(true)}
-                title="Trocar sementes"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  color: '#4F7E4E',
-                }}
-              >
-                <ArrowLeftRight size={15} />
-              </button>
-              <button
-                onClick={togglePanic}
-                title={
-                  panicMode ? 'Modo pânico ativo — clique para desativar' : 'Ativar modo pânico'
-                }
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 14px',
-                  borderRadius: 20,
-                  border: 'none',
-                  background: panicMode ? '#c0392b' : '#e8d8c0',
-                  color: panicMode ? '#fff' : 'var(--color-bark-700)',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  boxShadow: panicMode ? '0 2px 8px rgba(192,57,43,0.4)' : 'none',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <AlertTriangle size={13} />
-                {panicMode ? 'Pânico ON' : 'Pânico'}
-              </button>
               <button
                 onClick={onClose}
                 style={{
-                  background: 'none',
+                  background: 'rgba(200,120,140,0.15)',
                   border: 'none',
+                  borderRadius: '50%',
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   cursor: 'pointer',
-                  color: 'var(--color-bark-700)',
+                  padding: 0,
                 }}
               >
-                <X size={20} />
+                <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
               </button>
             </div>
           </div>
@@ -273,12 +322,13 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
               <div
                 style={{
                   position: 'relative',
-                  border: '2px solid var(--color-wood-300)',
-                  borderRadius: 16,
+                  border: '1.5px solid rgba(232,160,176,0.35)',
+                  borderRadius: 14,
                   padding: '16px 8px 12px',
                   marginBottom: 16,
                   minHeight: 280,
                   overflow: 'hidden',
+                  background: 'rgba(253,242,246,0.4)',
                 }}
               >
                 <img
@@ -353,45 +403,53 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
               {/* Estoque de sementes */}
               <div
                 style={{
-                  background: '#fff8f0',
-                  border: '1.5px solid var(--color-wood-300)',
+                  background: 'rgba(253,242,246,0.7)',
+                  border: '1.5px solid rgba(232,160,176,0.3)',
                   borderRadius: 12,
                   padding: '12px 14px',
                 }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-bark-700)' }}>
-                    <Sprout size={14} style={{ marginRight: 5, display: 'inline' }} /> Sementes (
+                  <span
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 11,
+                      color: 'rgba(122,48,64,0.55)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.8px',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    <Sprout size={12} strokeWidth={2} color="rgba(122,48,64,0.55)" /> sementes (
                     {seeds.length})
                   </span>
 
                   <button
                     onClick={() => setShowSeedModal(true)}
-                    disabled={seeds.length === 0 || !canPlant}
+                    disabled={plantBtnDisabled}
                     style={{
-                      background: seeds.length > 0 && canPlant ? 'var(--color-leaf-600)' : '#ccc',
-                      color: '#fff',
+                      background: !plantBtnDisabled
+                        ? 'rgba(232,160,176,0.55)'
+                        : 'rgba(232,160,176,0.2)',
+                      color: !plantBtnDisabled ? '#3d1a10' : 'rgba(61,26,16,0.35)',
                       border: 'none',
-                      borderRadius: 8,
-                      padding: '4px 12px',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: seeds.length > 0 && canPlant ? 'pointer' : 'default',
+                      borderRadius: 10,
+                      padding: '5px 14px',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      cursor: !plantBtnDisabled ? 'pointer' : 'default',
                       fontFamily: 'Baloo 2, sans-serif',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
                     }}
-                    title={
-                      !canPlant
-                        ? 'Já plantou hoje'
-                        : seeds.length === 0
-                          ? 'Sem sementes'
-                          : 'Plantar semente'
-                    }
+                    title={plantBtnLabel}
                   >
                     <Sprout size={14} />
-                    {!canPlant ? 'Já plantou hoje' : 'Plantar'}
+                    {plantBtnLabel}
                   </button>
                 </div>
 
@@ -419,7 +477,6 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                             color: 'var(--color-leaf-950)',
                           }}
                         >
-                          {/* Badge de raridade */}
                           <TbPlant2
                             size={14}
                             color={RARITY_COLOR[info.rarity]}
@@ -484,9 +541,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
         />
       )}
 
-      {/* Modal evento de estágio
-          key={currentEvent.id} força remontagem a cada novo evento,
-          resolvendo o travamento do botão fechar */}
+      {/* Modal evento de estágio */}
       {showEventRoll && currentEvent && (
         <SeedRollModal
           key={currentEvent.id}
@@ -522,23 +577,26 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'var(--color-bark-100)',
-              border: '2px solid var(--color-wood-300)',
-              borderRadius: 18,
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+              border: '1.5px solid rgba(232,160,176,0.4)',
+              borderRadius: 20,
               padding: '24px',
               width: 320,
               fontFamily: 'Baloo 2, sans-serif',
+              boxShadow: '0 8px 40px rgba(200,120,140,0.2)',
             }}
           >
             <h3
               style={{
                 margin: '0 0 14px',
-                fontSize: 17,
-                fontWeight: 700,
-                color: 'var(--color-leaf-950)',
+                fontSize: 15,
+                fontWeight: 800,
+                color: '#3d1a10',
+                fontFamily: 'Baloo 2, sans-serif',
               }}
             >
-              Escolha uma semente para plantar
+              escolha uma semente para plantar
             </h3>
             <div className="flex flex-col gap-2 mb-4">
               {seeds.map((s) => {
@@ -567,7 +625,6 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                       gap: 10,
                     }}
                   >
-                    {/* Badge de raridade no lugar do emoji */}
                     <TbPlant2
                       size={16}
                       color={RARITY_COLOR[info.rarity]}
@@ -600,16 +657,16 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   flex: 1,
                   padding: '8px 0',
                   borderRadius: 10,
-                  background: '#f0e8d8',
-                  border: '1.5px solid var(--color-wood-300)',
-                  color: 'var(--color-bark-700)',
+                  background: 'transparent',
+                  border: '1.5px solid rgba(232,160,176,0.4)',
+                  color: 'rgba(61,26,16,0.5)',
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 600,
-                  fontSize: 14,
+                  fontWeight: 800,
+                  fontSize: 13,
                   cursor: 'pointer',
                 }}
               >
-                Cancelar
+                cancelar
               </button>
               <button
                 onClick={handlePlant}
@@ -618,12 +675,12 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   flex: 1,
                   padding: '8px 0',
                   borderRadius: 10,
-                  background: plantingSeed ? 'var(--color-leaf-600)' : '#ccc',
+                  background: plantingSeed ? 'rgba(232,160,176,0.55)' : 'rgba(232,160,176,0.2)',
                   border: 'none',
-                  color: '#fff',
+                  color: plantingSeed ? '#3d1a10' : 'rgba(61,26,16,0.35)',
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 14,
+                  fontWeight: 800,
+                  fontSize: 13,
                   cursor: plantingSeed ? 'pointer' : 'default',
                   display: 'flex',
                   alignItems: 'center',
@@ -631,8 +688,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   gap: 6,
                 }}
               >
-                <Sprout size={14} />
-                Plantar
+                <Sprout size={13} strokeWidth={2} /> plantar
               </button>
             </div>
           </div>
@@ -655,20 +711,37 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#FFF8F0',
-              border: '2px solid #C59F78',
-              borderRadius: 14,
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+              border: '1.5px solid rgba(232,160,176,0.4)',
+              borderRadius: 20,
               padding: '24px 28px',
               fontFamily: 'Baloo 2, sans-serif',
               textAlign: 'center',
               width: 280,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              boxShadow: '0 8px 40px rgba(200,120,140,0.2)',
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#8E6D1A', marginBottom: 6 }}>
-              Vender semente
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 800,
+                color: '#3d1a10',
+                marginBottom: 6,
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              vender semente
             </div>
-            <div style={{ fontSize: 13, color: '#5a4010', marginBottom: 18 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'rgba(61,26,16,0.6)',
+                marginBottom: 18,
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
               {FLOWERS[confirmSellSeed.flowerType].name} por{' '}
               <strong>{SEED_SELL_VALUE[FLOWERS[confirmSellSeed.flowerType].rarity]} moedas</strong>?
             </div>
@@ -679,16 +752,16 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   flex: 1,
                   padding: '7px 0',
                   borderRadius: 10,
-                  background: 'none',
-                  border: '1.5px solid #C59F78',
-                  color: '#8E6D1A',
+                  background: 'transparent',
+                  border: '1.5px solid rgba(232,160,176,0.4)',
+                  color: 'rgba(61,26,16,0.5)',
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 600,
-                  fontSize: 13,
+                  fontWeight: 800,
+                  fontSize: 12,
                   cursor: 'pointer',
                 }}
               >
-                Cancelar
+                cancelar
               </button>
               <button
                 onClick={handleConfirmSellSeed}
@@ -696,16 +769,16 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   flex: 1,
                   padding: '7px 0',
                   borderRadius: 10,
-                  background: '#8b6914',
+                  background: 'rgba(232,160,176,0.55)',
                   border: 'none',
-                  color: '#fff',
+                  color: '#3d1a10',
                   fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 13,
+                  fontWeight: 800,
+                  fontSize: 12,
                   cursor: 'pointer',
                 }}
               >
-                Vender
+                vender
               </button>
             </div>
           </div>
@@ -719,20 +792,24 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
             bottom: 32,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#2d5a2d',
-            color: '#fff',
-            borderRadius: 20,
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+            border: '1.5px solid rgba(232,160,176,0.4)',
+            color: '#3d1a10',
+            borderRadius: 14,
             padding: '8px 20px',
-            fontSize: 14,
-            fontWeight: 700,
+            fontSize: 13,
+            fontWeight: 800,
             fontFamily: 'Baloo 2, sans-serif',
             zIndex: 9999,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+            boxShadow: '0 8px 40px rgba(200,120,140,0.2)',
+            backdropFilter: 'blur(18px)',
           }}
         >
           {sellFeedback}
         </div>
       )}
+
       {showExchangeModal && (
         <SeedExchangeModal seeds={seeds} onClose={() => setShowExchangeModal(false)} />
       )}
