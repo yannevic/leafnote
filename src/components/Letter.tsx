@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { LetterItem, LetterColor } from '../types/board'
+import { X } from 'lucide-react'
 
 const LETTER_COLORS: Record<
   LetterColor,
@@ -393,37 +394,53 @@ export function LetterModal({
         justifyContent: 'center',
       }}
     >
+      <style>{`
+        @keyframes letterPop { from { transform: scale(0.88) translateY(18px); opacity:0; } to { transform:scale(1); opacity:1; } }
+        .letter-body-scroll::-webkit-scrollbar { width: 4px; }
+        .letter-body-scroll::-webkit-scrollbar-track { background: transparent; }
+        .letter-body-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+      `}</style>
+
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 380,
+          width: 400,
+          maxWidth: '95vw',
           background:
             'linear-gradient(160deg, rgba(253,246,240,0.99) 0%, rgba(252,232,238,0.99) 100%)',
           border: `1.5px solid ${palette.stroke}`,
           borderRadius: 20,
-          boxShadow: '0 8px 40px rgba(200,120,140,0.22), inset 0 1px 0 rgba(255,255,255,0.6)',
+          boxShadow: '0 8px 40px rgba(200,120,140,0.25), inset 0 1px 0 rgba(255,255,255,0.6)',
           backdropFilter: 'blur(18px) saturate(1.4)',
           overflow: 'hidden',
           fontFamily: 'Baloo 2, sans-serif',
           animation: 'letterPop 0.3s cubic-bezier(.34,1.56,.64,1)',
         }}
       >
-        <style>{`@keyframes letterPop { from { transform: scale(0.85) translateY(20px); opacity:0; } to { transform:scale(1); opacity:1; } }`}</style>
-
-        {/* cabeçalho */}
+        {/* Header */}
         <div
           style={{
-            background: palette.header,
-            padding: '16px 20px 14px',
-            borderBottom: `1.5px solid ${palette.stroke}`,
+            padding: '16px 18px 14px',
+            borderBottom: `2px dashed ${palette.stroke}44`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
+            gap: 10,
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {/* de / pra */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, color: palette.text, fontWeight: 700, minWidth: 26 }}>
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  color: `${palette.text}88`,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.8px',
+                  minWidth: 22,
+                }}
+              >
                 de
               </span>
               <NameSelect
@@ -435,7 +452,16 @@ export function LetterModal({
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, color: palette.text, fontWeight: 700, minWidth: 26 }}>
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  color: `${palette.text}88`,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.8px',
+                  minWidth: 22,
+                }}
+              >
                 pra
               </span>
               <NameSelect
@@ -447,48 +473,58 @@ export function LetterModal({
               />
             </div>
             {item.openedAt && (
-              <div style={{ fontSize: 10, color: palette.text, opacity: 0.7, marginTop: 2 }}>
+              <div style={{ fontSize: 10, color: `${palette.text}66`, marginTop: 2 }}>
                 aberta em {new Date(item.openedAt).toLocaleDateString('pt-BR')}
               </div>
             )}
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.4)',
-              border: `1px solid ${palette.stroke}`,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: palette.text,
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: 'Baloo 2, sans-serif',
-            }}
-          >
-            ✕
-          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            {/* bolinha de cor ativa */}
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: palette.flap,
+                border: `1.5px solid ${palette.stroke}`,
+                flexShrink: 0,
+              }}
+            />
+            <button
+              onClick={onClose}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: `${palette.stroke}22`,
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <X size={13} strokeWidth={2.5} color={palette.text} />
+            </button>
+          </div>
         </div>
 
-        {/* seletor de cor */}
+        {/* Seletor de cor */}
         {editing && (
           <div
             style={{
               display: 'flex',
               gap: 8,
-              padding: '10px 20px 0',
+              padding: '10px 18px 0',
               alignItems: 'center',
               flexWrap: 'wrap',
             }}
           >
             <span
               style={{
-                fontSize: 11,
-                color: 'rgba(122,48,64,0.7)',
+                fontSize: 9,
+                color: `${palette.text}88`,
                 fontWeight: 800,
                 textTransform: 'uppercase',
                 letterSpacing: '0.8px',
@@ -502,8 +538,8 @@ export function LetterModal({
                 title={COLOR_LABELS[c]}
                 onClick={() => setColor(c)}
                 style={{
-                  width: 22,
-                  height: 22,
+                  width: 20,
+                  height: 20,
                   borderRadius: '50%',
                   background: LETTER_COLORS[c].flap,
                   border:
@@ -512,8 +548,7 @@ export function LetterModal({
                       : `1.5px solid ${LETTER_COLORS[c].stroke}`,
                   cursor: 'pointer',
                   outline: 'none',
-                  boxShadow: color === c ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none',
-                  transform: color === c ? 'scale(1.15)' : 'scale(1)',
+                  transform: color === c ? 'scale(1.18)' : 'scale(1)',
                   transition: 'transform 0.12s',
                 }}
               />
@@ -521,18 +556,28 @@ export function LetterModal({
           </div>
         )}
 
-        {/* corpo */}
-        <div style={{ position: 'relative', padding: '18px 20px 20px', minHeight: 200 }}>
+        {/* Corpo */}
+        <div
+          className="letter-body-scroll"
+          style={{
+            position: 'relative',
+            padding: '16px 18px 18px',
+            minHeight: 180,
+            maxHeight: 340,
+            overflowY: 'auto',
+          }}
+        >
+          {/* linhas decorativas */}
           {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div
               key={i}
               style={{
                 position: 'absolute',
-                left: 20,
-                right: 20,
+                left: 18,
+                right: 18,
                 height: 1,
-                background: 'rgba(232,160,176,0.2)',
-                top: 18 + i * 24,
+                background: `${palette.stroke}22`,
+                top: 16 + i * 24,
                 pointerEvents: 'none',
               }}
             />
@@ -578,13 +623,14 @@ export function LetterModal({
                   }}
                   style={{
                     background: 'none',
-                    border: '1.5px solid rgba(232,160,176,0.4)',
+                    border: `1.5px solid ${palette.stroke}66`,
                     borderRadius: 10,
-                    padding: '8px 18px',
+                    padding: '7px 18px',
                     fontSize: 12,
-                    color: 'rgba(122,48,64,0.8)',
+                    color: palette.text,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 700,
                   }}
                 >
                   cancelar
@@ -592,13 +638,13 @@ export function LetterModal({
                 <button
                   onClick={handleSave}
                   style={{
-                    background: 'rgba(232,160,176,0.55)',
+                    background: `${palette.flap}cc`,
                     border: 'none',
                     borderRadius: 10,
-                    padding: '8px 20px',
+                    padding: '7px 20px',
                     fontSize: 12,
-                    color: '#3d1a10',
-                    fontWeight: 700,
+                    color: palette.text,
+                    fontWeight: 800,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -636,13 +682,14 @@ export function LetterModal({
                   onClick={onClose}
                   style={{
                     background: 'none',
-                    border: '1.5px solid rgba(232,160,176,0.4)',
+                    border: `1.5px solid ${palette.stroke}66`,
                     borderRadius: 10,
-                    padding: '8px 18px',
+                    padding: '7px 18px',
                     fontSize: 12,
-                    color: 'rgba(122,48,64,0.8)',
+                    color: palette.text,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 700,
                   }}
                 >
                   fechar
@@ -651,13 +698,13 @@ export function LetterModal({
                   <button
                     onClick={() => setEditing(true)}
                     style={{
-                      background: 'rgba(232,160,176,0.55)',
+                      background: `${palette.flap}cc`,
                       border: 'none',
                       borderRadius: 10,
-                      padding: '8px 20px',
+                      padding: '7px 20px',
                       fontSize: 12,
-                      color: '#3d1a10',
-                      fontWeight: 700,
+                      color: palette.text,
+                      fontWeight: 800,
                       cursor: 'pointer',
                       fontFamily: 'Baloo 2, sans-serif',
                     }}
