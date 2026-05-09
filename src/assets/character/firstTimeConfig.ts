@@ -94,4 +94,5 @@ export const FIRST_TIME_DEFAULT_CONFIG: CharacterConfig = {
   accessory_topo: [],
   tattoo: [],
   colorVariants: {},
+  bottom_over: [],
 }
