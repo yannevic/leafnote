@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Mail, Sprout, X } from 'lucide-react'
+import { Bell, Mail, Sprout, X, CalendarHeart } from 'lucide-react'
 import type { AppNotification } from '../hooks/useNotificationCenter'
 
 interface Props {
@@ -9,6 +9,12 @@ interface Props {
 export default function NotificationCenter({ notifications }: Props) {
   const [open, setOpen] = useState(false)
   const count = notifications.length
+
+  function getIcon(n: AppNotification) {
+    if (n.type === 'garden-water') return <Sprout size={14} color="#7FB87F" />
+    if (n.type === 'special-date') return <CalendarHeart size={14} color="#c87090" />
+    return <Mail size={14} color="#E8A0B0" />
+  }
 
   return (
     <div style={{ position: 'relative' }}>
@@ -121,15 +127,11 @@ export default function NotificationCenter({ notifications }: Props) {
                     gap: 10,
                     padding: '10px 14px',
                     borderBottom: '1px solid #d4aa8022',
+                    background:
+                      n.type === 'special-date' ? 'rgba(200,112,144,0.06)' : 'transparent',
                   }}
                 >
-                  <div style={{ marginTop: 1, flexShrink: 0 }}>
-                    {n.type === 'garden-water' ? (
-                      <Sprout size={14} color="#7FB87F" />
-                    ) : (
-                      <Mail size={14} color="#E8A0B0" />
-                    )}
-                  </div>
+                  <div style={{ marginTop: 1, flexShrink: 0 }}>{getIcon(n)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: '#3d2408' }}>
                       {n.message}

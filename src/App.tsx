@@ -17,6 +17,8 @@ function AppInner({ user }: { user: User }) {
     user.uid
   )
   const [partnerUid, setPartnerUid] = useState<string>('')
+  const [myNick, setMyNick] = useState<string>('')
+  const [partnerNick, setPartnerNick] = useState<string>('')
 
   useEffect(() => {
     import('firebase/database').then(({ getDatabase, ref, onValue }) => {
@@ -29,8 +31,33 @@ function AppInner({ user }: { user: User }) {
     })
   }, [user.uid])
 
+  useEffect(() => {
+    import('firebase/database').then(({ getDatabase, ref, onValue }) => {
+      const db = getDatabase()
+      const myRef = ref(db, 'users/' + user.uid + '/displayName')
+      const unsub = onValue(myRef, (snap) => setMyNick(snap.val() ?? ''))
+      return () => unsub()
+    })
+  }, [user.uid])
+
+  useEffect(() => {
+    if (!partnerUid) return
+    import('firebase/database').then(({ getDatabase, ref, onValue }) => {
+      const db = getDatabase()
+      const partnerRef = ref(db, 'users/' + partnerUid + '/displayName')
+      const unsub = onValue(partnerRef, (snap) => setPartnerNick(snap.val() ?? ''))
+      return () => unsub()
+    })
+  }, [partnerUid])
+
   const extraBoardNames = Object.fromEntries(extraBoards.map((b) => [b.id, b.name]))
-  const { notifications } = useNotificationCenter({ uid: user.uid, partnerUid, extraBoardNames })
+  const { notifications } = useNotificationCenter({
+    uid: user.uid,
+    partnerUid,
+    myNick,
+    partnerNick,
+    extraBoardNames,
+  })
 
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
   const [updateProgress, setUpdateProgress] = useState(0)

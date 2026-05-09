@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ref, onValue, off } from 'firebase/database'
+import useSound from 'use-sound'
 import { db } from '../lib/firebase'
 import type { AnyBoardItem, LetterItem } from '../types/board'
 import type { PlantData } from '../lib/garden'
 import { boardItemsPath, DEFAULT_BOARD_ID } from '../lib/boards'
+import { subscribeSpecialDates, getAvailableDates } from '../lib/specialDates'
+import type { SpecialDates } from '../lib/specialDates'
+import moodSound from '../assets/sounds/mood.mp3'
 
 export interface AppNotification {
   id: string
-  type: 'letter' | 'special-letter' | 'garden-water'
+  type: 'letter' | 'special-letter' | 'garden-water' | 'special-date'
   message: string
   boardId?: string
   boardName?: string
@@ -16,11 +20,51 @@ export interface AppNotification {
 interface Props {
   uid: string
   partnerUid: string
+  myNick: string
+  partnerNick: string
   extraBoardNames: Record<string, string>
 }
 
-export function useNotificationCenter({ uid, partnerUid, extraBoardNames }: Props) {
+/** Retorna 'YYYY-MM-DD' de hoje e de amanhã */
+function getTodayAndTomorrow() {
+  const now = new Date()
+  const today = now.toLocaleDateString('en-CA') // YYYY-MM-DD
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowStr = tomorrow.toLocaleDateString('en-CA')
+  return { today, tomorrow: tomorrowStr }
+}
+
+/** Converte DD-MM ou DD-MM-AAAA para 'MM-DD' para comparar com hoje/amanhã */
+function toMmDd(ddmm: string): string {
+  if (!ddmm || ddmm.length < 5) return ''
+  const parts = ddmm.split('-')
+  // partes[0]=DD, partes[1]=MM
+  return `${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
+}
+
+/** Verifica se uma data DD-MM (ou DD-MM-AAAA) cai hoje ou amanhã */
+function checkDate(ddmm: string): 'today' | 'tomorrow' | null {
+  const mmdd = toMmDd(ddmm)
+  if (!mmdd) return null
+  const { today, tomorrow } = getTodayAndTomorrow()
+  const todayMmDd = today.slice(5) // MM-DD
+  const tomorrowMmDd = tomorrow.slice(5)
+  if (mmdd === todayMmDd) return 'today'
+  if (mmdd === tomorrowMmDd) return 'tomorrow'
+  return null
+}
+
+export function useNotificationCenter({
+  uid,
+  partnerUid,
+  myNick,
+  partnerNick,
+  extraBoardNames,
+}: Props) {
   const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [play] = useSound(moodSound, { volume: 0.5 })
+  const playedDates = useRef<Set<string>>(new Set())
 
   // Cartas não abertas
   useEffect(() => {
@@ -98,6 +142,44 @@ export function useNotificationCenter({ uid, partnerUid, extraBoardNames }: Prop
 
     return () => off(r, 'value', handler)
   }, [uid, partnerUid])
+
+  // Datas especiais — notificação no dia e 1 dia antes + som
+  useEffect(() => {
+    if (!uid || !partnerUid) return
+
+    const unsub = subscribeSpecialDates((dates: SpecialDates) => {
+      const allDates = getAvailableDates(dates, uid, partnerUid, myNick, partnerNick)
+
+      const dateNotifs: AppNotification[] = []
+
+      allDates.forEach((d) => {
+        const when = checkDate(d.mmdd)
+        if (!when) return
+
+        const notifId = `special-date-${d.key}-${when}`
+        const message =
+          when === 'today'
+            ? `hoje é ${d.label.toLowerCase()}!`
+            : `amanhã é ${d.label.toLowerCase()}!`
+
+        dateNotifs.push({
+          id: notifId,
+          type: 'special-date',
+          message,
+        })
+
+        // toca som só uma vez por data por sessão
+        if (!playedDates.current.has(notifId)) {
+          playedDates.current.add(notifId)
+          play()
+        }
+      })
+
+      setNotifications((prev) => [...prev.filter((n) => n.type !== 'special-date'), ...dateNotifs])
+    })
+
+    return () => unsub()
+  }, [uid, partnerUid, myNick, partnerNick, play])
 
   return { notifications }
 }

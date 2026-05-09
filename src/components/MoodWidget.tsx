@@ -4,6 +4,7 @@ import useSound from 'use-sound'
 import { db } from '../lib/firebase'
 import moodImages from '../assets/moods/index'
 import moodSound from '../assets/sounds/mood.mp3'
+import { SmilePlus } from 'lucide-react'
 
 const MOODS: { id: string; label: string }[] = [
   { id: 'apaixonada', label: 'Apaixonado' },
@@ -195,7 +196,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
             style={{ width: 34, height: 34, objectFit: 'contain', pointerEvents: 'none' }}
           />
         ) : (
-          <span style={{ fontSize: 20 }}>🙂</span>
+          <SmilePlus size={20} color="rgba(122,48,64,0.6)" strokeWidth={2} />
         )}
       </div>
 
