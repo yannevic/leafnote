@@ -33,6 +33,7 @@ export default function WeekCalendarModal({
   const [newText, setNewText] = useState('')
   const [newHour, setNewHour] = useState('')
   const [newMin, setNewMin] = useState('')
+  const [showTimePicker, setShowTimePicker] = useState(false)
   const t = THEME_COLORS[theme]
 
   const { year, month, day } = parseDateKey(dateKey)
@@ -42,11 +43,29 @@ export default function WeekCalendarModal({
   function handleAdd() {
     const trimmed = newText.trim()
     if (!trimmed) return
-    const time = newHour ? `${newHour.padStart(2, '0')}:${(newMin || '00').padStart(2, '0')}` : null
+    const h = parseInt(newHour)
+    const m = parseInt(newMin || '0')
+    const validH = !isNaN(h) && h >= 0 && h <= 23
+    const validM = !isNaN(m) && m >= 0 && m <= 59
+    const time =
+      newHour !== '' && validH && validM
+        ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+        : null
     onAdd(trimmed, time)
     setNewText('')
     setNewHour('')
     setNewMin('')
+    setShowTimePicker(false)
+  }
+
+  function handleHourChange(val: string) {
+    const n = parseInt(val)
+    if (val === '' || (n >= 0 && n <= 23)) setNewHour(val)
+  }
+
+  function handleMinChange(val: string) {
+    const n = parseInt(val)
+    if (val === '' || (n >= 0 && n <= 59)) setNewMin(val)
   }
 
   return (
@@ -255,63 +274,269 @@ export default function WeekCalendarModal({
           }}
         >
           <div style={{ display: 'flex', gap: 8 }}>
-            {/* horário personalizado */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                background: 'rgba(253,242,246,0.7)',
-                border: '1.5px solid rgba(232,160,176,0.35)',
-                borderRadius: 10,
-                padding: '0 10px',
-                flexShrink: 0,
-              }}
-            >
-              <Clock size={12} color={t.accent} strokeWidth={2} />
-              <input
-                className="time-input"
-                type="number"
-                min={0}
-                max={23}
-                placeholder="hh"
-                value={newHour}
-                onChange={(e) => setNewHour(e.target.value)}
+            {/* horário customizado com picker */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div
+                onClick={() => setShowTimePicker((v) => !v)}
                 style={{
-                  width: 28,
-                  background: 'none',
-                  border: 'none',
-                  outline: 'none',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: '#3d1a10',
-                  textAlign: 'center',
-                  padding: '8px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: showTimePicker ? 'rgba(232,160,176,0.2)' : 'rgba(253,242,246,0.7)',
+                  border: `1.5px solid ${showTimePicker ? 'rgba(232,160,176,0.6)' : 'rgba(232,160,176,0.35)'}`,
+                  borderRadius: 10,
+                  padding: '0 10px',
+                  cursor: 'pointer',
+                  height: 40,
+                  minWidth: 90,
+                  transition: 'all 0.15s',
                 }}
-              />
-              <span style={{ color: 'rgba(61,26,16,0.4)', fontWeight: 700, fontSize: 13 }}>:</span>
-              <input
-                className="time-input"
-                type="number"
-                min={0}
-                max={59}
-                placeholder="mm"
-                value={newMin}
-                onChange={(e) => setNewMin(e.target.value)}
-                style={{
-                  width: 28,
-                  background: 'none',
-                  border: 'none',
-                  outline: 'none',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: '#3d1a10',
-                  textAlign: 'center',
-                  padding: '8px 0',
-                }}
-              />
+              >
+                <Clock size={12} color={t.accent} strokeWidth={2} />
+                <span
+                  style={{
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: newHour !== '' ? '#3d1a10' : 'rgba(61,26,16,0.35)',
+                  }}
+                >
+                  {newHour !== ''
+                    ? `${newHour.padStart(2, '0')}:${(newMin || '00').padStart(2, '0')}`
+                    : 'hora'}
+                </span>
+              </div>
+
+              {showTimePicker && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 48,
+                    left: 0,
+                    zIndex: 999,
+                    background:
+                      'linear-gradient(160deg, rgba(253,246,240,0.98) 0%, rgba(252,232,238,0.98) 100%)',
+                    border: '1.5px solid rgba(232,160,176,0.4)',
+                    borderRadius: 14,
+                    boxShadow: '0 8px 32px rgba(200,120,140,0.2)',
+                    padding: '14px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    minWidth: 180,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 800,
+                      color: 'rgba(122,48,64,0.55)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.8px',
+                      fontFamily: 'Baloo 2, sans-serif',
+                    }}
+                  >
+                    horário
+                  </span>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {/* horas */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <button
+                        onClick={() =>
+                          handleHourChange(String(Math.min(23, parseInt(newHour || '0') + 1)))
+                        }
+                        style={{
+                          background: 'rgba(232,160,176,0.2)',
+                          border: 'none',
+                          borderRadius: 6,
+                          width: 32,
+                          height: 24,
+                          cursor: 'pointer',
+                          color: '#3d1a10',
+                          fontWeight: 800,
+                          fontSize: 14,
+                        }}
+                      >
+                        ›
+                      </button>
+                      <input
+                        className="time-input"
+                        type="number"
+                        min={0}
+                        max={23}
+                        placeholder="00"
+                        value={newHour}
+                        onChange={(e) => handleHourChange(e.target.value)}
+                        style={{
+                          width: 40,
+                          textAlign: 'center',
+                          background: 'rgba(253,242,246,0.8)',
+                          border: '1.5px solid rgba(232,160,176,0.35)',
+                          borderRadius: 8,
+                          fontFamily: 'Baloo 2, sans-serif',
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: '#3d1a10',
+                          padding: '6px 0',
+                          outline: 'none',
+                        }}
+                      />
+                      <button
+                        onClick={() =>
+                          handleHourChange(String(Math.max(0, parseInt(newHour || '0') - 1)))
+                        }
+                        style={{
+                          background: 'rgba(232,160,176,0.2)',
+                          border: 'none',
+                          borderRadius: 6,
+                          width: 32,
+                          height: 24,
+                          cursor: 'pointer',
+                          color: '#3d1a10',
+                          fontWeight: 800,
+                          fontSize: 14,
+                        }}
+                      >
+                        ‹
+                      </button>
+                    </div>
+
+                    <span
+                      style={{
+                        fontSize: 20,
+                        fontWeight: 800,
+                        color: 'rgba(61,26,16,0.4)',
+                        marginBottom: 2,
+                      }}
+                    >
+                      :
+                    </span>
+
+                    {/* minutos */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <button
+                        onClick={() =>
+                          handleMinChange(String(Math.min(59, parseInt(newMin || '0') + 5)))
+                        }
+                        style={{
+                          background: 'rgba(232,160,176,0.2)',
+                          border: 'none',
+                          borderRadius: 6,
+                          width: 32,
+                          height: 24,
+                          cursor: 'pointer',
+                          color: '#3d1a10',
+                          fontWeight: 800,
+                          fontSize: 14,
+                        }}
+                      >
+                        ›
+                      </button>
+                      <input
+                        className="time-input"
+                        type="number"
+                        min={0}
+                        max={59}
+                        placeholder="00"
+                        value={newMin}
+                        onChange={(e) => handleMinChange(e.target.value)}
+                        style={{
+                          width: 40,
+                          textAlign: 'center',
+                          background: 'rgba(253,242,246,0.8)',
+                          border: '1.5px solid rgba(232,160,176,0.35)',
+                          borderRadius: 8,
+                          fontFamily: 'Baloo 2, sans-serif',
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: '#3d1a10',
+                          padding: '6px 0',
+                          outline: 'none',
+                        }}
+                      />
+                      <button
+                        onClick={() =>
+                          handleMinChange(String(Math.max(0, parseInt(newMin || '0') - 5)))
+                        }
+                        style={{
+                          background: 'rgba(232,160,176,0.2)',
+                          border: 'none',
+                          borderRadius: 6,
+                          width: 32,
+                          height: 24,
+                          cursor: 'pointer',
+                          color: '#3d1a10',
+                          fontWeight: 800,
+                          fontSize: 14,
+                        }}
+                      >
+                        ‹
+                      </button>
+                    </div>
+
+                    {/* atalhos */}
+                    <div
+                      style={{ display: 'flex', flexDirection: 'column', gap: 4, marginLeft: 4 }}
+                    >
+                      {['08:00', '12:00', '18:00', '21:00'].map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => {
+                            setNewHour(t.split(':')[0])
+                            setNewMin(t.split(':')[1])
+                          }}
+                          style={{
+                            background: 'rgba(232,160,176,0.15)',
+                            border: '1px solid rgba(232,160,176,0.3)',
+                            borderRadius: 6,
+                            padding: '3px 8px',
+                            fontFamily: 'Baloo 2, sans-serif',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: '#3d1a10',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowTimePicker(false)}
+                    style={{
+                      background: 'rgba(232,160,176,0.4)',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '7px 0',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: '#3d1a10',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    confirmar
+                  </button>
+                </div>
+              )}
             </div>
 
             <input

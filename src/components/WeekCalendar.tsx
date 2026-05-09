@@ -4,15 +4,15 @@ import { THEME_COLORS, DAY_NAMES, MONTH_NAMES, CalendarTheme, toDateKey } from '
 import WeekCalendarModal from './WeekCalendarModal'
 import { subscribeAllCycles } from '../lib/cycle'
 import type { CycleData } from '../lib/cycle'
-import { Pin } from 'lucide-react'
+import { Pin, X } from 'lucide-react'
 
 const THEME_OPTIONS: { key: CalendarTheme; label: string }[] = [
-  { key: 'rosa', label: 'Rosa 🌸' },
-  { key: 'tulipa', label: 'Tulipa 🌷' },
-  { key: 'margarida', label: 'Margarida 🌼' },
-  { key: 'girassol', label: 'Girassol 🌻' },
-  { key: 'orquidea', label: 'Orquídea 🌺' },
-  { key: 'especial', label: 'Especial 🌿' },
+  { key: 'rosa', label: 'rosa' },
+  { key: 'tulipa', label: 'tulipa' },
+  { key: 'margarida', label: 'margarida' },
+  { key: 'girassol', label: 'girassol' },
+  { key: 'orquidea', label: 'orquídea' },
+  { key: 'especial', label: 'especial' },
 ]
 
 import type { CalendarEvent } from '../lib/calendar'
@@ -125,20 +125,14 @@ export default function WeekCalendar({
           height: '90vh',
           borderRadius: 17,
           paddingTop: 6,
-          background: t.bg,
-          backgroundImage: `url(./src/assets/patterns/${theme}.png), url(./src/assets/patterns/${theme}.png)`,
-          backgroundSize: '60px 60px, 60px 60px',
-          backgroundRepeat: 'repeat, repeat',
-          backgroundPosition: '0px 0px, 150px 150px',
+          background:
+            'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+          border: '1.5px solid rgba(232,160,176,0.4)',
+          boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(18px) saturate(1.4)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* overlay legibilidade */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: `${t.bg}e8`, zIndex: 1, borderRadius: 17 }}
-        />
-
         {/* ── HEADER ── */}
         <div
           className="relative z-10 flex items-center justify-between px-10 shrink-0"
@@ -285,11 +279,21 @@ export default function WeekCalendar({
             </button>
 
             <button
-              className="text-base hover:opacity-70 transition-opacity"
-              style={{ color: t.accent, padding: '4px 8px' }}
               onClick={onClose}
+              style={{
+                background: 'rgba(200,120,140,0.15)',
+                border: 'none',
+                borderRadius: '50%',
+                width: 28,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                padding: 0,
+              }}
             >
-              ✕
+              <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -311,7 +315,17 @@ export default function WeekCalendar({
         </div>
 
         {/* ── GRID DE DIAS ── */}
-        <div className="relative z-10 flex-1 overflow-y-auto" style={{ padding: '0 24px 24px' }}>
+        {/* ── GRID DE DIAS ── */}
+        <style>{`
+          .cal-scroll::-webkit-scrollbar { width: 4px; }
+          .cal-scroll::-webkit-scrollbar-track { background: transparent; }
+          .cal-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.4); border-radius: 99px; }
+          .cal-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.7); }
+        `}</style>
+        <div
+          className="relative z-10 flex-1 overflow-y-auto cal-scroll"
+          style={{ padding: '0 24px 24px' }}
+        >
           <div className="grid grid-cols-7" style={{ gap: '8px' }}>
             {cells.map((day, idx) => {
               if (day === null) {
@@ -431,9 +445,11 @@ export default function WeekCalendar({
           style={{
             top: datePickerPos.top,
             left: datePickerPos.left,
-            background: t.bg,
-            border: `1.5px solid ${t.border}`,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.98) 0%, rgba(252,232,238,0.98) 100%)',
+            border: '1.5px solid rgba(232,160,176,0.4)',
+            boxShadow: '0 8px 40px rgba(200,120,140,0.2)',
+            backdropFilter: 'blur(18px)',
             zIndex: 9999,
             padding: '16px',
             minWidth: 280,
@@ -495,12 +511,14 @@ export default function WeekCalendar({
           style={{
             top: themePickerPos.top,
             right: themePickerPos.right,
-            background: t.bg,
-            border: `1.5px solid ${t.border}`,
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.98) 0%, rgba(252,232,238,0.98) 100%)',
+            border: '1.5px solid rgba(232,160,176,0.4)',
             minWidth: 180,
             padding: '10px 8px',
             gap: 4,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            boxShadow: '0 8px 40px rgba(200,120,140,0.2)',
+            backdropFilter: 'blur(18px)',
             zIndex: 9999,
           }}
         >
