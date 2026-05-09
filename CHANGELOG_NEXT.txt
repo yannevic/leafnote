@@ -7,4 +7,4 @@
 ✨ personagem aparece na casinha e pode ser posicionado livremente |
 💄 provador de roupas na loja com manequim em tempo real |
 💄 grupo de atalhos no mural (guarda-roupa / casinha / loja) |
-🐛 várias correções de build, caminhos de imagem e layout | 
+🐛 várias correções de build, caminhos de imagem e layout |
