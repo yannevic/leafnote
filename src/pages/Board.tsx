@@ -28,7 +28,6 @@ import { usePresence } from '../hooks/usePresence'
 import PresenceBadge from '../components/PresenceBadge'
 import Dice from '../components/Dice'
 import Timer, { TimerState, makeInitialTimerState } from '../components/Timer'
-import TimerBar from '../components/TimerBar'
 import ActivityFeed from '../components/ActivityFeed'
 import Roulette from '../components/Roulette'
 import { PostItModal } from '../components/PostIt'
@@ -551,16 +550,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         style={{ background: '#c8a882', cursor: editMode ? 'default' : 'crosshair' }}
         onClick={handleBoardClick}
       >
-        {nickSaved && (
-          <TimerBar
-            timerState={timerState}
-            onOpen={() => {
-              setShowWidgets(true)
-              setActiveWidget('timer')
-              setTimerDismissed(false)
-            }}
-          />
-        )}
         {/* Textura de madeira */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"

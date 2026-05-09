@@ -1,6 +1,6 @@
 // src/components/CharacterDoll.tsx
 import { useRef, useState, useCallback } from 'react'
-import { PinOff, Pin } from 'lucide-react'
+import { PinOff, Pin, FlipHorizontal2 } from 'lucide-react'
 import {
   ALL_PIECES,
   CharacterConfig,
@@ -42,6 +42,7 @@ export default function CharacterDoll({
 }: CharacterDollProps) {
   const [pos, setPos] = useState(initialPosition)
   const [showPin, setShowPin] = useState(false)
+  const [flipped, setFlipped] = useState(false)
   const dragging = useRef(false)
   const lastMouse = useRef({ x: 0, y: 0 })
   const pinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -155,6 +156,7 @@ export default function CharacterDoll({
         userSelect: 'none',
         touchAction: 'none',
         filter: 'drop-shadow(0 6px 16px rgba(61,26,16,0.22))',
+        transform: flipped ? 'scaleX(-1)' : 'none',
         zIndex: 90,
       }}
     >
@@ -222,12 +224,56 @@ export default function CharacterDoll({
         </button>
       )}
 
-      <style>{`
-        @keyframes fadeInPin {
+      {showPin && (
+        <button
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            setFlipped((v) => !v)
+            schedulePinHide()
+          }}
+          onMouseEnter={() => {
+            if (pinTimeoutRef.current) clearTimeout(pinTimeoutRef.current)
+          }}
+          onMouseLeave={() => schedulePinHide()}
+          title="espelhar"
+          style={{
+            position: 'absolute',
+            top: Math.round(height * 0.05) - 14,
+            left: '50%',
+            transform: 'translateX(calc(-50% + 32px))',
+            width: 26,
+            height: 26,
+            borderRadius: '50%',
+            border: '1.5px solid rgba(200,120,140,0.6)',
+            background: flipped ? 'rgba(232,160,176,0.95)' : 'rgba(253,242,246,0.92)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(61,26,16,0.2)',
+            padding: 0,
+            zIndex: 2,
+            animation: 'fadeInPin 0.15s ease',
+          }}
+        >
+          <FlipHorizontal2
+            size={12}
+            strokeWidth={2.2}
+            color={flipped ? '#3d1a10' : 'rgba(122,48,64,0.7)'}
+          />
+        </button>
+      )}
+
+      <style>
+        {`
+    @keyframes fadeInPin {
           from { opacity: 0; transform: translateX(-50%) scale(0.7); }
           to   { opacity: 1; transform: translateX(-50%) scale(1); }
         }
-      `}</style>
+      `}
+      </style>
     </div>
   )
 }
