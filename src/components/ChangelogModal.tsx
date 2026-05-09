@@ -2,19 +2,6 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
-  '3.0.0': [
-    '✨ presets de personagem — até 6 slots, nome customizado, grade 2x2, aplicar/excluir com um clique',
-    '✨ nossa casinha — cena isométrica com chão, paredes e fundo personalizáveis',
-    '✨ loja — comprar pisos, paredes, fundos e roupas com moedas',
-    '✨ inventário — itens comprados salvos e sincronizados entre os dois',
-    '✨ wishlist — favoritar itens e ver a lista de desejos do casal lado a lado',
-    '✨ presentes — montar um presente com vários itens e enviar para o parceiro abrir na casinha',
-    '✨ personagem aparece na casinha e pode ser posicionado livremente',
-    '💄 provador de roupas na loja com manequim em tempo real',
-    '💄 grupo de atalhos no mural (guarda-roupa / casinha / loja)',
-    '🐛 várias correções de build, caminhos de imagem e layout',
-  ],
-
   '2.2.2': [
     '✨ sistema de troca de sementes entre flores do jardim',
     '✨ modal guia do jardim com regras e dicas',
