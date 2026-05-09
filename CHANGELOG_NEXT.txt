@@ -5,6 +5,6 @@
 ✨ wishlist — favoritar itens e ver a lista de desejos do casal lado a lado |
 ✨ presentes — montar um presente com vários itens e enviar para o parceiro abrir na casinha |
 ✨ personagem aparece na casinha e pode ser posicionado livremente |
-💄 provador de roupas na loja com manequim em tempo real |
-💄 grupo de atalhos no mural (guarda-roupa / casinha / loja) | 
+💄 provador de roupas na loja com manequim em tempo real | 
+💄 grupo de atalhos no mural (guarda-roupa / casinha / loja) |
 🐛 várias correções de build, caminhos de imagem e layout |
