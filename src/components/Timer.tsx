@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Play, Pause, RotateCcw, Timer as TimerIcon, Hourglass } from 'lucide-react'
+import timerEndSound from '../assets/sounds/timer-end.mp3'
+import useSound from 'use-sound'
 
 const PRESETS = [
   { label: '1 min', seconds: 60 },
@@ -49,6 +51,7 @@ interface TimerProps {
 export default function Timer({ state, onChange }: TimerProps) {
   const { mode, running, elapsed, target, finished } = state
   const [tick, setTick] = useState(0)
+  const [playEnd] = useSound(timerEndSound, { volume: 0.8 })
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [customMin, setCustomMin] = useState(String(Math.floor(target / 60)))
   const [customSec, setCustomSec] = useState(String(target % 60).padStart(2, '0'))
@@ -62,10 +65,17 @@ export default function Timer({ state, onChange }: TimerProps) {
     }
   }, [running])
 
+  const firedRef = useRef(false)
+
   useEffect(() => {
-    if (!running || mode !== 'countdown') return
+    if (!running || mode !== 'countdown') {
+      firedRef.current = false
+      return
+    }
     const currentElapsed = elapsed + Math.floor((Date.now() - state.startedAt) / 1000)
-    if (currentElapsed >= target) {
+    if (currentElapsed >= target && !firedRef.current) {
+      firedRef.current = true
+      playEnd()
       onChange({ ...state, running: false, elapsed: target, startedAt: 0, finished: true })
     }
   }, [tick]) // eslint-disable-line react-hooks/exhaustive-deps

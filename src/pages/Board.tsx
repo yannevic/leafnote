@@ -35,6 +35,7 @@ import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
 import MovieList from '../components/MovieList'
+import TimerFloat from '../components/TimerFloat'
 import {
   CalendarDays,
   LayoutGrid,
@@ -144,6 +145,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette'>('dice')
   const [sharedDice, setSharedDice] = useState(false)
   const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
+  const [timerDismissed, setTimerDismissed] = useState(false)
   const [openModalItem, setOpenModalItem] = useState<AnyBoardItem | null>(null)
   const [openSpecialLetter, setOpenSpecialLetter] = useState<SpecialLetterItem | null>(null)
   const [openLetter, setOpenLetter] = useState<LetterItem | null>(null)
@@ -555,6 +557,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onOpen={() => {
               setShowWidgets(true)
               setActiveWidget('timer')
+              setTimerDismissed(false)
             }}
           />
         )}
@@ -2142,6 +2145,15 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             </div>
           )
         })()}
+      {!showWidgets &&
+        !timerDismissed &&
+        (timerState.running || timerState.elapsed > 0 || timerState.finished) && (
+          <TimerFloat
+            state={timerState}
+            onChange={setTimerState}
+            onDismiss={() => setTimerDismissed(true)}
+          />
+        )}
     </>
   )
 }
