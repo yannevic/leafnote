@@ -20,6 +20,7 @@ interface TitleBarProps {
   onInstallUpdate?: () => void
   onCheckUpdate?: () => void
   notifications?: AppNotification[]
+  onDismissNotification?: (id: string) => void
   coins?: number
 }
 
@@ -34,6 +35,7 @@ export default function TitleBar({
   onInstallUpdate,
   onCheckUpdate,
   notifications = [],
+  onDismissNotification,
   coins = 0,
 }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
@@ -189,7 +191,10 @@ export default function TitleBar({
           <PiMoneyWavyLight size={22} />
           <span style={{ fontSize: 15, fontWeight: 800, marginTop: 4 }}>{coins}</span>
         </div>
-        <NotificationCenter notifications={notifications} />
+        <NotificationCenter
+          notifications={notifications}
+          onDismiss={onDismissNotification ?? (() => {})}
+        />
 
         <UpdateBtn
           status={updateStatus}

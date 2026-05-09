@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { usePresence } from './hooks/usePresence'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from './lib/firebase'
@@ -16,42 +17,15 @@ function AppInner({ user }: { user: User }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
     user.uid
   )
-  const [partnerUid, setPartnerUid] = useState<string>('')
-  const [myNick, setMyNick] = useState<string>('')
-  const [partnerNick, setPartnerNick] = useState<string>('')
+  const { partnerUid, myPresence, partnerPresence } = usePresence(user.uid, user.displayName ?? '')
+  const myNick = myPresence?.displayName ?? ''
+  const partnerNick = partnerPresence?.displayName ?? ''
 
-  useEffect(() => {
-    import('firebase/database').then(({ getDatabase, ref, onValue }) => {
-      const db = getDatabase()
-      const r = ref(db, 'users/' + user.uid + '/partnerUid')
-      const unsub = onValue(r, (snap) => {
-        setPartnerUid(snap.val() ?? '')
-      })
-      return () => unsub()
-    })
-  }, [user.uid])
-
-  useEffect(() => {
-    import('firebase/database').then(({ getDatabase, ref, onValue }) => {
-      const db = getDatabase()
-      const myRef = ref(db, 'users/' + user.uid + '/displayName')
-      const unsub = onValue(myRef, (snap) => setMyNick(snap.val() ?? ''))
-      return () => unsub()
-    })
-  }, [user.uid])
-
-  useEffect(() => {
-    if (!partnerUid) return
-    import('firebase/database').then(({ getDatabase, ref, onValue }) => {
-      const db = getDatabase()
-      const partnerRef = ref(db, 'users/' + partnerUid + '/displayName')
-      const unsub = onValue(partnerRef, (snap) => setPartnerNick(snap.val() ?? ''))
-      return () => unsub()
-    })
-  }, [partnerUid])
-
-  const extraBoardNames = Object.fromEntries(extraBoards.map((b) => [b.id, b.name]))
-  const { notifications } = useNotificationCenter({
+  const extraBoardNames = useMemo(
+    () => Object.fromEntries(extraBoards.map((b) => [b.id, b.name])),
+    [extraBoards]
+  )
+  const { notifications, dismiss } = useNotificationCenter({
     uid: user.uid,
     partnerUid,
     myNick,
@@ -87,6 +61,7 @@ function AppInner({ user }: { user: User }) {
         onInstallUpdate={() => window.api.installUpdate()}
         onCheckUpdate={() => window.api.checkForUpdates()}
         notifications={notifications}
+        onDismissNotification={dismiss}
         coins={coins}
       />
       <div className="flex-1 overflow-hidden">

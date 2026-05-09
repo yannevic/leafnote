@@ -1,23 +1,27 @@
 import { useState } from 'react'
-import { Bell, Mail, Sprout, X, CalendarHeart } from 'lucide-react'
+import { Bell, Mail, Sprout, X, CalendarHeart, Lock, Check, CheckCheck } from 'lucide-react'
 import type { AppNotification } from '../hooks/useNotificationCenter'
 
 interface Props {
   notifications: AppNotification[]
+  onDismiss: (id: string) => void
 }
 
-export default function NotificationCenter({ notifications }: Props) {
+export default function NotificationCenter({ notifications, onDismiss }: Props) {
   const [open, setOpen] = useState(false)
   const count = notifications.length
 
   function getIcon(n: AppNotification) {
-    if (n.type === 'garden-water') return <Sprout size={14} color="#7FB87F" />
-    if (n.type === 'special-date') return <CalendarHeart size={14} color="#c87090" />
-    return <Mail size={14} color="#E8A0B0" />
+    if (n.type === 'garden-water') return <Sprout size={14} color="#7FB87F" strokeWidth={2} />
+    if (n.type === 'special-date')
+      return <CalendarHeart size={14} color="#c87090" strokeWidth={2} />
+    if (n.dismissible) return <Lock size={14} color="#E8A0B0" strokeWidth={2} />
+    return <Mail size={14} color="#E8A0B0" strokeWidth={2} />
   }
 
   return (
     <div style={{ position: 'relative' }}>
+      {/* Botão sino */}
       <button
         onClick={() => setOpen((v) => !v)}
         title="notificações"
@@ -63,6 +67,7 @@ export default function NotificationCenter({ notifications }: Props) {
         )}
       </button>
 
+      {/* Painel */}
       {open && (
         <div
           style={{
@@ -70,48 +75,80 @@ export default function NotificationCenter({ notifications }: Props) {
             top: 44,
             right: 60,
             zIndex: 9999,
-            background: 'linear-gradient(160deg, #fdf6f0 0%, #f5ecd7 100%)',
-            border: '1.5px solid #d4aa80',
-            borderRadius: 14,
-            boxShadow: '0 8px 32px rgba(44,20,8,0.25)',
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+            border: '1.5px solid rgba(232,160,176,0.4)',
+            borderRadius: 20,
+            boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+            backdropFilter: 'blur(18px) saturate(1.4)',
+            WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
             fontFamily: 'Baloo 2, sans-serif',
-            minWidth: 260,
+            minWidth: 270,
             maxWidth: 320,
             overflow: 'hidden',
           }}
         >
+          {/* Header */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '10px 14px',
-              borderBottom: '1px solid #d4aa8044',
+              padding: '11px 14px 10px',
+              borderBottom: '2px dashed rgba(232,160,176,0.4)',
             }}
           >
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#3d2408' }}>notificações</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Bell size={13} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: 'rgba(122,48,64,0.55)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.8px',
+                }}
+              >
+                notificações
+              </span>
+            </div>
             <button
               onClick={() => setOpen(false)}
               style={{
-                background: 'none',
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: 'rgba(200,120,140,0.15)',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#8b6914',
-                padding: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <X size={13} />
+              <X size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
             </button>
           </div>
 
-          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+          {/* Lista */}
+          <div
+            className="notif-scroll"
+            style={{ maxHeight: 320, overflowY: 'auto', padding: '4px 0' }}
+          >
+            <style>{`
+              .notif-scroll::-webkit-scrollbar { width: 4px; }
+              .notif-scroll::-webkit-scrollbar-track { background: transparent; }
+              .notif-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+              .notif-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+            `}</style>
+
             {notifications.length === 0 ? (
               <div
                 style={{
-                  padding: '20px 14px',
+                  padding: '24px 14px',
                   fontSize: 12,
-                  color: '#8b6914',
-                  opacity: 0.6,
+                  fontWeight: 600,
+                  color: 'rgba(61,26,16,0.4)',
                   textAlign: 'center',
                 }}
               >
@@ -123,27 +160,85 @@ export default function NotificationCenter({ notifications }: Props) {
                   key={n.id}
                   style={{
                     display: 'flex',
-                    alignItems: 'flex-start',
+                    alignItems: 'center',
                     gap: 10,
-                    padding: '10px 14px',
-                    borderBottom: '1px solid #d4aa8022',
+                    padding: '9px 14px',
+                    borderBottom: '1px solid rgba(232,160,176,0.15)',
                     background:
-                      n.type === 'special-date' ? 'rgba(200,112,144,0.06)' : 'transparent',
+                      n.type === 'special-date'
+                        ? 'rgba(200,112,144,0.06)'
+                        : n.dismissible
+                          ? 'rgba(232,160,176,0.07)'
+                          : 'transparent',
                   }}
                 >
-                  <div style={{ marginTop: 1, flexShrink: 0 }}>{getIcon(n)}</div>
+                  <div style={{ flexShrink: 0 }}>{getIcon(n)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#3d2408' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#3d1a10' }}>
                       {n.message}
                     </div>
                     {n.boardName && (
-                      <div style={{ fontSize: 10, color: '#8b6914', opacity: 0.8, marginTop: 2 }}>
+                      <div style={{ fontSize: 10, color: 'rgba(61,26,16,0.4)', marginTop: 2 }}>
                         {n.boardName}
                       </div>
                     )}
                   </div>
+                  {n.dismissible && (
+                    <button
+                      onClick={() => onDismiss(n.id)}
+                      title="marcar como lida"
+                      style={{
+                        flexShrink: 0,
+                        width: 26,
+                        height: 26,
+                        borderRadius: 8,
+                        background: 'rgba(232,160,176,0.18)',
+                        border: '1px solid rgba(232,160,176,0.35)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Check size={13} strokeWidth={2.5} color="rgba(122,48,64,0.6)" />
+                    </button>
+                  )}
                 </div>
               ))
+            )}
+            {notifications.some((n) => n.dismissible) && (
+              <div
+                style={{
+                  padding: '8px 14px',
+                  borderTop: '2px dashed rgba(232,160,176,0.3)',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  onClick={() =>
+                    notifications.filter((n) => n.dismissible).forEach((n) => onDismiss(n.id))
+                  }
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    fontSize: 10,
+                    fontWeight: 800,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    color: 'rgba(122,48,64,0.6)',
+                    background: 'rgba(232,160,176,0.18)',
+                    border: '1px solid rgba(232,160,176,0.35)',
+                    borderRadius: 8,
+                    padding: '4px 12px',
+                    cursor: 'pointer',
+                    letterSpacing: '0.3px',
+                  }}
+                >
+                  <CheckCheck size={13} strokeWidth={2.5} color="rgba(122,48,64,0.6)" />
+                  marcar todas como lidas
+                </button>
+              </div>
             )}
           </div>
         </div>
