@@ -267,7 +267,6 @@ function drawShape(
     }
     ctx.closePath()
   } else if (tool === 'heart') {
-    // path clássico do coração escalado para o bounding box
     const w = Math.abs(x2 - x1)
     const h = Math.abs(y2 - y1)
     const lx = Math.min(x1, x2)
@@ -314,23 +313,16 @@ function floodFill(
 ) {
   const imageData = ctx.getImageData(0, 0, canvasW, canvasH)
   const data = imageData.data
-
   const px = Math.floor(startX)
   const py = Math.floor(startY)
   const idx = (py * canvasW + px) * 4
-
   const targetR = data[idx]
   const targetG = data[idx + 1]
   const targetB = data[idx + 2]
   const targetA = data[idx + 3]
-
   const [fillR, fillG, fillB] = hexToRgb(fillColor)
-
-  // já é a mesma cor
   if (targetR === fillR && targetG === fillG && targetB === fillB && targetA === 255) return
-
   const tolerance = 32
-
   function matchesTarget(i: number) {
     return (
       Math.abs(data[i] - targetR) <= tolerance &&
@@ -339,36 +331,30 @@ function floodFill(
       Math.abs(data[i + 3] - targetA) <= tolerance
     )
   }
-
   const visited = new Uint8Array(canvasW * canvasH)
   const stack: number[] = [px + py * canvasW]
   visited[px + py * canvasW] = 1
-
   while (stack.length > 0) {
     const pos = stack.pop()!
     const x = pos % canvasW
     const y = Math.floor(pos / canvasW)
     const i = pos * 4
-
     data[i] = fillR
     data[i + 1] = fillG
     data[i + 2] = fillB
     data[i + 3] = 255
-
     const neighbors = [
       x > 0 ? pos - 1 : -1,
       x < canvasW - 1 ? pos + 1 : -1,
       y > 0 ? pos - canvasW : -1,
       y < canvasH - 1 ? pos + canvasW : -1,
     ]
-
     neighbors.forEach((n) => {
       if (n === -1 || visited[n]) return
       visited[n] = 1
       if (matchesTarget(n * 4)) stack.push(n)
     })
   }
-
   ctx.putImageData(imageData, 0, 0)
 }
 
@@ -463,6 +449,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     const scaleY = canvas.height / rect.height
     return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }
   }
+
   const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const pos = getPos(e)
     const canvas = canvasRef.current!
@@ -493,7 +480,6 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
         x: Math.max(0, Math.min(CANVAS_W, ev.clientX - rect.left)),
         y: Math.max(0, Math.min(CANVAS_H, ev.clientY - rect.top)),
       }
-
       if (tool === 'pen') {
         ctx2.lineWidth = size
         ctx2.lineCap = 'round'
@@ -566,9 +552,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
   }
 
-  const onMouseUp = () => {
-    // handled by window listener in onMouseDown
-  }
+  const onMouseUp = () => {}
 
   const handleClear = () => {
     const canvas = canvasRef.current!
@@ -600,9 +584,12 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     >
       <div
         style={{
-          background: '#fdf6f0',
-          borderRadius: 18,
-          boxShadow: '0 8px 40px rgba(44,20,8,0.35)',
+          background:
+            'linear-gradient(160deg, rgba(253,246,240,0.99) 0%, rgba(252,232,238,0.99) 100%)',
+          border: '1.5px solid rgba(232,160,176,0.35)',
+          backdropFilter: 'blur(18px) saturate(1.4)',
+          borderRadius: 20,
+          boxShadow: '0 8px 40px rgba(200,120,140,0.22), inset 0 1px 0 rgba(255,255,255,0.6)',
           padding: 20,
           display: 'flex',
           flexDirection: 'column',
@@ -610,17 +597,18 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
           fontFamily: 'Baloo 2, sans-serif',
         }}
       >
+        {/* título */}
         <div
           style={{
             fontSize: 14,
             fontWeight: 800,
-            color: '#3d2408',
+            color: '#3d1a10',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
           }}
         >
-          <Brush size={16} color="#3d2408" /> Desenho
+          <Brush size={16} color="#e8a0b0" /> desenho
         </div>
 
         <div style={{ display: 'flex', gap: 12 }}>
@@ -630,15 +618,14 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
-              background: '#f0e8d8',
-              borderRadius: 12,
+              background: 'rgba(253,242,246,0.85)',
+              borderRadius: 14,
               padding: 8,
-              border: '1px solid #c4a882',
+              border: '1.5px solid rgba(232,160,176,0.35)',
               width: 48,
               alignItems: 'center',
             }}
           >
-            {/* desfazer / refazer */}
             <button onClick={handleUndo} title="desfazer (Ctrl+Z)" style={toolBtnStyle(false)}>
               <Undo2 size={15} />
             </button>
@@ -646,9 +633,15 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
               <Redo2 size={15} />
             </button>
 
-            <div style={{ width: '100%', height: 1, background: '#c4a882', margin: '2px 0' }} />
+            <div
+              style={{
+                width: '100%',
+                height: 1,
+                background: 'rgba(232,160,176,0.4)',
+                margin: '2px 0',
+              }}
+            />
 
-            {/* ferramentas */}
             {TOOLS.map((t) => (
               <button
                 key={t.id}
@@ -660,9 +653,15 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
               </button>
             ))}
 
-            <div style={{ width: '100%', height: 1, background: '#c4a882', margin: '2px 0' }} />
+            <div
+              style={{
+                width: '100%',
+                height: 1,
+                background: 'rgba(232,160,176,0.4)',
+                margin: '2px 0',
+              }}
+            />
 
-            {/* preencher */}
             <button
               onClick={() => setFill((v) => !v)}
               title="preencher forma"
@@ -670,8 +669,6 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
             >
               ◼
             </button>
-
-            {/* limpar */}
             <button onClick={handleClear} title="limpar tudo" style={toolBtnStyle(false)}>
               <Trash2 size={15} />
             </button>
@@ -679,7 +676,6 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
 
           {/* canvas + cores + tamanhos */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* cores */}
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 560 }}>
               {PRESET_COLORS.map((c) => (
                 <button
@@ -694,14 +690,18 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                     borderRadius: '50%',
                     background: c,
                     border:
-                      color === c && !eraser ? '2.5px solid #3d2408' : '1.5px solid #c4a88288',
+                      color === c && !eraser
+                        ? '2.5px solid rgba(122,48,64,0.8)'
+                        : '1.5px solid rgba(232,160,176,0.5)',
                     cursor: 'pointer',
                     outline: 'none',
                     flexShrink: 0,
-                    boxShadow: color === c && !eraser ? '0 0 0 1.5px #fff' : 'none',
+                    boxShadow:
+                      color === c && !eraser ? '0 0 0 1.5px rgba(253,242,246,0.9)' : 'none',
                   }}
                 />
               ))}
+
               {/* color picker */}
               <div style={{ position: 'relative', width: 20, height: 20 }}>
                 <input
@@ -729,7 +729,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                     height: 20,
                     borderRadius: '50%',
                     background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)',
-                    border: '1.5px solid #c4a88288',
+                    border: '1.5px solid rgba(232,160,176,0.5)',
                     pointerEvents: 'none',
                   }}
                 />
@@ -739,13 +739,11 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                 style={{
                   width: 1,
                   height: 20,
-                  background: '#c4a882',
-                  opacity: 0.5,
+                  background: 'rgba(232,160,176,0.4)',
                   margin: '0 4px',
                 }}
               />
 
-              {/* tamanhos — um pouco acima das cores */}
               {SIZES.map((s) => (
                 <button
                   key={s}
@@ -756,7 +754,8 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                     height: Math.min(s + 8, 22),
                     borderRadius: '50%',
                     background: color,
-                    border: size === s ? '2px solid #c4845a' : '2px solid transparent',
+                    border:
+                      size === s ? '2px solid rgba(232,160,176,0.8)' : '2px solid transparent',
                     cursor: 'pointer',
                     outline: 'none',
                     flexShrink: 0,
@@ -780,8 +779,8 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                   setMousePos(null)
                 }}
                 style={{
-                  borderRadius: 10,
-                  border: '2px solid #c4a882',
+                  borderRadius: 12,
+                  border: '1.5px solid rgba(232,160,176,0.5)',
                   cursor: 'none',
                   display: 'block',
                   background: '#fffef8',
@@ -799,7 +798,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                     height: eraser ? size * 4 : size + 4,
                     borderRadius: '50%',
                     background: eraser ? 'transparent' : color,
-                    border: eraser ? '1.5px solid #3d2408' : 'none',
+                    border: eraser ? '1.5px solid rgba(122,48,64,0.6)' : 'none',
                     transform: 'translate(-50%, -50%)',
                     pointerEvents: 'none',
                     opacity: 0.85,
@@ -816,12 +815,12 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
             style={{
               padding: '6px 18px',
               borderRadius: 10,
-              background: '#f0e8d8',
-              border: '1.5px solid #c4a882',
+              background: 'rgba(253,242,246,0.7)',
+              border: '1.5px solid rgba(232,160,176,0.4)',
               cursor: 'pointer',
               fontSize: 12,
               fontWeight: 700,
-              color: '#3d2408',
+              color: '#3d1a10',
               fontFamily: 'Baloo 2, sans-serif',
             }}
           >
@@ -832,12 +831,12 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
             style={{
               padding: '6px 18px',
               borderRadius: 10,
-              background: 'linear-gradient(180deg, #d4956a 0%, #b8744e 100%)',
-              border: '1.5px solid #8b5a2a',
+              background: 'rgba(232,160,176,0.55)',
+              border: '1.5px solid rgba(200,120,140,0.4)',
               cursor: 'pointer',
               fontSize: 12,
               fontWeight: 700,
-              color: '#5a2e0e',
+              color: '#3d1a10',
               fontFamily: 'Baloo 2, sans-serif',
             }}
           >
@@ -854,11 +853,11 @@ function toolBtnStyle(active: boolean): React.CSSProperties {
     width: 32,
     height: 32,
     borderRadius: 8,
-    background: active ? '#c4845a' : '#fdf6f0',
-    border: active ? '2px solid #8b5a2a' : '1.5px solid #c4a882',
+    background: active ? 'rgba(232,160,176,0.55)' : 'rgba(253,242,246,0.7)',
+    border: active ? '1.5px solid rgba(200,120,140,0.5)' : '1.5px solid rgba(232,160,176,0.3)',
     cursor: 'pointer',
     fontSize: 14,
-    color: active ? '#fff' : '#3d2408',
+    color: active ? '#3d1a10' : 'rgba(61,26,16,0.7)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1032,11 +1031,11 @@ export default function DrawingSheet({
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: 10,
-              border: '2px solid #c4a882',
+              borderRadius: 12,
+              border: '1.5px solid rgba(232,160,176,0.5)',
               overflow: 'hidden',
               cursor: editMode ? 'grab' : 'default',
-              boxShadow: '3px 4px 18px rgba(44,20,8,0.22)',
+              boxShadow: '2px 4px 18px rgba(200,120,140,0.18), inset 0 1px 0 rgba(255,255,255,0.4)',
             }}
           >
             <img
@@ -1057,10 +1056,10 @@ export default function DrawingSheet({
                 width: 16,
                 height: 16,
                 borderRadius: '50%',
-                background: 'linear-gradient(180deg, #d4956a 0%, #b8744e 100%)',
-                border: '2px solid #8b5a2a',
+                background: 'rgba(232,160,176,0.55)',
+                border: '1.5px solid rgba(200,120,140,0.5)',
                 cursor: 'grab',
-                boxShadow: '0 2px 6px rgba(44,20,8,0.3)',
+                boxShadow: '0 2px 6px rgba(200,120,140,0.25)',
                 zIndex: 2,
               }}
             />
@@ -1074,7 +1073,7 @@ export default function DrawingSheet({
                 transform: 'translateX(-50%)',
                 width: 1,
                 height: 12,
-                background: '#8b5a2a88',
+                background: 'rgba(232,160,176,0.5)',
                 pointerEvents: 'none',
               }}
             />
@@ -1083,7 +1082,7 @@ export default function DrawingSheet({
           {editMode && showMenu && (
             <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 3 }}>
               <CtxBtn
-                label="✏️"
+                label="✏"
                 onClick={(e) => {
                   e.stopPropagation()
                   setModalOpen(true)
@@ -1131,7 +1130,7 @@ export default function DrawingSheet({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path
                   d="M2 9 L9 2 M5 9 L9 5 M8 9 L9 8"
-                  stroke="#8b5a2a"
+                  stroke="rgba(200,120,140,0.7)"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
@@ -1152,11 +1151,11 @@ function CtxBtn({ label, onClick }: { label: string; onClick: (e: React.MouseEve
         width: 22,
         height: 22,
         borderRadius: '50%',
-        background: 'rgba(44,20,8,0.65)',
-        border: 'none',
+        background: 'rgba(253,214,228,0.9)',
+        border: '1px solid rgba(232,160,176,0.5)',
         cursor: 'pointer',
         fontSize: 10,
-        color: '#fdf0e0',
+        color: '#7a3040',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

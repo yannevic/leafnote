@@ -2,12 +2,12 @@ import { useState, useRef, useCallback } from 'react'
 import { TagItem } from '../types/board'
 
 const TAG_COLORS = [
-  { bg: '#f5d5dc', border: '#e8a0b0', text: '#7a3040' },
-  { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' },
-  { bg: '#dbeafe', border: '#93c5fd', text: '#1e3a5f' },
-  { bg: '#fef9c3', border: '#fde047', text: '#713f12' },
-  { bg: '#ede9fe', border: '#c4b5fd', text: '#4c1d95' },
-  { bg: '#fee2e2', border: '#fca5a5', text: '#7f1d1d' },
+  { bg: 'rgba(253,214,228,0.75)', border: 'rgba(232,160,176,0.7)', text: '#7a3040' },
+  { bg: 'rgba(210,242,220,0.75)', border: 'rgba(140,200,160,0.7)', text: '#1a5a2a' },
+  { bg: 'rgba(210,228,252,0.75)', border: 'rgba(140,180,240,0.7)', text: '#1a3a6a' },
+  { bg: 'rgba(254,248,200,0.75)', border: 'rgba(220,190,80,0.7)', text: '#5a3e00' },
+  { bg: 'rgba(230,220,252,0.75)', border: 'rgba(180,160,240,0.7)', text: '#3a1a7a' },
+  { bg: 'rgba(252,220,215,0.75)', border: 'rgba(230,150,130,0.7)', text: '#6a1a10' },
 ]
 
 interface Props {
@@ -94,9 +94,10 @@ export default function Tag({
         top: item.y,
         background: colors.bg,
         border: `1.5px solid ${colors.border}`,
-        borderRadius: 20,
+        borderRadius: 99,
         padding: '4px 14px',
-        boxShadow: '2px 2px 8px rgba(44,20,8,0.15)',
+        boxShadow: '1px 2px 8px rgba(200,120,140,0.15), inset 0 1px 0 rgba(255,255,255,0.4)',
+        backdropFilter: 'blur(8px)',
         cursor: editMode ? 'grab' : 'default',
         display: 'inline-flex',
         alignItems: 'center',
@@ -166,11 +167,11 @@ function CtxBtn({ label, onClick }: { label: string; onClick: (e: React.MouseEve
         width: 14,
         height: 14,
         borderRadius: '50%',
-        background: 'rgba(44,20,8,0.15)',
-        border: 'none',
+        background: 'rgba(253,214,228,0.9)',
+        border: '1px solid rgba(232,160,176,0.5)',
         cursor: 'pointer',
         fontSize: 8,
-        color: '#3d2408',
+        color: '#7a3040',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

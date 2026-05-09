@@ -119,11 +119,11 @@ export default function Checklist({
         top: item.y,
         width: item.width,
         minHeight: item.height,
-        background: '#fef9f0',
-        border: '1.5px solid #d4aa80',
-        borderRadius: 8,
+        background: 'rgba(232,248,238,0.88)',
+        border: '1.5px solid rgba(140,200,160,0.6)',
+        borderRadius: 12,
+        boxShadow: '2px 4px 18px rgba(100,180,130,0.15), inset 0 1px 0 rgba(255,255,255,0.5)',
         padding: '14px 12px 12px',
-        boxShadow: '3px 5px 14px rgba(44,20,8,0.18)',
         cursor: editMode ? 'grab' : 'pointer',
         userSelect: 'none',
         fontFamily: 'Baloo 2, sans-serif',
@@ -135,14 +135,15 @@ export default function Checklist({
       <div
         style={{
           position: 'absolute',
-          top: -8,
+          top: -9,
           left: '50%',
           transform: 'translateX(-50%)',
-          width: 38,
-          height: 16,
-          background: 'rgba(255,255,200,0.6)',
-          border: '1px solid rgba(200,180,0,0.25)',
-          borderRadius: 3,
+          width: 40,
+          height: 17,
+          background: 'rgba(253,246,240,0.75)',
+          border: '1px solid rgba(232,160,176,0.35)',
+          borderRadius: 4,
+          boxShadow: '0 1px 3px rgba(200,120,140,0.12)',
         }}
       />
 
@@ -173,7 +174,7 @@ export default function Checklist({
       )}
 
       {item.title && (
-        <div style={{ fontWeight: 700, fontSize: 11, color: '#8b6914', marginBottom: 5 }}>
+        <div style={{ fontWeight: 700, fontSize: 11, color: '#2a5a38', marginBottom: 5 }}>
           {item.title}
         </div>
       )}
@@ -188,8 +189,8 @@ export default function Checklist({
               width: 11,
               height: 11,
               borderRadius: 3,
-              border: '1.5px solid #d4aa80',
-              background: entry.done ? '#8b6914' : 'transparent',
+              border: '1.5px solid rgba(140,200,160,0.7)',
+              background: entry.done ? '#5a9e6a' : 'transparent',
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
@@ -213,7 +214,7 @@ export default function Checklist({
       ))}
 
       {total > 0 && (
-        <div style={{ fontSize: 9, color: '#8b6914', marginTop: 4, opacity: 0.7 }}>
+        <div style={{ fontSize: 9, color: 'rgba(42,90,56,0.7)', marginTop: 4, opacity: 0.7 }}>
           {done}/{total} feitos
         </div>
       )}
@@ -240,7 +241,7 @@ export default function Checklist({
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path
               d="M2 9 L9 2 M5 9 L9 5 M8 9 L9 8"
-              stroke="#8b5a2a"
+              stroke="#5a9e6a"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
@@ -268,11 +269,11 @@ export default function Checklist({
               width: 14,
               height: 14,
               borderRadius: 3,
-              background: 'rgba(44,20,8,0.15)',
+              background: 'rgba(100,180,130,0.2)',
               border: 'none',
               cursor: 'pointer',
               fontSize: 9,
-              color: '#3d2408',
+              color: '#2a5a38',
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
@@ -292,11 +293,11 @@ export default function Checklist({
               width: 16,
               height: 16,
               borderRadius: 3,
-              background: 'rgba(44,20,8,0.15)',
+              background: 'rgba(100,180,130,0.2)',
               border: 'none',
               cursor: 'pointer',
               fontSize: 11,
-              color: '#3d2408',
+              color: '#2a5a38',
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
@@ -320,11 +321,11 @@ function CtxBtn({ label, onClick }: { label: string; onClick: (e: React.MouseEve
         width: 18,
         height: 18,
         borderRadius: '50%',
-        background: 'rgba(44,20,8,0.18)',
-        border: 'none',
+        background: 'rgba(253,214,228,0.9)',
+        border: '1px solid rgba(232,160,176,0.5)',
         cursor: 'pointer',
         fontSize: 9,
-        color: '#3d2408',
+        color: '#7a3040',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -420,10 +421,12 @@ export function ChecklistModal({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 360,
-          background: '#fef9f0',
-          border: '2px solid #d4aa80',
-          borderRadius: 12,
-          boxShadow: '0 16px 48px rgba(44,20,8,0.28)',
+          background:
+            'linear-gradient(160deg, rgba(240,252,244,0.98) 0%, rgba(220,246,230,0.98) 100%)',
+          border: '1.5px solid rgba(140,200,160,0.45)',
+          borderRadius: 20,
+          boxShadow: '0 8px 40px rgba(100,180,130,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(18px) saturate(1.4)',
           fontFamily: 'Baloo 2, sans-serif',
           overflow: 'hidden',
           animation: 'popIn 0.25s cubic-bezier(.34,1.56,.64,1)',
@@ -437,9 +440,10 @@ export function ChecklistModal({
             style={{
               width: 52,
               height: 18,
-              background: 'rgba(255,255,200,0.65)',
-              border: '1px solid rgba(200,180,0,0.3)',
-              borderRadius: 3,
+              background: 'rgba(253,246,240,0.75)',
+              border: '1px solid rgba(232,160,176,0.35)',
+              borderRadius: 4,
+              boxShadow: '0 1px 3px rgba(200,120,140,0.12)',
             }}
           />
         </div>
@@ -453,13 +457,13 @@ export function ChecklistModal({
                 placeholder="título da lista (opcional)"
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.5)',
-                  border: '1px solid #d4aa80',
-                  borderRadius: 8,
+                  background: 'rgba(240,252,244,0.7)',
+                  border: '1.5px solid rgba(140,200,160,0.35)',
+                  borderRadius: 10,
                   padding: '8px 12px',
                   fontSize: 13,
                   fontWeight: 700,
-                  color: '#8b6914',
+                  color: '#2a5a38',
                   outline: 'none',
                   fontFamily: 'Baloo 2, sans-serif',
                   marginBottom: 14,
@@ -469,21 +473,26 @@ export function ChecklistModal({
 
               <div style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, color: '#8b6914' }}>
+                  <span style={{ fontSize: 10, color: 'rgba(42,90,56,0.7)' }}>
                     {done} de {entries.length} feitos
                   </span>
-                  <span style={{ fontSize: 10, color: '#8b6914', opacity: 0.6 }}>
+                  <span style={{ fontSize: 10, color: 'rgba(42,90,56,0.5)' }}>
                     {entries.length > 0 ? Math.round((done / entries.length) * 100) : 0}%
                   </span>
                 </div>
                 <div
-                  style={{ height: 4, background: '#e8d8c0', borderRadius: 4, overflow: 'hidden' }}
+                  style={{
+                    height: 4,
+                    background: 'rgba(140,200,160,0.2)',
+                    borderRadius: 4,
+                    overflow: 'hidden',
+                  }}
                 >
                   <div
                     style={{
                       height: '100%',
                       borderRadius: 4,
-                      background: 'linear-gradient(90deg, #8b6914, #c4956a)',
+                      background: 'linear-gradient(90deg, #5a9e6a, #8fce9a)',
                       width: `${entries.length > 0 ? (done / entries.length) * 100 : 0}%`,
                       transition: 'width 0.3s',
                     }}
@@ -509,8 +518,8 @@ export function ChecklistModal({
                         height: 18,
                         borderRadius: 5,
                         flexShrink: 0,
-                        border: '1.5px solid #d4aa80',
-                        background: entry.done ? '#8b6914' : 'transparent',
+                        border: '1.5px solid rgba(140,200,160,0.7)',
+                        background: entry.done ? '#5a9e6a' : 'transparent',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -544,8 +553,7 @@ export function ChecklistModal({
                         border: 'none',
                         cursor: 'pointer',
                         fontSize: 11,
-                        color: '#8b6914',
-                        opacity: 0.4,
+                        color: 'rgba(42,90,56,0.5)',
                         padding: 0,
                       }}
                     >
@@ -560,11 +568,11 @@ export function ChecklistModal({
                 style={{
                   marginTop: 10,
                   background: 'none',
-                  border: '1px dashed #d4aa80',
-                  borderRadius: 8,
+                  border: '1.5px dashed rgba(140,200,160,0.6)',
+                  borderRadius: 10,
                   padding: '5px 14px',
                   fontSize: 11,
-                  color: '#8b6914',
+                  color: 'rgba(42,90,56,0.7)',
                   cursor: 'pointer',
                   fontFamily: 'Baloo 2, sans-serif',
                   width: '100%',
@@ -578,11 +586,11 @@ export function ChecklistModal({
                   onClick={handleCancel}
                   style={{
                     background: 'none',
-                    border: '1px solid #d4aa80',
-                    borderRadius: 8,
+                    border: '1.5px solid rgba(140,200,160,0.4)',
+                    borderRadius: 10,
                     padding: '8px 16px',
                     fontSize: 12,
-                    color: '#8b6914',
+                    color: 'rgba(42,90,56,0.8)',
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -592,12 +600,12 @@ export function ChecklistModal({
                 <button
                   onClick={handleSave}
                   style={{
-                    background: '#8b6914',
+                    background: 'rgba(140,200,160,0.55)',
                     border: 'none',
-                    borderRadius: 8,
+                    borderRadius: 10,
                     padding: '8px 18px',
                     fontSize: 12,
-                    color: '#fff',
+                    color: '#1a4a2a',
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
@@ -610,7 +618,7 @@ export function ChecklistModal({
           ) : (
             <>
               {item.title && (
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#8b6914', marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#2a5a38', marginBottom: 10 }}>
                   {item.title}
                 </div>
               )}
@@ -620,11 +628,11 @@ export function ChecklistModal({
                   <div
                     style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}
                   >
-                    <span style={{ fontSize: 10, color: '#8b6914' }}>
+                    <span style={{ fontSize: 10, color: 'rgba(42,90,56,0.7)' }}>
                       {(item.entries ?? []).filter((e) => e.done).length} de{' '}
                       {(item.entries ?? []).length} feitos
                     </span>
-                    <span style={{ fontSize: 10, color: '#8b6914', opacity: 0.6 }}>
+                    <span style={{ fontSize: 10, color: 'rgba(42,90,56,0.5)' }}>
                       {Math.round(
                         ((item.entries ?? []).filter((e) => e.done).length /
                           (item.entries ?? []).length) *
@@ -636,7 +644,7 @@ export function ChecklistModal({
                   <div
                     style={{
                       height: 4,
-                      background: '#e8d8c0',
+                      background: 'rgba(140,200,160,0.2)',
                       borderRadius: 4,
                       overflow: 'hidden',
                     }}
@@ -645,7 +653,7 @@ export function ChecklistModal({
                       style={{
                         height: '100%',
                         borderRadius: 4,
-                        background: 'linear-gradient(90deg, #8b6914, #c4956a)',
+                        background: 'linear-gradient(90deg, #5a9e6a, #8fce9a)',
                         width: `${((item.entries ?? []).filter((e) => e.done).length / (item.entries ?? []).length) * 100}%`,
                         transition: 'width 0.3s',
                       }}
@@ -682,8 +690,8 @@ export function ChecklistModal({
                         height: 16,
                         borderRadius: 4,
                         flexShrink: 0,
-                        border: '1.5px solid #d4aa80',
-                        background: entry.done ? '#8b6914' : 'transparent',
+                        border: '1.5px solid rgba(140,200,160,0.6)',
+                        background: entry.done ? '#5a9e6a' : 'transparent',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -719,11 +727,11 @@ export function ChecklistModal({
                   onClick={onClose}
                   style={{
                     background: 'none',
-                    border: '1px solid #d4aa80',
-                    borderRadius: 8,
+                    border: '1.5px solid rgba(140,200,160,0.4)',
+                    borderRadius: 10,
                     padding: '8px 16px',
                     fontSize: 12,
-                    color: '#8b6914',
+                    color: 'rgba(42,90,56,0.8)',
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -733,18 +741,18 @@ export function ChecklistModal({
                 <button
                   onClick={() => setEditing(true)}
                   style={{
-                    background: '#8b6914',
+                    background: 'rgba(140,200,160,0.55)',
                     border: 'none',
-                    borderRadius: 8,
+                    borderRadius: 10,
                     padding: '8px 18px',
                     fontSize: 12,
-                    color: '#fff',
+                    color: '#1a4a2a',
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
                 >
-                  editar ✏️
+                  editar
                 </button>
               </div>
             </>

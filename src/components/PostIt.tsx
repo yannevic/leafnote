@@ -5,12 +5,12 @@ export const COLOR_MAP: Record<
   string,
   { bg: string; border: string; title: string; name: string }
 > = {
-  yellow: { bg: '#fef08a', border: '#d4b800', title: '#5a3e00', name: 'amarelo' },
-  pink: { bg: '#fda4b4', border: '#e8607a', title: '#6b1030', name: 'rosa' },
-  green: { bg: '#86efac', border: '#22a855', title: '#14532d', name: 'verde' },
-  blue: { bg: '#93c5fd', border: '#3b82f6', title: '#1e3a5f', name: 'azul' },
-  lavender: { bg: '#c4b5fd', border: '#7c3aed', title: '#2e1065', name: 'lilás' },
-  peach: { bg: '#fdba74', border: '#ea6c00', title: '#5a2200', name: 'pêssego' },
+  yellow: { bg: '#fef9d7', border: '#e8cc60', title: '#5a3e00', name: 'amarelo' },
+  pink: { bg: '#fde8ee', border: '#e8a0b0', title: '#7a3040', name: 'rosa' },
+  green: { bg: '#e8f5e8', border: '#8fce9a', title: '#1a4a2a', name: 'verde' },
+  blue: { bg: '#e8f0fd', border: '#93b8f0', title: '#1e3a5f', name: 'azul' },
+  lavender: { bg: '#ede8fd', border: '#b8a8f0', title: '#3a2070', name: 'lilás' },
+  peach: { bg: '#fdeee0', border: '#e8a878', title: '#5a2a00', name: 'pêssego' },
 }
 
 const COLOR_KEYS = Object.keys(COLOR_MAP)
@@ -132,9 +132,9 @@ export default function PostIt({
         height: item.compacted ? 120 : undefined,
         background: colors.bg,
         border: `1.5px solid ${colors.border}`,
-        borderRadius: 4,
         padding: '16px 12px 12px',
-        boxShadow: '3px 5px 14px rgba(44,20,8,0.22)',
+        borderRadius: 12,
+        boxShadow: '2px 4px 18px rgba(200,120,140,0.18), 0 1px 0 rgba(255,255,255,0.6) inset',
         cursor: editMode ? 'grab' : 'pointer',
         userSelect: 'none',
         fontFamily: 'Baloo 2, sans-serif',
@@ -147,14 +147,15 @@ export default function PostIt({
       <div
         style={{
           position: 'absolute',
-          top: -8,
+          top: -9,
           left: '50%',
           transform: 'translateX(-50%)',
-          width: 38,
-          height: 16,
-          background: 'rgba(255,255,200,0.6)',
-          border: '1px solid rgba(200,180,0,0.25)',
-          borderRadius: 3,
+          width: 40,
+          height: 17,
+          background: 'rgba(253,246,240,0.75)',
+          border: '1px solid rgba(232,160,176,0.35)',
+          borderRadius: 4,
+          boxShadow: '0 1px 3px rgba(200,120,140,0.12)',
         }}
       />
 
@@ -398,10 +399,12 @@ export function PostItModal({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 380,
-          background: colors.bg,
-          border: `2px solid ${colors.border}`,
-          borderRadius: 12,
-          boxShadow: '0 16px 48px rgba(44,20,8,0.28)',
+          background:
+            'linear-gradient(160deg, rgba(253,246,240,0.98) 0%, rgba(252,232,238,0.98) 100%)',
+          border: '1.5px solid rgba(232,160,176,0.4)',
+          borderRadius: 20,
+          boxShadow: '0 8px 40px rgba(200,120,140,0.22), inset 0 1px 0 rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(18px) saturate(1.4)',
           fontFamily: 'Baloo 2, sans-serif',
           overflow: 'hidden',
           animation: 'popIn 0.25s cubic-bezier(.34,1.56,.64,1)',
@@ -473,8 +476,8 @@ export function PostItModal({
                 placeholder="título (opcional)"
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.45)',
-                  border: `1px solid ${colors.border}`,
+                  background: 'rgba(253,242,246,0.7)',
+                  border: '1.5px solid rgba(232,160,176,0.3)',
                   borderRadius: 8,
                   padding: '8px 12px',
                   fontSize: 13,
@@ -495,8 +498,8 @@ export function PostItModal({
                 style={{
                   width: '100%',
                   minHeight: 150,
-                  background: 'rgba(255,255,255,0.45)',
-                  border: `1px solid ${colors.border}`,
+                  background: 'rgba(253,242,246,0.7)',
+                  border: '1.5px solid rgba(232,160,176,0.3)',
                   borderRadius: 8,
                   padding: '10px 12px',
                   fontSize: 13,
@@ -514,11 +517,11 @@ export function PostItModal({
                   onClick={handleCancel}
                   style={{
                     background: 'none',
-                    border: `1px solid ${colors.border}`,
+                    border: '1.5px solid rgba(232,160,176,0.4)',
+                    color: 'rgba(122,48,64,0.8)',
                     borderRadius: 8,
                     padding: '6px 14px',
                     fontSize: 11,
-                    color: colors.title,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -528,12 +531,12 @@ export function PostItModal({
                 <button
                   onClick={handleSave}
                   style={{
-                    background: colors.border,
+                    background: 'rgba(232,160,176,0.55)',
+                    color: '#3d1a10',
                     border: 'none',
                     borderRadius: 8,
                     padding: '6px 16px',
                     fontSize: 11,
-                    color: '#fff',
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
@@ -575,11 +578,11 @@ export function PostItModal({
                   onClick={onClose}
                   style={{
                     background: 'none',
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: 8,
+                    border: '1.5px solid rgba(232,160,176,0.4)',
+                    borderRadius: 10,
                     padding: '6px 14px',
                     fontSize: 11,
-                    color: colors.title,
+                    color: 'rgba(122,48,64,0.8)',
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -589,18 +592,18 @@ export function PostItModal({
                 <button
                   onClick={() => setEditing(true)}
                   style={{
-                    background: colors.border,
+                    background: 'rgba(232,160,176,0.55)',
                     border: 'none',
-                    borderRadius: 8,
+                    borderRadius: 10,
                     padding: '6px 16px',
                     fontSize: 11,
-                    color: '#fff',
+                    color: '#3d1a10',
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
                 >
-                  editar ✏️
+                  editar
                 </button>
               </div>
             </>

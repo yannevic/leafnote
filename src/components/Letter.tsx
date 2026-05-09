@@ -43,11 +43,11 @@ const LETTER_COLORS: Record<
 }
 
 const COLOR_LABELS: Record<LetterColor, string> = {
-  rosa: '🌸 rosa',
-  verde: '🌿 verde',
-  azul: '💙 azul',
-  amarelo: '🌼 amarelo',
-  lilas: '💜 lilás',
+  rosa: 'rosa',
+  verde: 'verde',
+  azul: 'azul',
+  amarelo: 'amarelo',
+  lilas: 'lilás',
 }
 
 interface Props {
@@ -165,7 +165,6 @@ export default function Letter({
           zIndex,
         }}
       >
-        {/* envelope SVG */}
         <svg
           viewBox={`0 0 ${ENV_W} ${ENV_H + 50}`}
           xmlns="http://www.w3.org/2000/svg"
@@ -244,10 +243,9 @@ export default function Letter({
               fontFamily="Baloo 2, sans-serif"
               opacity="0.85"
             >
-              clique pra abrir 💌
+              clique pra abrir
             </text>
           )}
-          {/* etiqueta sobre o envelope */}
           <text
             x="7"
             y={ENV_H * 0.7}
@@ -334,7 +332,7 @@ function CtxBtn({
         height: 20,
         borderRadius: '50%',
         background: 'rgba(253,214,228,0.9)',
-        border: '1px solid #e8a0b0',
+        border: '1px solid rgba(232,160,176,0.5)',
         cursor: 'pointer',
         fontSize: 10,
         color: '#7a3040',
@@ -399,10 +397,12 @@ export function LetterModal({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 380,
-          background: '#fff8f0',
-          border: `2px solid ${palette.stroke}`,
-          borderRadius: 14,
-          boxShadow: '0 12px 40px rgba(44,20,8,0.3)',
+          background:
+            'linear-gradient(160deg, rgba(253,246,240,0.99) 0%, rgba(252,232,238,0.99) 100%)',
+          border: `1.5px solid ${palette.stroke}`,
+          borderRadius: 20,
+          boxShadow: '0 8px 40px rgba(200,120,140,0.22), inset 0 1px 0 rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(18px) saturate(1.4)',
           overflow: 'hidden',
           fontFamily: 'Baloo 2, sans-serif',
           animation: 'letterPop 0.3s cubic-bezier(.34,1.56,.64,1)',
@@ -455,22 +455,26 @@ export function LetterModal({
           <button
             onClick={onClose}
             style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
               background: 'rgba(255,255,255,0.4)',
               border: `1px solid ${palette.stroke}`,
-              borderRadius: 8,
               cursor: 'pointer',
-              fontSize: 14,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               color: palette.text,
-              padding: '6px 12px',
-              fontFamily: 'Baloo 2, sans-serif',
+              fontSize: 13,
               fontWeight: 700,
+              fontFamily: 'Baloo 2, sans-serif',
             }}
           >
-            fechar
+            ✕
           </button>
         </div>
 
-        {/* seletor de cor — só aparece editando */}
+        {/* seletor de cor */}
         {editing && (
           <div
             style={{
@@ -481,7 +485,17 @@ export function LetterModal({
               flexWrap: 'wrap',
             }}
           >
-            <span style={{ fontSize: 11, color: '#7a3040', fontWeight: 700 }}>cor:</span>
+            <span
+              style={{
+                fontSize: 11,
+                color: 'rgba(122,48,64,0.7)',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+              }}
+            >
+              cor
+            </span>
             {(Object.keys(LETTER_COLORS) as LetterColor[]).map((c) => (
               <button
                 key={c}
@@ -498,8 +512,9 @@ export function LetterModal({
                       : `1.5px solid ${LETTER_COLORS[c].stroke}`,
                   cursor: 'pointer',
                   outline: 'none',
-                  boxShadow: color === c ? '0 0 0 2px rgba(0,0,0,0.15)' : 'none',
-                  transition: 'border 0.15s',
+                  boxShadow: color === c ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none',
+                  transform: color === c ? 'scale(1.15)' : 'scale(1)',
+                  transition: 'transform 0.12s',
                 }}
               />
             ))}
@@ -516,7 +531,7 @@ export function LetterModal({
                 left: 20,
                 right: 20,
                 height: 1,
-                background: '#f0d8c8',
+                background: 'rgba(232,160,176,0.2)',
                 top: 18 + i * 24,
                 pointerEvents: 'none',
               }}
@@ -529,7 +544,7 @@ export function LetterModal({
                 autoFocus
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="escreva sua cartinha aqui... 🌸"
+                placeholder="escreva sua cartinha aqui..."
                 style={{
                   width: '100%',
                   minHeight: 192,
@@ -550,7 +565,7 @@ export function LetterModal({
                 style={{
                   display: 'flex',
                   justifyContent: 'flex-end',
-                  gap: 10,
+                  gap: 8,
                   marginTop: 12,
                   position: 'relative',
                   zIndex: 1,
@@ -563,11 +578,11 @@ export function LetterModal({
                   }}
                   style={{
                     background: 'none',
-                    border: `1px solid ${palette.stroke}`,
-                    borderRadius: 8,
+                    border: '1.5px solid rgba(232,160,176,0.4)',
+                    borderRadius: 10,
                     padding: '8px 18px',
                     fontSize: 12,
-                    color: palette.text,
+                    color: 'rgba(122,48,64,0.8)',
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -577,18 +592,18 @@ export function LetterModal({
                 <button
                   onClick={handleSave}
                   style={{
-                    background: palette.header,
+                    background: 'rgba(232,160,176,0.55)',
                     border: 'none',
-                    borderRadius: 8,
+                    borderRadius: 10,
                     padding: '8px 20px',
                     fontSize: 12,
-                    color: palette.text,
+                    color: '#3d1a10',
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
                 >
-                  salvar 💌
+                  salvar
                 </button>
               </div>
             </>
@@ -621,11 +636,11 @@ export function LetterModal({
                   onClick={onClose}
                   style={{
                     background: 'none',
-                    border: `1px solid ${palette.stroke}`,
-                    borderRadius: 8,
+                    border: '1.5px solid rgba(232,160,176,0.4)',
+                    borderRadius: 10,
                     padding: '8px 18px',
                     fontSize: 12,
-                    color: palette.text,
+                    color: 'rgba(122,48,64,0.8)',
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -636,18 +651,18 @@ export function LetterModal({
                   <button
                     onClick={() => setEditing(true)}
                     style={{
-                      background: palette.header,
+                      background: 'rgba(232,160,176,0.55)',
                       border: 'none',
-                      borderRadius: 8,
+                      borderRadius: 10,
                       padding: '8px 20px',
                       fontSize: 12,
-                      color: palette.text,
+                      color: '#3d1a10',
                       fontWeight: 700,
                       cursor: 'pointer',
                       fontFamily: 'Baloo 2, sans-serif',
                     }}
                   >
-                    editar ✏️
+                    editar
                   </button>
                 )}
               </div>
