@@ -1,5 +1,12 @@
 import { X, Droplets, Droplet } from 'lucide-react'
-import { PlantData, FLOWERS, RARITY_COLORS, FlowerType, FLOWER_SELL_VALUE } from '../../lib/garden'
+import {
+  PlantData,
+  FLOWERS,
+  RARITY_COLORS,
+  FlowerType,
+  FLOWER_SELL_VALUE,
+  DAYS_PER_STAGE,
+} from '../../lib/garden'
 import { getFlowerImage } from '../../assets/garden'
 import { useState } from 'react'
 import { TbPlant2 } from 'react-icons/tb'
@@ -174,7 +181,9 @@ export default function FlowerModal({
                 }}
               >
                 <span>Dias regados</span>
-                <span>{plant.daysWatered % 3}/3</span>
+                <span>
+                  {plant.daysWatered % DAYS_PER_STAGE[info.rarity]}/{DAYS_PER_STAGE[info.rarity]}
+                </span>
               </div>
               <div
                 style={{ background: '#d4e8d4', borderRadius: 999, height: 8, overflow: 'hidden' }}
@@ -184,7 +193,7 @@ export default function FlowerModal({
                     height: '100%',
                     borderRadius: 999,
                     background: '#5b9bd5',
-                    width: `${((plant.daysWatered % 3) / 3) * 100}%`,
+                    width: `${((plant.daysWatered % DAYS_PER_STAGE[info.rarity]) / DAYS_PER_STAGE[info.rarity]) * 100}%`,
                     transition: 'width 0.4s ease',
                   }}
                 />

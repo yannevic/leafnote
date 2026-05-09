@@ -8,7 +8,7 @@ import {
   FlameKindling,
   AlertTriangle,
 } from 'lucide-react'
-import { EXCHANGE_COST } from '../../lib/garden'
+import { EXCHANGE_COST, SEED_SELL_VALUE, FLOWER_SELL_VALUE, DAYS_PER_STAGE } from '../../lib/garden'
 
 interface Props {
   onClose: () => void
@@ -56,6 +56,47 @@ const Section = ({
     >
       {children}
     </div>
+  </div>
+)
+
+const InfoCard = ({ children }: { children: React.ReactNode }) => (
+  <div
+    style={{
+      marginTop: 8,
+      background: 'rgba(253,242,246,0.7)',
+      border: '1.5px solid rgba(232,160,176,0.3)',
+      borderRadius: 10,
+      padding: '10px 12px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6,
+    }}
+  >
+    {children}
+  </div>
+)
+
+const Row = ({
+  label,
+  rarity,
+  value,
+  sub,
+}: {
+  label: string
+  rarity?: keyof typeof RARITY_COLORS
+  value: string
+  sub?: string
+}) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <span style={{ fontWeight: 700, color: rarity ? RARITY_COLORS[rarity] : 'rgba(61,26,16,0.7)' }}>
+      {label}
+      {sub && (
+        <span style={{ fontWeight: 400, fontSize: 10, marginLeft: 5, opacity: 0.7 }}>({sub})</span>
+      )}
+    </span>
+    <span style={{ fontSize: 11, color: 'rgba(61,26,16,0.45)', flexShrink: 0, marginLeft: 8 }}>
+      {value}
+    </span>
   </div>
 )
 
@@ -135,8 +176,39 @@ export default function GardenGuideModal({ onClose }: Props) {
           style={{ overflowY: 'auto', padding: '20px 24px 24px', flex: 1 }}
         >
           <Section icon={<Droplets size={14} color="#5b9bd5" strokeWidth={2} />} title="como regar">
-            os dois precisam regar a mesma planta uma vez por dia. a cada 3 dias regados juntos, a
-            planta sobe um estágio. só é possível plantar uma semente por dia.
+            os dois precisam regar a mesma planta uma vez por dia. a cada dia que os dois regam
+            juntos, conta como um dia de progresso. só é possível plantar uma semente por dia.
+          </Section>
+
+          <Section
+            icon={<Sprout size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="estágios da planta"
+          >
+            cada planta tem 5 estágios. no estágio 5 ela está completamente crescida e não precisa
+            mais ser regada. a cada subida de estágio vocês ganham uma semente nova! o tempo pra
+            florescer varia por raridade:
+            <InfoCard>
+              <Row
+                label="comum"
+                rarity="comum"
+                value={`${DAYS_PER_STAGE.comum} dias por estágio — ${DAYS_PER_STAGE.comum * 4} dias pra florescer`}
+              />
+              <Row
+                label="incomum"
+                rarity="incomum"
+                value={`${DAYS_PER_STAGE.incomum} dias por estágio — ${DAYS_PER_STAGE.incomum * 4} dias pra florescer`}
+              />
+              <Row
+                label="rara"
+                rarity="rara"
+                value={`${DAYS_PER_STAGE.rara} dias por estágio — ${DAYS_PER_STAGE.rara * 4} dias pra florescer`}
+              />
+              <Row
+                label="épica"
+                rarity="epica"
+                value={`${DAYS_PER_STAGE.epica} dias por estágio — ${DAYS_PER_STAGE.epica * 4} dias pra florescer`}
+              />
+            </InfoCard>
           </Section>
 
           <Section
@@ -151,8 +223,8 @@ export default function GardenGuideModal({ onClose }: Props) {
             icon={<AlertTriangle size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
             title="murcha"
           >
-            se a planta ficar 48 horas sem ser regada, ela murcha. cada dia seguinte sem rega remove
-            mais um dia de progresso, até zerar no estágio atual. não deixe murchar!
+            se a planta ficar 48 horas sem ser regada, ela murcha e perde um dia de progresso. não
+            deixe murchar!
           </Section>
 
           <Section
@@ -161,68 +233,30 @@ export default function GardenGuideModal({ onClose }: Props) {
           >
             sempre que uma planta sobe de estágio, os dois rolam um dado. a soma determina a semente
             ganha — quanto maior a soma, mais rara:
-            <div
-              style={{
-                marginTop: 8,
-                background: 'rgba(253,242,246,0.7)',
-                border: '1.5px solid rgba(232,160,176,0.3)',
-                borderRadius: 10,
-                padding: '10px 12px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-              }}
-            >
+            <InfoCard>
               {[
                 {
                   label: 'rosa, margarida, peônia, papoula, lavanda',
-                  rarity: 'comum',
+                  rarity: 'comum' as const,
                   value: 'soma 2–8',
                 },
                 {
                   label: 'tulipa, girassol, jasmim, violeta',
-                  rarity: 'incomum',
+                  rarity: 'incomum' as const,
                   value: 'soma 9–11',
                 },
-                { label: 'orquídea, lírio', rarity: 'rara', value: 'soma 12 (duplo 6!)' },
-                { label: 'flor especial', rarity: 'epica', value: 'streak de 30 dias' },
+                { label: 'orquídea, lírio', rarity: 'rara' as const, value: 'soma 12 (duplo 6!)' },
+                { label: 'flor especial', rarity: 'epica' as const, value: 'streak de 30 dias' },
               ].map((row) => (
-                <div
+                <Row
                   key={row.label}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <span
-                    style={{
-                      fontWeight: 700,
-                      color: RARITY_COLORS[row.rarity as keyof typeof RARITY_COLORS],
-                    }}
-                  >
-                    {row.label}
-                    <span style={{ fontWeight: 400, fontSize: 10, marginLeft: 5, opacity: 0.7 }}>
-                      ({row.rarity})
-                    </span>
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: 'rgba(61,26,16,0.45)',
-                      flexShrink: 0,
-                      marginLeft: 8,
-                    }}
-                  >
-                    {row.value}
-                  </span>
-                </div>
+                  label={row.label}
+                  rarity={row.rarity}
+                  sub={row.rarity}
+                  value={row.value}
+                />
               ))}
-            </div>
-          </Section>
-
-          <Section
-            icon={<Sprout size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
-            title="estágios da planta"
-          >
-            cada planta tem 5 estágios. no estágio 5 ela está completamente crescida e não precisa
-            mais ser regada. a cada subida de estágio vocês ganham uma semente nova!
+            </InfoCard>
           </Section>
 
           <Section
@@ -231,50 +265,70 @@ export default function GardenGuideModal({ onClose }: Props) {
           >
             acumulou sementes repetidas? junte sementes do mesmo tier e troque por uma diferente —
             do mesmo tier ou um acima. a quantidade necessária aumenta conforme a raridade:
-            <div
-              style={{
-                marginTop: 8,
-                background: 'rgba(253,242,246,0.7)',
-                border: '1.5px solid rgba(232,160,176,0.3)',
-                borderRadius: 10,
-                padding: '10px 12px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-              }}
-            >
+            <InfoCard>
               {[
-                { rarity: 'comum', label: 'comum' },
-                { rarity: 'incomum', label: 'incomum' },
-                { rarity: 'rara', label: 'rara' },
+                { rarity: 'comum' as const, label: 'comum' },
+                { rarity: 'incomum' as const, label: 'incomum' },
+                { rarity: 'rara' as const, label: 'rara' },
               ].map((row) => (
-                <div
+                <Row
                   key={row.rarity}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <span
-                    style={{
-                      fontWeight: 700,
-                      color: RARITY_COLORS[row.rarity as keyof typeof RARITY_COLORS],
-                    }}
-                  >
-                    {row.label}
-                  </span>
-                  <span style={{ fontSize: 11, color: 'rgba(61,26,16,0.45)' }}>
-                    {EXCHANGE_COST[row.rarity as keyof typeof EXCHANGE_COST]} sementes
-                  </span>
-                </div>
+                  label={row.label}
+                  rarity={row.rarity}
+                  value={`${EXCHANGE_COST[row.rarity]} sementes`}
+                />
               ))}
-            </div>
+            </InfoCard>
             orquídeas e lírios podem ser trocados entre si.
           </Section>
 
-          <Section
-            icon={<Coins size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
-            title="moedinhas (em breve)"
-          >
-            em breve será possível vender sementes por moedinhas e usá-las para comprar móveis e
-            roupinhas para a casinha de vocês!
+          <Section icon={<Coins size={14} color="#c4956a" strokeWidth={2} />} title="economia">
+            as moedinhas são compartilhadas entre vocês dois e podem ser ganhas vendendo sementes ou
+            flores colhidas. use na loja pra comprar itens pra casinha e roupinhas!
+            {/* Venda de sementes */}
+            <div
+              style={{
+                marginTop: 10,
+                marginBottom: 4,
+                fontSize: 11,
+                fontWeight: 800,
+                color: 'rgba(61,26,16,0.5)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.7px',
+              }}
+            >
+              venda de semente
+            </div>
+            <InfoCard>
+              <Row label="comum" rarity="comum" value={`${SEED_SELL_VALUE.comum} moedas`} />
+              <Row label="incomum" rarity="incomum" value={`${SEED_SELL_VALUE.incomum} moedas`} />
+              <Row label="rara" rarity="rara" value={`${SEED_SELL_VALUE.rara} moedas`} />
+              <Row label="épica" rarity="epica" value={`${SEED_SELL_VALUE.epica} moedas`} />
+            </InfoCard>
+            {/* Venda de flor */}
+            <div
+              style={{
+                marginTop: 10,
+                marginBottom: 4,
+                fontSize: 11,
+                fontWeight: 800,
+                color: 'rgba(61,26,16,0.5)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.7px',
+              }}
+            >
+              venda de flor florescida
+            </div>
+            <InfoCard>
+              <Row label="comum" rarity="comum" value={`${FLOWER_SELL_VALUE.comum} moedas`} />
+              <Row label="incomum" rarity="incomum" value={`${FLOWER_SELL_VALUE.incomum} moedas`} />
+              <Row label="rara" rarity="rara" value={`${FLOWER_SELL_VALUE.rara} moedas`} />
+              <Row label="épica" rarity="epica" value={`${FLOWER_SELL_VALUE.epica} moedas`} />
+            </InfoCard>
+            <div style={{ marginTop: 10, lineHeight: 1.6 }}>
+              vale mais vender a flor do que a semente — flores valem até 3x mais. mas fica com a
+              semente se quiser plantar de novo!
+            </div>
           </Section>
         </div>
       </div>
