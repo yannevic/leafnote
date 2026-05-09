@@ -56,7 +56,6 @@ export default function WeekCalendar({
   const [datePickerPos, setDatePickerPos] = useState({ top: 0, left: 0 })
   const dateButtonRef = useRef<HTMLButtonElement>(null)
   const themeButtonRef = useRef<HTMLButtonElement>(null)
-  const [cyclePinned, setCyclePinned] = useState(false)
 
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
 
