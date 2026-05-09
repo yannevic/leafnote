@@ -11,6 +11,27 @@ import { getFlowerImage } from '../../assets/garden'
 import { useState } from 'react'
 import { TbPlant2 } from 'react-icons/tb'
 
+const T = {
+  bg: 'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+  card: 'rgba(253,242,246,0.7)',
+  cardBorder: '1.5px solid rgba(232,160,176,0.3)',
+  border: 'rgba(232,160,176,0.4)',
+  borderVal: '1.5px solid rgba(232,160,176,0.4)',
+  borderDashed: '2px dashed rgba(232,160,176,0.4)',
+  shadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+  text: '#3d1a10',
+  textSub: 'rgba(61,26,16,0.5)',
+  textLabel: 'rgba(122,48,64,0.55)',
+  btnPrimary: 'rgba(232,160,176,0.55)',
+  btnIcon: 'rgba(200,120,140,0.15)',
+  btnPositive: 'rgba(74,122,74,0.15)',
+  btnPositiveText: '#4A7A4A',
+  btnPositiveBorder: 'rgba(74,122,74,0.35)',
+  btnDestructive: 'rgba(232,96,122,0.12)',
+  btnDestructiveText: '#e8607a',
+  btnDestructiveBorder: 'rgba(232,96,122,0.3)',
+}
+
 const RARITY_COLOR: Record<string, string> = {
   comum: '#3d7a3d',
   incomum: '#8b6914',
@@ -50,6 +71,10 @@ export default function FlowerModal({
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [earnedCoins, setEarnedCoins] = useState<number | null>(null)
 
+  const daysNeeded = DAYS_PER_STAGE[info.rarity]
+  const daysInStage = plant.daysWatered % daysNeeded
+  const progressPct = (daysInStage / daysNeeded) * 100
+
   const handleSell = async () => {
     const value = await onSellFlower(plant.id, plant.flowerType)
     setEarnedCoins(value)
@@ -62,11 +87,11 @@ export default function FlowerModal({
   }
 
   const stageLabels: Record<number, string> = {
-    1: 'Semente 🌱',
-    2: 'Broto 🌿',
-    3: 'Jovem 🌾',
-    4: 'Adulta 🌷',
-    5: 'Florescida 🌸',
+    1: 'semente',
+    2: 'broto',
+    3: 'jovem',
+    4: 'adulta',
+    5: 'florescida',
   }
 
   return (
@@ -74,7 +99,8 @@ export default function FlowerModal({
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.45)',
+        background: 'rgba(61,26,16,0.35)',
+        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -85,330 +111,368 @@ export default function FlowerModal({
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'var(--color-bark-100)',
-          border: '2px solid var(--color-wood-300)',
+          background: T.bg,
+          border: T.borderVal,
           borderRadius: 20,
-          padding: '28px 36px',
-          width: 380,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          width: 360,
+          maxWidth: '95vw',
+          boxShadow: T.shadow,
+          backdropFilter: 'blur(18px) saturate(1.4)',
           fontFamily: 'Baloo 2, sans-serif',
-          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
-        {/* Fechar */}
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--color-bark-700)',
-          }}
-        >
-          <X size={18} />
-        </button>
-
-        {/* Imagem */}
-        {/* Nome e raridade */}
-        <div className="text-center mb-3">
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-leaf-950)', margin: 0 }}>
-            <span
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-            >
-              <TbPlant2 size={18} color={RARITY_COLOR[info.rarity]} />
-              {info.name}
-            </span>
-          </h2>
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: rarityColor,
-              textTransform: 'capitalize',
-              letterSpacing: 1,
-            }}
-          >
-            {info.rarity}
-          </span>
-        </div>
-
-        {/* Imagem */}
-        <div className="flex justify-center mb-8">
-          <img
-            src={imgSrc}
-            alt={info.name}
-            style={{
-              height: 140,
-              objectFit: 'contain',
-              filter: plant.wilted ? 'grayscale(100%) brightness(0.7)' : 'none',
-            }}
-          />
-        </div>
-
-        {/* Estágio */}
+        {/* Header */}
         <div
           style={{
-            background: 'var(--color-leaf-100)',
-            borderRadius: 10,
-            padding: isFullyGrown ? '8px 14px' : '10px 14px',
-            marginBottom: 12,
-            marginTop: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: T.borderDashed,
+            flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              fontWeight: 700,
-              fontSize: 14,
-              color: 'var(--color-leaf-950)',
-              marginBottom: isFullyGrown ? 0 : 8,
-              textAlign: 'center',
-            }}
-          >
-            Estágio {plant.stage} — {stageLabels[plant.stage] ?? ''}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <TbPlant2 size={16} color={RARITY_COLOR[info.rarity]} />
+            <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>{info.name}</span>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: rarityColor,
+                textTransform: 'uppercase',
+                letterSpacing: '0.7px',
+              }}
+            >
+              {info.rarity}
+            </span>
           </div>
-          {!isFullyGrown && (
-            <>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 11,
-                  color: 'var(--color-leaf-600)',
-                  marginBottom: 4,
-                }}
-              >
-                <span>Dias regados</span>
-                <span>
-                  {plant.daysWatered % DAYS_PER_STAGE[info.rarity]}/{DAYS_PER_STAGE[info.rarity]}
-                </span>
-              </div>
-              <div
-                style={{ background: '#d4e8d4', borderRadius: 999, height: 8, overflow: 'hidden' }}
-              >
-                <div
-                  style={{
-                    height: '100%',
-                    borderRadius: 999,
-                    background: '#5b9bd5',
-                    width: `${((plant.daysWatered % DAYS_PER_STAGE[info.rarity]) / DAYS_PER_STAGE[info.rarity]) * 100}%`,
-                    transition: 'width 0.4s ease',
-                  }}
-                />
-              </div>
-            </>
-          )}
-          {plant.wilted && (
-            <div
-              style={{
-                fontWeight: 600,
-                fontSize: 13,
-                color: '#b05050',
-                textAlign: 'center',
-                marginTop: 6,
-              }}
-            >
-              Murcha — regue para recuperar
-            </div>
-          )}
-        </div>
-
-        {/* Status de rega */}
-        {!isFullyGrown && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <div
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                padding: '8px',
-                borderRadius: 10,
-                background: alreadyWatered ? '#a8d8a8' : '#e8d8c0',
-                color: alreadyWatered ? '#2d5a2d' : '#7a5a30',
-                fontWeight: 700,
-                fontSize: 13,
-                border: `2px solid ${alreadyWatered ? '#7fb87f' : '#c4956a'}`,
-              }}
-            >
-              <Droplet size={13} style={{ display: 'inline', marginRight: 4 }} /> Você{' '}
-              {alreadyWatered ? '✓' : '—'}
-            </div>
-            <div
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                padding: '8px',
-                borderRadius: 10,
-                background: partnerWatered ? '#a8d8a8' : '#e8d8c0',
-                color: partnerWatered ? '#2d5a2d' : '#7a5a30',
-                fontWeight: 700,
-                fontSize: 13,
-                border: `2px solid ${partnerWatered ? '#7fb87f' : '#c4956a'}`,
-              }}
-            >
-              <Droplet size={13} style={{ display: 'inline', marginRight: 4 }} /> {partnerName}{' '}
-              {partnerWatered ? '✓' : '—'}
-            </div>
-          </div>
-        )}
-
-        {/* Botão regar */}
-        {!isFullyGrown && !alreadyWatered && (
           <button
-            onClick={onWater}
+            onClick={onClose}
             style={{
-              width: '100%',
-              padding: '10px 0',
-              borderRadius: 12,
-              background: 'var(--color-leaf-600)',
-              color: '#fff',
-              fontFamily: 'Baloo 2, sans-serif',
-              fontWeight: 700,
-              fontSize: 15,
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
               border: 'none',
+              background: T.btnIcon,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 8,
+              padding: 0,
+              flexShrink: 0,
             }}
           >
-            <Droplets size={16} />
-            Regar
+            <X size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
           </button>
-        )}
-        {!isFullyGrown && alreadyWatered && (
+        </div>
+
+        {/* Conteúdo */}
+        <div
+          style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}
+        >
+          {/* Imagem */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <img
+              src={imgSrc}
+              alt={info.name}
+              style={{
+                height: 130,
+                objectFit: 'contain',
+                filter: plant.wilted ? 'grayscale(100%) brightness(0.7)' : 'none',
+                transition: 'filter 0.3s',
+              }}
+            />
+          </div>
+
+          {/* Estágio + progresso */}
           <div
             style={{
-              textAlign: 'center',
-              fontSize: 13,
-              color: 'var(--color-leaf-600)',
-              fontWeight: 600,
+              background: T.card,
+              border: T.cardBorder,
+              borderRadius: 12,
+              padding: '10px 14px',
             }}
           >
-            Você já regou hoje!
-          </div>
-        )}
-        {isFullyGrown && !sellDone && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div
               style={{
-                textAlign: 'center',
+                fontWeight: 800,
                 fontSize: 13,
-                color: 'var(--color-leaf-600)',
-                fontWeight: 700,
+                color: T.text,
+                textAlign: 'center',
+                marginBottom: isFullyGrown ? 0 : 8,
               }}
             >
-              Totalmente florescida
+              estágio {plant.stage} — {stageLabels[plant.stage] ?? ''}
             </div>
+
+            {!isFullyGrown && (
+              <>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: T.textLabel,
+                    marginBottom: 5,
+                  }}
+                >
+                  <span>dias regados</span>
+                  <span>
+                    {daysInStage}/{daysNeeded}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    background: 'rgba(232,160,176,0.2)',
+                    borderRadius: 999,
+                    height: 7,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      borderRadius: 999,
+                      background: 'rgba(232,160,176,0.8)',
+                      width: `${progressPct}%`,
+                      transition: 'width 0.4s ease',
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
+            {plant.wilted && (
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 12,
+                  color: T.btnDestructiveText,
+                  textAlign: 'center',
+                  marginTop: 6,
+                }}
+              >
+                murcha — regue para recuperar
+              </div>
+            )}
+          </div>
+
+          {/* Status de rega */}
+          {!isFullyGrown && (
+            <div style={{ display: 'flex', gap: 7 }}>
+              {[
+                { label: 'você', watered: alreadyWatered },
+                { label: partnerName, watered: partnerWatered },
+              ].map((p) => (
+                <div
+                  key={p.label}
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    padding: '7px 8px',
+                    borderRadius: 10,
+                    background: p.watered ? 'rgba(74,122,74,0.12)' : T.card,
+                    color: p.watered ? T.btnPositiveText : T.textSub,
+                    fontWeight: 800,
+                    fontSize: 12,
+                    border: `1.5px solid ${p.watered ? T.btnPositiveBorder : T.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 5,
+                  }}
+                >
+                  <Droplet size={12} strokeWidth={2} />
+                  {p.label} {p.watered ? '✓' : '—'}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Botão regar */}
+          {!isFullyGrown && !alreadyWatered && (
             <button
-              onClick={handleSell}
+              onClick={onWater}
               style={{
                 width: '100%',
                 padding: '10px 0',
                 borderRadius: 12,
-                background: '#8b6914',
-                color: '#fff',
+                background: T.btnPrimary,
+                color: T.text,
                 fontFamily: 'Baloo 2, sans-serif',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: 14,
                 border: 'none',
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 7,
               }}
             >
-              Vender — {FLOWER_SELL_VALUE[info.rarity]} moedas
+              <Droplets size={15} strokeWidth={2} /> regar
             </button>
-          </div>
-        )}
+          )}
 
-        {isFullyGrown && sellDone && (
-          <div
-            style={{
-              textAlign: 'center',
-              fontSize: 14,
-              color: '#2d5a2d',
-              fontWeight: 700,
-              padding: '10px 0',
-            }}
-          >
-            +{earnedCoins} moedas recebidas!
-          </div>
-        )}
-
-        {!isFullyGrown && !confirmRemove && !removeDone && (
-          <button
-            onClick={() => setConfirmRemove(true)}
-            style={{
-              width: '100%',
-              marginTop: 8,
-              padding: '7px 0',
-              borderRadius: 12,
-              background: 'none',
-              color: '#b05050',
-              fontFamily: 'Baloo 2, sans-serif',
-              fontWeight: 600,
-              fontSize: 13,
-              border: '1.5px solid #e8a0a0',
-              cursor: 'pointer',
-            }}
-          >
-            Arrancar planta
-          </button>
-        )}
-
-        {!isFullyGrown && confirmRemove && !removeDone && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button
-              onClick={() => setConfirmRemove(false)}
+          {!isFullyGrown && alreadyWatered && (
+            <div
               style={{
-                flex: 1,
-                padding: '7px 0',
-                borderRadius: 12,
-                background: 'none',
-                border: '1.5px solid var(--color-wood-300)',
-                color: 'var(--color-bark-700)',
-                fontFamily: 'Baloo 2, sans-serif',
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: 'pointer',
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleRemove}
-              style={{
-                flex: 1,
-                padding: '7px 0',
-                borderRadius: 12,
-                background: '#b05050',
-                border: 'none',
-                color: '#fff',
-                fontFamily: 'Baloo 2, sans-serif',
+                textAlign: 'center',
+                fontSize: 12,
                 fontWeight: 700,
+                color: T.btnPositiveText,
+              }}
+            >
+              você já regou hoje!
+            </div>
+          )}
+
+          {/* Florescida — vender */}
+          {isFullyGrown && !sellDone && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: T.btnPositiveText,
+                }}
+              >
+                totalmente florescida
+              </div>
+              <button
+                onClick={handleSell}
+                style={{
+                  width: '100%',
+                  padding: '10px 0',
+                  borderRadius: 12,
+                  background: T.btnPositive,
+                  color: T.btnPositiveText,
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  border: `1.5px solid ${T.btnPositiveBorder}`,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                vender — {FLOWER_SELL_VALUE[info.rarity]} moedas
+              </button>
+            </div>
+          )}
+
+          {isFullyGrown && sellDone && (
+            <div
+              style={{
+                textAlign: 'center',
                 fontSize: 13,
+                fontWeight: 800,
+                color: T.btnPositiveText,
+                padding: '6px 0',
+              }}
+            >
+              +{earnedCoins} moedas recebidas!
+            </div>
+          )}
+
+          {/* Arrancar planta */}
+          {!isFullyGrown && !confirmRemove && !removeDone && (
+            <button
+              onClick={() => setConfirmRemove(true)}
+              style={{
+                width: '100%',
+                padding: '7px 0',
+                borderRadius: 12,
+                background: 'transparent',
+                color: T.btnDestructiveText,
+                fontFamily: 'Baloo 2, sans-serif',
+                fontWeight: 800,
+                fontSize: 12,
+                border: `1.5px solid ${T.btnDestructiveBorder}`,
                 cursor: 'pointer',
               }}
             >
-              Confirmar
+              arrancar planta
             </button>
-          </div>
-        )}
+          )}
 
-        {!isFullyGrown && removeDone && (
-          <div
-            style={{
-              textAlign: 'center',
-              fontSize: 13,
-              color: '#b05050',
-              fontWeight: 600,
-              padding: '8px 0',
-            }}
-          >
-            Planta removida.
-          </div>
-        )}
+          {!isFullyGrown && confirmRemove && !removeDone && (
+            <div
+              style={{
+                background: T.btnDestructive,
+                border: `1.5px solid ${T.btnDestructiveBorder}`,
+                borderRadius: 12,
+                padding: '10px 14px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.btnDestructiveText }}>
+                arrancar mesmo?
+              </span>
+              <div style={{ display: 'flex', gap: 7, width: '100%' }}>
+                <button
+                  onClick={() => setConfirmRemove(false)}
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    borderRadius: 10,
+                    background: 'transparent',
+                    border: T.borderVal,
+                    color: T.textSub,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 800,
+                    fontSize: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  cancelar
+                </button>
+                <button
+                  onClick={handleRemove}
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    borderRadius: 10,
+                    background: T.btnDestructive,
+                    border: `1.5px solid ${T.btnDestructiveBorder}`,
+                    color: T.btnDestructiveText,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 800,
+                    fontSize: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  arrancar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!isFullyGrown && removeDone && (
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: 12,
+                fontWeight: 700,
+                color: T.btnDestructiveText,
+                padding: '4px 0',
+              }}
+            >
+              planta removida.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

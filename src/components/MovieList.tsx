@@ -23,20 +23,44 @@ import { Movie, MovieStatus, addMovie, subscribeTrashedMovies } from '../lib/mov
 import { useEffect, useRef, useState } from 'react'
 import type React from 'react'
 
+// ── Paleta leafnote ──────────────────────────────────────────
+const T = {
+  bg: 'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+  card: 'rgba(253,242,246,0.7)',
+  cardBorder: '1.5px solid rgba(232,160,176,0.3)',
+  border: 'rgba(232,160,176,0.4)',
+  borderVal: '1.5px solid rgba(232,160,176,0.4)',
+  borderDashed: '2px dashed rgba(232,160,176,0.4)',
+  shadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+  text: '#3d1a10',
+  textSub: 'rgba(61,26,16,0.5)',
+  textLabel: 'rgba(122,48,64,0.55)',
+  btnPrimary: 'rgba(232,160,176,0.55)',
+  btnIcon: 'rgba(200,120,140,0.15)',
+  btnPositive: 'rgba(74,122,74,0.15)',
+  btnPositiveText: '#4A7A4A',
+  btnPositiveBorder: 'rgba(74,122,74,0.35)',
+  btnDestructive: 'rgba(232,96,122,0.12)',
+  btnDestructiveText: '#e8607a',
+  btnDestructiveBorder: 'rgba(232,96,122,0.3)',
+  selectedBg: 'rgba(232,160,176,0.2)',
+  selectedBorder: 'rgba(232,160,176,0.7)',
+}
+
 type TabType = 'watched' | 'watching' | 'wishlist'
 type FilterType = 'todos' | 'filme' | 'série' | 'desenho'
 type SortType = 'data' | 'nota'
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
-  filme: <Film size={13} />,
-  série: <Tv size={13} />,
-  desenho: <Clapperboard size={13} />,
+  filme: <Film size={13} strokeWidth={2} />,
+  série: <Tv size={13} strokeWidth={2} />,
+  desenho: <Clapperboard size={13} strokeWidth={2} />,
 }
 
 const TYPE_ICON_SM: Record<string, React.ReactNode> = {
-  filme: <Film size={10} />,
-  série: <Tv size={10} />,
-  desenho: <Clapperboard size={10} />,
+  filme: <Film size={10} strokeWidth={2} />,
+  série: <Tv size={10} strokeWidth={2} />,
+  desenho: <Clapperboard size={10} strokeWidth={2} />,
 }
 
 const TMDB_KEY = '26818979413c5eb5bd1bb9e703c239a5'
@@ -126,7 +150,7 @@ function StarRating({
               size={16}
               strokeWidth={1.5}
               style={{
-                color: full || half ? '#f59e0b' : '#d4aa8055',
+                color: full || half ? '#f59e0b' : 'rgba(232,160,176,0.35)',
                 fill: full ? '#f59e0b' : 'none',
               }}
             />
@@ -214,19 +238,19 @@ function AddMovieForm({
             value={newType}
             onChange={(e) => setNewType(e.target.value as Movie['type'])}
             style={{
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(196,149,106,0.4)',
+              background: T.card,
+              border: T.borderVal,
               borderRadius: 8,
-              padding: '6px 6px',
+              padding: '6px',
               fontSize: 11,
-              color: '#fdf0e0',
+              color: T.text,
               fontFamily: 'Baloo 2, sans-serif',
               flexShrink: 0,
             }}
           >
-            <option value="filme">🎬</option>
-            <option value="série">📺</option>
-            <option value="desenho">🎨</option>
+            <option value="filme">filme</option>
+            <option value="série">série</option>
+            <option value="desenho">desenho</option>
           </select>
         )}
         {selected?.poster && (
@@ -256,12 +280,12 @@ function AddMovieForm({
             placeholder="buscar título..."
             style={{
               width: '100%',
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(196,149,106,0.4)',
+              background: T.card,
+              border: T.borderVal,
               borderRadius: 8,
               padding: '6px 10px',
               fontSize: 12,
-              color: '#fdf0e0',
+              color: T.text,
               fontFamily: 'Baloo 2, sans-serif',
               outline: 'none',
               boxSizing: 'border-box',
@@ -275,8 +299,7 @@ function AddMovieForm({
                 top: '50%',
                 transform: 'translateY(-50%)',
                 fontSize: 10,
-                color: '#c4956a',
-                opacity: 0.6,
+                color: T.textLabel,
               }}
             >
               ...
@@ -294,13 +317,13 @@ function AddMovieForm({
           }
           disabled={loading || !query.trim()}
           style={{
-            background: '#c4956a',
+            background: T.btnPrimary,
             border: 'none',
             borderRadius: 8,
             padding: '6px 12px',
             fontSize: 11,
-            fontWeight: 700,
-            color: '#fff',
+            fontWeight: 800,
+            color: T.text,
             cursor: 'pointer',
             fontFamily: 'Baloo 2, sans-serif',
             opacity: loading || !query.trim() ? 0.5 : 1,
@@ -311,21 +334,21 @@ function AddMovieForm({
         </button>
         <button
           onClick={onCancel}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c4956a' }}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: T.textLabel,
+            display: 'flex',
+          }}
         >
-          <X size={15} />
+          <X size={15} strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* Dropdown */}
       {results.length > 0 && (
         <div
-          style={{
-            background: '#2d1a0e',
-            border: '1px solid rgba(196,149,106,0.3)',
-            borderRadius: 10,
-            overflow: 'hidden',
-          }}
+          style={{ background: T.card, border: T.borderVal, borderRadius: 12, overflow: 'hidden' }}
         >
           {results.map((r, i) => (
             <div
@@ -337,9 +360,9 @@ function AddMovieForm({
                 gap: 10,
                 padding: '7px 10px',
                 cursor: 'pointer',
-                borderBottom: i < results.length - 1 ? '1px solid rgba(196,149,106,0.1)' : 'none',
+                borderBottom: i < results.length - 1 ? T.borderDashed : 'none',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(196,149,106,0.12)')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = T.selectedBg)}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               <div
@@ -349,11 +372,10 @@ function AddMovieForm({
                   borderRadius: 4,
                   overflow: 'hidden',
                   flexShrink: 0,
-                  background: 'rgba(255,255,255,0.08)',
+                  background: 'rgba(232,160,176,0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 14,
                 }}
               >
                 {r.poster ? (
@@ -363,7 +385,7 @@ function AddMovieForm({
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <Film size={14} color="#c4956a" />
+                  <Film size={14} color={T.textLabel} strokeWidth={2} />
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -371,7 +393,7 @@ function AddMovieForm({
                   style={{
                     fontSize: 12,
                     fontWeight: 700,
-                    color: '#fdf0e0',
+                    color: T.text,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -379,7 +401,7 @@ function AddMovieForm({
                 >
                   {r.title}
                 </div>
-                <div style={{ fontSize: 10, color: '#c4956a', opacity: 0.7 }}>
+                <div style={{ fontSize: 10, color: T.textLabel }}>
                   {r.type}
                   {r.year ? ` · ${r.year}` : ''}
                 </div>
@@ -387,6 +409,35 @@ function AddMovieForm({
             </div>
           ))}
         </div>
+      )}
+    </div>
+  )
+}
+
+// ── Poster Box ────────────────────────────────────────────────────────────────
+function PosterBox({ movie, w = 36, h = 52 }: { movie: Movie; w?: number; h?: number }) {
+  return (
+    <div
+      style={{
+        width: w,
+        height: h,
+        borderRadius: 6,
+        overflow: 'hidden',
+        flexShrink: 0,
+        background: 'rgba(232,160,176,0.15)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {movie.poster ? (
+        <img
+          src={movie.poster}
+          alt={movie.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <span style={{ color: T.textLabel, opacity: 0.7 }}>{TYPE_ICON[movie.type]}</span>
       )}
     </div>
   )
@@ -436,8 +487,8 @@ function WatchedCard({
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: T.card,
+        border: T.borderVal,
         borderRadius: 12,
         overflow: 'hidden',
         marginBottom: 6,
@@ -453,37 +504,14 @@ function WatchedCard({
         }}
         onClick={() => setExpanded((v) => !v)}
       >
-        <div
-          style={{
-            width: 36,
-            height: 52,
-            borderRadius: 5,
-            overflow: 'hidden',
-            flexShrink: 0,
-            background: 'rgba(255,255,255,0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 16,
-          }}
-        >
-          {movie.poster ? (
-            <img
-              src={movie.poster}
-              alt={movie.title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <span style={{ color: '#c4956a', opacity: 0.6 }}>{TYPE_ICON[movie.type]}</span>
-          )}
-        </div>
+        <PosterBox movie={movie} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div
               style={{
                 fontSize: 12,
                 fontWeight: 800,
-                color: '#fdf0e0',
+                color: T.text,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -493,48 +521,48 @@ function WatchedCard({
             </div>
             {(movie.watchCount ?? 1) > 1 && (
               <div
-                title={`assistido ${movie.watchCount} vezes`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 3,
-                  background: 'rgba(127,184,127,0.15)',
-                  border: '1px solid rgba(127,184,127,0.3)',
+                  background: T.btnPositive,
+                  border: `1px solid ${T.btnPositiveBorder}`,
                   borderRadius: 10,
                   padding: '1px 6px',
                   flexShrink: 0,
                 }}
               >
-                <Eye size={9} color="#7FB87F" />
-                <span style={{ fontSize: 9, fontWeight: 800, color: '#7FB87F' }}>
+                <Eye size={9} color={T.btnPositiveText} strokeWidth={2} />
+                <span style={{ fontSize: 9, fontWeight: 800, color: T.btnPositiveText }}>
                   {movie.watchCount}x
                 </span>
               </div>
             )}
           </div>
-          <div style={{ fontSize: 10, color: '#c4956a', opacity: 0.7, marginBottom: 2 }}>
-            {dateLabel}
-          </div>
+          <div style={{ fontSize: 10, color: T.textLabel, marginBottom: 2 }}>{dateLabel}</div>
           {avgStars !== null && <StarRating value={avgStars} readonly />}
         </div>
-        <div style={{ color: '#c4956a', opacity: 0.5 }}>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        <div style={{ color: T.textLabel }}>
+          {expanded ? (
+            <ChevronUp size={14} strokeWidth={2} />
+          ) : (
+            <ChevronDown size={14} strokeWidth={2} />
+          )}
         </div>
       </div>
 
       {expanded && (
         <div
           style={{
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: T.borderDashed,
             padding: '10px 12px',
             display: 'flex',
             flexDirection: 'column',
             gap: 10,
           }}
         >
-          {/* Data */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Calendar size={12} color="#c4956a" />
+            <Calendar size={12} color={T.textLabel} strokeWidth={2} />
             {editingDate ? (
               <input
                 type="date"
@@ -547,12 +575,12 @@ function WatchedCard({
                 }}
                 autoFocus
                 style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid #c4956a',
+                  background: T.card,
+                  border: T.borderVal,
                   borderRadius: 6,
                   padding: '2px 8px',
                   fontSize: 11,
-                  color: '#fdf0e0',
+                  color: T.text,
                   fontFamily: 'Baloo 2, sans-serif',
                 }}
               />
@@ -560,7 +588,7 @@ function WatchedCard({
               <span
                 style={{
                   fontSize: 11,
-                  color: '#c4956a',
+                  color: T.textLabel,
                   cursor: 'pointer',
                   textDecoration: 'underline dotted',
                 }}
@@ -574,9 +602,17 @@ function WatchedCard({
             )}
           </div>
 
-          {/* Avaliações */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#c4956a', marginBottom: 4 }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: T.textLabel,
+                textTransform: 'uppercase',
+                letterSpacing: '0.7px',
+                marginBottom: 4,
+              }}
+            >
               {displayName}
             </div>
             <StarRating
@@ -595,52 +631,65 @@ function WatchedCard({
               style={{
                 marginTop: 5,
                 width: '100%',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 7,
+                background: T.card,
+                border: T.borderVal,
+                borderRadius: 8,
                 padding: '4px 8px',
                 fontSize: 11,
-                color: '#fdf0e0',
+                color: T.text,
                 fontFamily: 'Baloo 2, sans-serif',
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
             />
           </div>
+
           {partnerRating && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#c4956a', marginBottom: 4 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: T.textLabel,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.7px',
+                  marginBottom: 4,
+                }}
+              >
                 {partnerName}
               </div>
               <StarRating value={partnerRating.stars} readonly />
               {partnerRating.comment && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: '#fdf0e0',
-                    opacity: 0.55,
-                    marginTop: 3,
-                    fontStyle: 'italic',
-                  }}
-                >
+                <div style={{ fontSize: 11, color: T.textSub, marginTop: 3, fontStyle: 'italic' }}>
                   &ldquo;{partnerRating.comment}&rdquo;
                 </div>
               )}
             </div>
           )}
+
           {myRating && partnerRating && (
             <div
               style={{
-                background: 'rgba(196,149,106,0.12)',
-                border: '1px solid rgba(196,149,106,0.25)',
-                borderRadius: 8,
+                background: T.selectedBg,
+                border: T.borderVal,
+                borderRadius: 10,
                 padding: '5px 10px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
               }}
             >
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#c4956a' }}>média</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: T.textLabel,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.7px',
+                }}
+              >
+                média
+              </span>
               <StarRating value={avgStars!} readonly />
               <span style={{ fontSize: 11, fontWeight: 800, color: '#f59e0b' }}>
                 {avgStars?.toFixed(1)}
@@ -655,12 +704,13 @@ function WatchedCard({
                 onChangeStatus(movie.id, 'watching', movie.title)
               }}
               style={{
-                background: 'none',
-                border: '1px solid rgba(196,149,106,0.3)',
-                borderRadius: 7,
+                background: T.btnIcon,
+                border: T.borderVal,
+                borderRadius: 8,
                 padding: '4px 10px',
                 fontSize: 10,
-                color: '#c4956a',
+                fontWeight: 800,
+                color: T.text,
                 cursor: 'pointer',
                 fontFamily: 'Baloo 2, sans-serif',
                 display: 'flex',
@@ -668,7 +718,7 @@ function WatchedCard({
                 gap: 4,
               }}
             >
-              <Play size={10} /> assistir de novo
+              <Play size={10} strokeWidth={2} /> assistir de novo
             </button>
             <button
               onClick={(e) => {
@@ -676,12 +726,13 @@ function WatchedCard({
                 onDelete(movie.id)
               }}
               style={{
-                background: 'none',
-                border: '1px solid rgba(232,96,122,0.3)',
-                borderRadius: 7,
+                background: T.btnDestructive,
+                border: `1px solid ${T.btnDestructiveBorder}`,
+                borderRadius: 8,
                 padding: '4px 10px',
                 fontSize: 10,
-                color: '#e8607a',
+                fontWeight: 800,
+                color: T.btnDestructiveText,
                 cursor: 'pointer',
                 fontFamily: 'Baloo 2, sans-serif',
                 display: 'flex',
@@ -689,7 +740,7 @@ function WatchedCard({
                 gap: 4,
               }}
             >
-              <Trash2 size={10} /> remover
+              <Trash2 size={10} strokeWidth={2} /> remover
             </button>
           </div>
         </div>
@@ -719,8 +770,8 @@ function WatchingCard({
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: T.card,
+        border: T.borderVal,
         borderRadius: 12,
         overflow: 'hidden',
         marginBottom: 6,
@@ -736,36 +787,13 @@ function WatchingCard({
         }}
         onClick={() => setExpanded((v) => !v)}
       >
-        <div
-          style={{
-            width: 36,
-            height: 52,
-            borderRadius: 5,
-            overflow: 'hidden',
-            flexShrink: 0,
-            background: 'rgba(255,255,255,0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 16,
-          }}
-        >
-          {movie.poster ? (
-            <img
-              src={movie.poster}
-              alt={movie.title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <span style={{ color: '#c4956a', opacity: 0.6 }}>{TYPE_ICON[movie.type]}</span>
-          )}
-        </div>
+        <PosterBox movie={movie} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
               fontSize: 12,
               fontWeight: 800,
-              color: '#fdf0e0',
+              color: T.text,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -774,20 +802,24 @@ function WatchingCard({
             {movie.title}
           </div>
           {movie.progress && movie.type !== 'filme' && (
-            <div style={{ fontSize: 10, color: '#7FB87F', fontWeight: 700, marginTop: 2 }}>
+            <div style={{ fontSize: 10, color: T.btnPositiveText, fontWeight: 800, marginTop: 2 }}>
               T{movie.progress.season} · E{movie.progress.episode}
             </div>
           )}
         </div>
-        <div style={{ color: '#c4956a', opacity: 0.5 }}>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        <div style={{ color: T.textLabel }}>
+          {expanded ? (
+            <ChevronUp size={14} strokeWidth={2} />
+          ) : (
+            <ChevronDown size={14} strokeWidth={2} />
+          )}
         </div>
       </div>
 
       {expanded && (
         <div
           style={{
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: T.borderDashed,
             padding: '10px 12px',
             display: 'flex',
             flexDirection: 'column',
@@ -796,56 +828,49 @@ function WatchingCard({
         >
           {movie.type !== 'filme' && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#c4956a', marginBottom: 6 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: T.textLabel,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.7px',
+                  marginBottom: 6,
+                }}
+              >
                 onde paramos
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 10, color: '#fdf0e0', opacity: 0.6 }}>T</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={season}
-                    onChange={(e) => setSeason(Number(e.target.value))}
-                    onBlur={() => onSaveProgress(movie.id, season, episode)}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      width: 44,
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(196,149,106,0.3)',
-                      borderRadius: 6,
-                      padding: '4px 6px',
-                      fontSize: 12,
-                      color: '#fdf0e0',
-                      fontFamily: 'Baloo 2, sans-serif',
-                      outline: 'none',
-                      textAlign: 'center',
-                    }}
-                  />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 10, color: '#fdf0e0', opacity: 0.6 }}>E</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={episode}
-                    onChange={(e) => setEpisode(Number(e.target.value))}
-                    onBlur={() => onSaveProgress(movie.id, season, episode)}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      width: 44,
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(196,149,106,0.3)',
-                      borderRadius: 6,
-                      padding: '4px 6px',
-                      fontSize: 12,
-                      color: '#fdf0e0',
-                      fontFamily: 'Baloo 2, sans-serif',
-                      outline: 'none',
-                      textAlign: 'center',
-                    }}
-                  />
-                </div>
+                {[
+                  { label: 'T', val: season, set: setSeason },
+                  { label: 'E', val: episode, set: setEpisode },
+                ].map((f) => (
+                  <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: T.textLabel }}>
+                      {f.label}
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={f.val}
+                      onChange={(e) => f.set(Number(e.target.value))}
+                      onBlur={() => onSaveProgress(movie.id, season, episode)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        width: 44,
+                        background: T.card,
+                        border: T.borderVal,
+                        borderRadius: 8,
+                        padding: '4px 6px',
+                        fontSize: 12,
+                        color: T.text,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        outline: 'none',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -857,21 +882,21 @@ function WatchingCard({
                 onChangeStatus(movie.id, 'watched', movie.title)
               }}
               style={{
-                background: 'linear-gradient(135deg, #7FB87F, #4A7A4A)',
-                border: 'none',
-                borderRadius: 7,
+                background: T.btnPositive,
+                border: `1px solid ${T.btnPositiveBorder}`,
+                borderRadius: 8,
                 padding: '5px 12px',
                 fontSize: 10,
-                color: '#fff',
+                fontWeight: 800,
+                color: T.btnPositiveText,
                 cursor: 'pointer',
                 fontFamily: 'Baloo 2, sans-serif',
-                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 4,
               }}
             >
-              <CheckCheck size={10} /> terminamos!
+              <CheckCheck size={10} strokeWidth={2} /> terminamos!
             </button>
             <button
               onClick={(e) => {
@@ -879,12 +904,13 @@ function WatchingCard({
                 onDelete(movie.id)
               }}
               style={{
-                background: 'none',
-                border: '1px solid rgba(232,96,122,0.3)',
-                borderRadius: 7,
+                background: T.btnDestructive,
+                border: `1px solid ${T.btnDestructiveBorder}`,
+                borderRadius: 8,
                 padding: '4px 10px',
                 fontSize: 10,
-                color: '#e8607a',
+                fontWeight: 800,
+                color: T.btnDestructiveText,
                 cursor: 'pointer',
                 fontFamily: 'Baloo 2, sans-serif',
                 display: 'flex',
@@ -892,7 +918,7 @@ function WatchingCard({
                 gap: 4,
               }}
             >
-              <Trash2 size={10} /> remover
+              <Trash2 size={10} strokeWidth={2} /> remover
             </button>
           </div>
         </div>
@@ -916,8 +942,8 @@ function WishlistCard({
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: T.card,
+        border: T.borderVal,
         borderRadius: 12,
         overflow: 'hidden',
         marginBottom: 6,
@@ -929,40 +955,17 @@ function WishlistCard({
     >
       <div
         {...dragHandleProps}
-        style={{ color: '#c4956a', opacity: 0.35, cursor: 'grab', flexShrink: 0 }}
+        style={{ color: T.textLabel, opacity: 0.5, cursor: 'grab', flexShrink: 0 }}
       >
-        <GripVertical size={14} />
+        <GripVertical size={14} strokeWidth={2} />
       </div>
-      <div
-        style={{
-          width: 32,
-          height: 46,
-          borderRadius: 4,
-          overflow: 'hidden',
-          flexShrink: 0,
-          background: 'rgba(255,255,255,0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 14,
-        }}
-      >
-        {movie.poster ? (
-          <img
-            src={movie.poster}
-            alt={movie.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
-          <span style={{ color: '#c4956a', opacity: 0.6 }}>{TYPE_ICON[movie.type]}</span>
-        )}
-      </div>
+      <PosterBox movie={movie} w={32} h={46} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
             fontSize: 12,
             fontWeight: 800,
-            color: '#fdf0e0',
+            color: T.text,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -973,8 +976,7 @@ function WishlistCard({
         <div
           style={{
             fontSize: 10,
-            color: '#c4956a',
-            opacity: 0.6,
+            color: T.textLabel,
             display: 'flex',
             alignItems: 'center',
             gap: 3,
@@ -986,36 +988,40 @@ function WishlistCard({
       <button
         onClick={() => onChangeStatus(movie.id, 'watching', movie.title)}
         style={{
-          background: 'rgba(127,184,127,0.15)',
-          border: '1px solid rgba(127,184,127,0.3)',
-          borderRadius: 7,
-          padding: '4px 8px',
+          background: T.btnPositive,
+          border: `1px solid ${T.btnPositiveBorder}`,
+          borderRadius: 8,
+          padding: '4px 9px',
           fontSize: 10,
-          color: '#7FB87F',
+          fontWeight: 800,
+          color: T.btnPositiveText,
           cursor: 'pointer',
           fontFamily: 'Baloo 2, sans-serif',
-          fontWeight: 700,
           display: 'flex',
           alignItems: 'center',
           gap: 3,
           flexShrink: 0,
         }}
       >
-        <Play size={9} /> assistir
+        <Play size={9} strokeWidth={2} /> assistir
       </button>
       <button
         onClick={() => onDelete(movie.id)}
         style={{
-          background: 'none',
+          width: 22,
+          height: 22,
+          borderRadius: '50%',
           border: 'none',
+          background: T.btnIcon,
           cursor: 'pointer',
-          color: '#e8607a',
-          opacity: 0.5,
-          padding: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 0,
           flexShrink: 0,
         }}
       >
-        <X size={13} />
+        <X size={11} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
       </button>
     </div>
   )
@@ -1061,10 +1067,8 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
     return subscribeTrashedMovies(setTrashed)
   }, [])
 
-  // Drag state para wishlist
   const dragItem = useRef<number | null>(null)
   const dragOver = useRef<number | null>(null)
-
   const searchLower = search.toLowerCase()
 
   const watched = movies
@@ -1080,42 +1084,35 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
           ? b.watchedAt.localeCompare(a.watchedAt)
           : (b.watchedAtMs ?? 0) - (a.watchedAtMs ?? 0)
         : (() => {
-            const avgA =
-              Object.values(a.ratings ?? {}).reduce((s, r) => s + r.stars, 0) /
-              Math.max(1, Object.values(a.ratings ?? {}).length)
-            const avgB =
-              Object.values(b.ratings ?? {}).reduce((s, r) => s + r.stars, 0) /
-              Math.max(1, Object.values(b.ratings ?? {}).length)
-            return avgB - avgA
+            const avg = (m: Movie) =>
+              Object.values(m.ratings ?? {}).reduce((s, r) => s + r.stars, 0) /
+              Math.max(1, Object.values(m.ratings ?? {}).length)
+            return avg(b) - avg(a)
           })()
     )
 
   const watching = movies.filter(
     (m) => m.status === 'watching' && (!search || m.title.toLowerCase().includes(searchLower))
   )
-
   const wishlist = movies
     .filter(
       (m) => m.status === 'wishlist' && (!search || m.title.toLowerCase().includes(searchLower))
     )
     .sort((a, b) => (a.wishlistOrder ?? 0) - (b.wishlistOrder ?? 0))
 
-  // Agrupar watched por mês
   const grouped: { label: string; items: Movie[] }[] = []
   if (sort === 'data') {
     watched.forEach((m) => {
-      const d = new Date(m.watchedAt + 'T12:00:00')
-      const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+      const label = new Date(m.watchedAt + 'T12:00:00').toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric',
+      })
       const last = grouped[grouped.length - 1]
-      if (last?.label === label) {
-        last.items.push(m)
-      } else {
-        grouped.push({ label, items: [m] })
-      }
+      if (last?.label === label) last.items.push(m)
+      else grouped.push({ label, items: [m] })
     })
   }
 
-  // Drag wishlist
   const handleDragEnd = () => {
     if (dragItem.current === null || dragOver.current === null) return
     const reordered = [...wishlist]
@@ -1130,19 +1127,19 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
     {
       key: 'watched',
       label: 'assistidos',
-      icon: <CheckCheck size={13} />,
+      icon: <CheckCheck size={13} strokeWidth={2} />,
       count: movies.filter((m) => m.status === 'watched').length,
     },
     {
       key: 'watching',
       label: 'assistindo',
-      icon: <Play size={13} />,
+      icon: <Play size={13} strokeWidth={2} />,
       count: movies.filter((m) => m.status === 'watching').length,
     },
     {
       key: 'wishlist',
       label: 'quero ver',
-      icon: <Bookmark size={13} />,
+      icon: <Bookmark size={13} strokeWidth={2} />,
       count: movies.filter((m) => m.status === 'wishlist').length,
     },
   ]
@@ -1162,7 +1159,8 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(26,18,8,0.6)',
+        background: 'rgba(61,26,16,0.4)',
+        backdropFilter: 'blur(4px)',
       }}
       onClick={onClose}
     >
@@ -1171,10 +1169,11 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
         style={{
           width: 440,
           maxHeight: '88vh',
-          background: 'linear-gradient(160deg, #2d1a0e 0%, #3d2408 100%)',
-          border: '1.5px solid #8b5a2a',
+          background: T.bg,
+          border: T.borderVal,
           borderRadius: 20,
-          boxShadow: '0 12px 48px rgba(26,18,8,0.6)',
+          boxShadow: T.shadow,
+          backdropFilter: 'blur(18px) saturate(1.4)',
           fontFamily: 'Baloo 2, sans-serif',
           display: 'flex',
           flexDirection: 'column',
@@ -1184,8 +1183,8 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
         {/* Header */}
         <div
           style={{
-            padding: '14px 16px 10px',
-            borderBottom: '1px solid rgba(139,90,42,0.3)',
+            padding: '14px 18px 12px',
+            borderBottom: T.borderDashed,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -1193,19 +1192,18 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <LayoutList size={16} color="#c4956a" />
-            <span style={{ fontSize: 14, fontWeight: 800, color: '#fdf0e0' }}>filmes & séries</span>
+            <LayoutList size={15} color="rgba(200,120,140,0.7)" strokeWidth={2} />
+            <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>filmes & séries</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <button
               onClick={() => setShowTrash(true)}
-              title="lixeira"
               style={{
-                background: trashed.length > 0 ? 'rgba(232,96,122,0.1)' : 'none',
-                border: trashed.length > 0 ? '1px solid rgba(232,96,122,0.3)' : 'none',
+                background: trashed.length > 0 ? T.btnDestructive : 'none',
+                border: trashed.length > 0 ? `1px solid ${T.btnDestructiveBorder}` : 'none',
                 borderRadius: 8,
                 cursor: 'pointer',
-                color: '#e8607a',
+                color: T.btnDestructiveText,
                 opacity: trashed.length > 0 ? 1 : 0.35,
                 display: 'flex',
                 alignItems: 'center',
@@ -1213,16 +1211,27 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 padding: '3px 7px',
               }}
             >
-              <Trash2 size={13} />
+              <Trash2 size={13} strokeWidth={2} />
               {trashed.length > 0 && (
                 <span style={{ fontSize: 9, fontWeight: 800 }}>{trashed.length}</span>
               )}
             </button>
             <button
               onClick={onClose}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c4956a' }}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: 'none',
+                background: T.btnIcon,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
             >
-              <X size={17} />
+              <X size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
             </button>
           </div>
         </div>
@@ -1245,9 +1254,10 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 fontFamily: 'Baloo 2, sans-serif',
                 fontSize: 11,
                 fontWeight: 700,
-                background: tab === t.key ? 'rgba(196,149,106,0.15)' : 'transparent',
-                color: tab === t.key ? '#f5ecd7' : '#c4956a',
-                borderBottom: tab === t.key ? '2px solid #c4956a' : '2px solid transparent',
+                background: tab === t.key ? T.selectedBg : 'transparent',
+                color: tab === t.key ? T.text : T.textLabel,
+                borderBottom:
+                  tab === t.key ? `2px solid ${T.selectedBorder}` : '2px solid transparent',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1258,12 +1268,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
               {t.icon} {t.label}
               {t.count > 0 && (
                 <span
-                  style={{
-                    background: 'rgba(196,149,106,0.25)',
-                    borderRadius: 10,
-                    padding: '0 5px',
-                    fontSize: 9,
-                  }}
+                  style={{ background: T.btnIcon, borderRadius: 10, padding: '0 5px', fontSize: 9 }}
                 >
                   {t.count}
                 </span>
@@ -1272,19 +1277,13 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
           ))}
         </div>
 
-        {/* Busca global */}
-        <div style={{ padding: '4px 12px 0', flexShrink: 0 }}>
+        {/* Busca */}
+        <div style={{ padding: '6px 12px 0', flexShrink: 0 }}>
           <div style={{ position: 'relative' }}>
             <Search
               size={12}
-              color="#c4956a"
-              style={{
-                position: 'absolute',
-                left: 9,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                opacity: 0.6,
-              }}
+              color={T.textLabel}
+              style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)' }}
             />
             <input
               value={search}
@@ -1292,12 +1291,12 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
               placeholder="buscar na lista..."
               style={{
                 width: '100%',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(196,149,106,0.25)',
-                borderRadius: 9,
-                padding: '5px 10px 5px 28px',
+                background: T.card,
+                border: T.borderVal,
+                borderRadius: 10,
+                padding: '5px 28px',
                 fontSize: 11,
-                color: '#fdf0e0',
+                color: T.text,
                 fontFamily: 'Baloo 2, sans-serif',
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -1314,18 +1313,18 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#c4956a',
+                  color: T.textLabel,
                   padding: 0,
                   display: 'flex',
                 }}
               >
-                <X size={11} />
+                <X size={11} strokeWidth={2.5} />
               </button>
             )}
           </div>
         </div>
 
-        {/* Filtros — só em watched */}
+        {/* Filtros — só watched */}
         {tab === 'watched' && (
           <div
             style={{
@@ -1340,9 +1339,13 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
             {(
               [
                 { key: 'todos', label: 'todos', icon: null },
-                { key: 'filme', label: 'filme', icon: <Film size={10} /> },
-                { key: 'série', label: 'série', icon: <Tv size={10} /> },
-                { key: 'desenho', label: 'desenho', icon: <Clapperboard size={10} /> },
+                { key: 'filme', label: 'filme', icon: <Film size={10} strokeWidth={2} /> },
+                { key: 'série', label: 'série', icon: <Tv size={10} strokeWidth={2} /> },
+                {
+                  key: 'desenho',
+                  label: 'desenho',
+                  icon: <Clapperboard size={10} strokeWidth={2} />,
+                },
               ] as { key: FilterType; label: string; icon: React.ReactNode }[]
             ).map((f) => (
               <button
@@ -1351,13 +1354,13 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 style={{
                   padding: '3px 10px',
                   borderRadius: 20,
-                  border: 'none',
+                  border: filter === f.key ? `1.5px solid ${T.selectedBorder}` : T.borderVal,
                   fontSize: 10,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   fontFamily: 'Baloo 2, sans-serif',
                   cursor: 'pointer',
-                  background: filter === f.key ? '#c4956a' : 'rgba(255,255,255,0.06)',
-                  color: filter === f.key ? '#fff' : '#c4956a',
+                  background: filter === f.key ? T.btnPrimary : 'transparent',
+                  color: T.text,
                   transition: 'all 0.15s',
                   display: 'flex',
                   alignItems: 'center',
@@ -1375,13 +1378,13 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                   style={{
                     padding: '3px 8px',
                     borderRadius: 20,
-                    border: '1px solid rgba(196,149,106,0.25)',
+                    border: sort === s ? `1.5px solid ${T.selectedBorder}` : T.borderVal,
                     fontSize: 9,
-                    fontWeight: 700,
+                    fontWeight: 800,
                     fontFamily: 'Baloo 2, sans-serif',
                     cursor: 'pointer',
-                    background: sort === s ? 'rgba(196,149,106,0.18)' : 'none',
-                    color: '#c4956a',
+                    background: sort === s ? T.selectedBg : 'transparent',
+                    color: T.textLabel,
                   }}
                 >
                   {s === 'data' ? 'recente' : 'nota'}
@@ -1402,13 +1405,12 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                   const result = await addNewMovie(title, type, poster, status)
                   if (result === 'duplicate_same' || result === 'duplicate_other') {
                     const found = movies.find((m) => m.title.toLowerCase() === title.toLowerCase())
-                    if (found) {
+                    if (found)
                       setDuplicate({
                         title: found.title,
                         status: found.status,
                         kind: result === 'duplicate_same' ? 'same' : 'other',
                       })
-                    }
                   } else {
                     setAdding(false)
                   }
@@ -1428,11 +1430,11 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 width: '100%',
                 padding: '7px',
                 borderRadius: 10,
-                border: '1.5px dashed rgba(196,149,106,0.35)',
+                border: T.borderDashed,
                 background: 'none',
-                color: '#c4956a',
+                color: T.textLabel,
                 fontSize: 11,
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: 'pointer',
                 fontFamily: 'Baloo 2, sans-serif',
                 display: 'flex',
@@ -1441,7 +1443,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 gap: 5,
               }}
             >
-              <Plus size={13} /> adicionar
+              <Plus size={13} strokeWidth={2.5} /> adicionar
             </button>
           )}
         </div>
@@ -1456,7 +1458,8 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'rgba(26,18,8,0.6)',
+              background: 'rgba(61,26,16,0.4)',
+              backdropFilter: 'blur(4px)',
             }}
             onClick={() => setShowTrash(false)}
           >
@@ -1467,16 +1470,16 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 maxHeight: '80vh',
                 display: 'flex',
                 flexDirection: 'column',
-                background: 'linear-gradient(160deg, #2d1a0e 0%, #3d2408 100%)',
-                border: '1.5px solid #8b5a2a',
+                background: T.bg,
+                border: T.borderVal,
                 borderRadius: 20,
-                boxShadow: '0 12px 48px rgba(26,18,8,0.6)',
+                boxShadow: T.shadow,
               }}
             >
               <div
                 style={{
-                  padding: '14px 16px 10px',
-                  borderBottom: '1px solid rgba(139,90,42,0.3)',
+                  padding: '14px 18px 12px',
+                  borderBottom: T.borderDashed,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -1484,10 +1487,10 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <Trash2 size={15} color="#e8607a" />
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#fdf0e0' }}>lixeira</span>
+                  <Trash2 size={14} color={T.btnDestructiveText} strokeWidth={2} />
+                  <span style={{ fontSize: 13, fontWeight: 800, color: T.text }}>lixeira</span>
                   {trashed.length > 0 && (
-                    <span style={{ fontSize: 10, color: '#e8607a', opacity: 0.7 }}>
+                    <span style={{ fontSize: 10, color: T.btnDestructiveText }}>
                       {trashed.length} item{trashed.length > 1 ? 's' : ''}
                     </span>
                   )}
@@ -1495,13 +1498,19 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 <button
                   onClick={() => setShowTrash(false)}
                   style={{
-                    background: 'none',
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
                     border: 'none',
+                    background: T.btnIcon,
                     cursor: 'pointer',
-                    color: '#c4956a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
                   }}
                 >
-                  <X size={17} />
+                  <X size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
                 </button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px 14px' }}>
@@ -1509,8 +1518,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                   <div
                     style={{
                       textAlign: 'center',
-                      color: '#c4956a',
-                      opacity: 0.4,
+                      color: T.textSub,
                       fontSize: 12,
                       padding: '40px 0',
                     }}
@@ -1532,13 +1540,12 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                             : deletedAgo < 1440
                               ? `há ${Math.floor(deletedAgo / 60)}h`
                               : `há ${Math.floor(deletedAgo / 1440)}d`
-
                     return (
                       <div
                         key={m.id}
                         style={{
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.07)',
+                          background: T.card,
+                          border: T.borderVal,
                           borderRadius: 12,
                           marginBottom: 6,
                           display: 'flex',
@@ -1547,37 +1554,13 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                           padding: '8px 10px',
                         }}
                       >
-                        <div
-                          style={{
-                            width: 32,
-                            height: 46,
-                            borderRadius: 4,
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                            background: 'rgba(255,255,255,0.07)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {m.poster ? (
-                            <img
-                              src={m.poster}
-                              alt={m.title}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <span style={{ color: '#c4956a', opacity: 0.5 }}>
-                              {TYPE_ICON[m.type]}
-                            </span>
-                          )}
-                        </div>
+                        <PosterBox movie={m} w={32} h={46} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div
                             style={{
                               fontSize: 12,
                               fontWeight: 800,
-                              color: '#fdf0e0',
+                              color: T.text,
                               opacity: 0.6,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -1586,47 +1569,47 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                           >
                             {m.title}
                           </div>
-                          <div
-                            style={{ fontSize: 9, color: '#e8607a', opacity: 0.6, marginTop: 2 }}
-                          >
+                          <div style={{ fontSize: 9, color: T.btnDestructiveText, marginTop: 2 }}>
                             excluído {agoLabel}
                           </div>
                         </div>
                         <button
                           onClick={() => restoreMovieById(m.id)}
-                          title="restaurar"
                           style={{
-                            background: 'rgba(127,184,127,0.12)',
-                            border: '1px solid rgba(127,184,127,0.3)',
-                            borderRadius: 7,
+                            background: T.btnPositive,
+                            border: `1px solid ${T.btnPositiveBorder}`,
+                            borderRadius: 8,
                             padding: '4px 8px',
                             fontSize: 10,
-                            color: '#7FB87F',
+                            fontWeight: 800,
+                            color: T.btnPositiveText,
                             cursor: 'pointer',
                             fontFamily: 'Baloo 2, sans-serif',
-                            fontWeight: 700,
                             display: 'flex',
                             alignItems: 'center',
                             gap: 3,
                             flexShrink: 0,
                           }}
                         >
-                          <RotateCcw size={10} /> restaurar
+                          <RotateCcw size={10} strokeWidth={2} /> restaurar
                         </button>
                         <button
                           onClick={() => deleteMovieForever(m.id)}
-                          title="excluir permanentemente"
                           style={{
-                            background: 'none',
+                            width: 22,
+                            height: 22,
+                            borderRadius: '50%',
                             border: 'none',
+                            background: T.btnDestructive,
                             cursor: 'pointer',
-                            color: '#e8607a',
-                            opacity: 0.5,
-                            padding: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0,
                             flexShrink: 0,
                           }}
                         >
-                          <X size={13} />
+                          <X size={11} strokeWidth={2.5} color={T.btnDestructiveText} />
                         </button>
                       </div>
                     )
@@ -1647,28 +1630,30 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'rgba(26,18,8,0.75)',
+              background: 'rgba(61,26,16,0.5)',
               borderRadius: 20,
+              backdropFilter: 'blur(4px)',
             }}
           >
             <div
               style={{
-                background: 'linear-gradient(160deg, #2d1a0e 0%, #3d2408 100%)',
-                border: '1.5px solid #8b5a2a',
+                background: T.bg,
+                border: T.borderVal,
                 borderRadius: 16,
                 padding: '20px 22px',
                 maxWidth: 300,
                 textAlign: 'center',
                 fontFamily: 'Baloo 2, sans-serif',
+                boxShadow: T.shadow,
               }}
             >
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#fdf0e0', marginBottom: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: T.text, marginBottom: 6 }}>
                 {duplicate.kind === 'same' ? 'já está nessa lista' : 'título já adicionado'}
               </div>
-              <div style={{ fontSize: 11, color: '#c4956a', marginBottom: 16, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 11, color: T.textSub, marginBottom: 16, lineHeight: 1.5 }}>
                 {duplicate.kind === 'same' ? (
                   <>
-                    <strong style={{ color: '#fdf0e0' }}>{duplicate.title}</strong> já está em{' '}
+                    <strong style={{ color: T.text }}>{duplicate.title}</strong> já está em{' '}
                     <strong style={{ color: '#f59e0b' }}>
                       {duplicate.status === 'watching' ? 'assistindo' : 'quero ver'}
                     </strong>
@@ -1676,7 +1661,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                   </>
                 ) : (
                   <>
-                    <strong style={{ color: '#fdf0e0' }}>{duplicate.title}</strong> já está como{' '}
+                    <strong style={{ color: T.text }}>{duplicate.title}</strong> já está como{' '}
                     <strong style={{ color: '#f59e0b' }}>
                       {duplicate.status === 'watched'
                         ? 'assistido'
@@ -1692,13 +1677,13 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 <button
                   onClick={() => setDuplicate(null)}
                   style={{
-                    background: 'none',
-                    border: '1px solid rgba(196,149,106,0.4)',
-                    borderRadius: 9,
+                    background: 'transparent',
+                    border: T.borderVal,
+                    borderRadius: 10,
                     padding: '6px 16px',
                     fontSize: 11,
-                    fontWeight: 700,
-                    color: '#c4956a',
+                    fontWeight: 800,
+                    color: T.textSub,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -1752,13 +1737,13 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                       }
                     }}
                     style={{
-                      background: '#c4956a',
+                      background: T.btnPrimary,
                       border: 'none',
-                      borderRadius: 9,
+                      borderRadius: 10,
                       padding: '6px 16px',
                       fontSize: 11,
-                      fontWeight: 700,
-                      color: '#fff',
+                      fontWeight: 800,
+                      color: T.text,
                       cursor: 'pointer',
                       fontFamily: 'Baloo 2, sans-serif',
                     }}
@@ -1773,17 +1758,10 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
 
         {/* Lista */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 14px' }}>
-          {/* Watched */}
           {tab === 'watched' &&
             (watched.length === 0 ? (
               <div
-                style={{
-                  textAlign: 'center',
-                  color: '#c4956a',
-                  opacity: 0.4,
-                  fontSize: 12,
-                  padding: '28px 0',
-                }}
+                style={{ textAlign: 'center', color: T.textSub, fontSize: 12, padding: '28px 0' }}
               >
                 nenhum título assistido ainda
               </div>
@@ -1794,11 +1772,10 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                     style={{
                       fontSize: 9,
                       fontWeight: 800,
-                      color: '#c4956a',
-                      opacity: 0.55,
+                      color: T.textLabel,
                       textTransform: 'capitalize',
                       padding: '8px 2px 5px',
-                      letterSpacing: '0.05em',
+                      letterSpacing: '0.8px',
                     }}
                   >
                     {group.label}
@@ -1836,17 +1813,10 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
               ))
             ))}
 
-          {/* Watching */}
           {tab === 'watching' &&
             (watching.length === 0 ? (
               <div
-                style={{
-                  textAlign: 'center',
-                  color: '#c4956a',
-                  opacity: 0.4,
-                  fontSize: 12,
-                  padding: '28px 0',
-                }}
+                style={{ textAlign: 'center', color: T.textSub, fontSize: 12, padding: '28px 0' }}
               >
                 nenhum título em andamento
               </div>
@@ -1864,17 +1834,10 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
               ))
             ))}
 
-          {/* Wishlist */}
           {tab === 'wishlist' &&
             (wishlist.length === 0 ? (
               <div
-                style={{
-                  textAlign: 'center',
-                  color: '#c4956a',
-                  opacity: 0.4,
-                  fontSize: 12,
-                  padding: '28px 0',
-                }}
+                style={{ textAlign: 'center', color: T.textSub, fontSize: 12, padding: '28px 0' }}
               >
                 lista vazia — o que querem assistir?
               </div>
