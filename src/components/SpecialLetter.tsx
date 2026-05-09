@@ -31,7 +31,7 @@ export default function SpecialLetter({
   onContextMenu,
 }: Props) {
   const [animating, setAnimating] = useState(false)
-  const [showCard, setShowCard] = useState(false)
+  const [showCard, setShowCard] = useState(() => item.opened === true)
   const [showMenu, setShowMenu] = useState(false)
   const [showBlocked, setShowBlocked] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })

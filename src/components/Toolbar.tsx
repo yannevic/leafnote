@@ -167,41 +167,33 @@ export default function Toolbar({
   return (
     <>
       {/* Badge modo mover */}
-      <div
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          width: '100%',
-          pointerEvents: 'none',
-          zIndex: 49,
-          display: 'flex',
-          justifyContent: 'center',
-          paddingTop: 14,
-        }}
-      >
-        {editMode && (
-          <div
-            style={{
-              background: 'rgba(30,18,8,0.78)',
-              color: '#fdf0e0',
-              fontSize: 11,
-              fontWeight: 700,
-              padding: '5px 16px',
-              borderRadius: 20,
-              fontFamily: 'Baloo 2, sans-serif',
-              letterSpacing: '0.04em',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <Hand size={12} />
-            modo mover — clique nos itens pra arrastar
-          </div>
-        )}
-      </div>
+      {editMode && (
+        <div
+          style={{
+            position: 'fixed',
+            left: pos.x + 58,
+            top: pos.y + (open ? (TOOLS.length + 2) * 54 : 0),
+            pointerEvents: 'none',
+            zIndex: 49,
+            background: 'rgba(30,18,8,0.78)',
+            color: '#fdf0e0',
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '5px 16px',
+            borderRadius: 20,
+            fontFamily: 'Baloo 2, sans-serif',
+            letterSpacing: '0.04em',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Hand size={12} />
+          modo mover — clique nos itens pra arrastar
+        </div>
+      )}
 
       {/* Toolbar flutuante */}
       <div
