@@ -1,4 +1,4 @@
-✨ presets de personagem — até 6 slots, nome customizado, grade 2x2, aplicar/excluir com um clique |
+✨ presets de personagem — até 6 slots, nome customizado, grade 2x2, aplicar/excluir com um clique | 
 ✨ nossa casinha — cena isométrica com chão, paredes e fundo personalizáveis |
 ✨ loja — comprar pisos, paredes, fundos e roupas com moedas |
 ✨ inventário — itens comprados salvos e sincronizados entre os dois |

@@ -35,7 +35,10 @@ jobs:
         id: bump
         shell: bash
         run: |
-          NEW_VERSION=$(node -p "require('./package.json').version")
+          CURRENT=$(node -p "require('./package.json').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
           node -e "
@@ -61,15 +64,17 @@ jobs:
             const version = '$NEW_VERSION';
             const items = $ITEMS_JS;
 
-            const lines = items.map(i => \`    '\${i}',\`).join('\n');
-            const newEntry = \`  '\${version}': [\n\${lines}\n  ],\n\`;
+            const lines = items.map(i => '    ' + JSON.stringify(i) + ',').join('\n');
+            const newEntry = '  \'' + version + '\': [\n' + lines + '\n  ],\n';
 
             let content = fs.readFileSync('./src/components/ChangelogModal.tsx', 'utf8');
-            content = content.replace(
-              /(const CHANGELOG: Record<string, string\[\]> = \{)/,
-              '\$1\n' + newEntry
-            );
-            fs.writeFileSync('./src/components/ChangelogModal.tsx', content);
+            if (!content.includes('\'' + version + '\'')) {
+              content = content.replace(
+                /(const CHANGELOG: Record<string, string\[\]> = \{)/,
+                '\$1\n' + newEntry
+              );
+              fs.writeFileSync('./src/components/ChangelogModal.tsx', content);
+            }
           "
 
       - name: Commit das mudanças
