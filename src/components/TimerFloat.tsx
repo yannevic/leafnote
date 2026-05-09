@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function TimerFloat({ state, onChange, onDismiss }: Props) {
-  const [tick, setTick] = useState(0)
+  const [_tick, setTick] = useState(0)
   const [pos, setPos] = useState({ x: 80, y: -1 })
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
 

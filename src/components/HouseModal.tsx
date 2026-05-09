@@ -31,6 +31,8 @@ import chestSprite from '../assets/house/treasure_chests.png'
 import { HOUSE_TILE_MAP, SHOP_HOUSE_ITEMS } from '../shop/shopPrices'
 import type { SheetGroup } from './HouseSceneShared'
 import { ALL_PIECES } from '../assets/character/index'
+import CharacterDoll from './CharacterDoll'
+import type { CharacterConfig } from '../assets/character/index'
 import {
   HouseScene,
   FLOOR_GROUPS,
@@ -90,6 +92,8 @@ interface HouseConfig {
   wall: { sheet: string; col: number; row: number }
   wallRight: { sheet: string; col: number; row: number }
   background: string
+  characterPosition?: { x: number; y: number }
+  characterPinned?: boolean
 }
 
 function tileToItemId(sheet: string, col: number, row: number): string | null {
@@ -117,6 +121,8 @@ interface HouseModalProps {
   partnerName?: string
   onClose: () => void
   onOpenShop?: (itemId?: string) => void
+  characterConfig?: CharacterConfig
+  characterColorVariants?: Record<string, string>
 }
 
 type HouseTab = 'floor' | 'wall' | 'background'
@@ -220,6 +226,8 @@ export default function HouseModal({
   partnerName,
   onClose,
   onOpenShop,
+  characterConfig,
+  characterColorVariants,
 }: HouseModalProps) {
   const [config, setConfig] = useState<HouseConfig>(DEFAULT_CONFIG)
   const [tab, setTab] = useState<HouseTab>('floor')
@@ -240,6 +248,9 @@ export default function HouseModal({
   const [giftPhase, setGiftPhase] = useState<'message' | 'reveal' | null>(null)
   const [newItems, setNewItems] = useState<Set<string>>(new Set())
   const [seenItems, setSeenItems] = useState<Set<string>>(new Set())
+  const [characterPos, setCharacterPos] = useState<{ x: number; y: number } | null>(null)
+  const characterPosLoadedRef = useRef(false)
+  const [characterPinned, setCharacterPinned] = useState(false)
 
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -267,6 +278,12 @@ export default function HouseModal({
           wallRight: data.wallRight ?? DEFAULT_CONFIG.wallRight,
           background: data.background ?? DEFAULT_BACKGROUND,
         })
+        // Carrega posição salva do personagem apenas na primeira vez
+        if (!characterPosLoadedRef.current) {
+          setCharacterPos(data.characterPosition ?? { x: 750, y: 450 })
+          if (data.characterPinned !== undefined) setCharacterPinned(data.characterPinned)
+          characterPosLoadedRef.current = true
+        }
       }
     })
   }, [])
@@ -324,7 +341,11 @@ export default function HouseModal({
   }
 
   const handleSave = async () => {
-    await set(ref(db, 'house/config'), config)
+    await set(ref(db, 'house/config'), {
+      ...config,
+      characterPosition: characterPos,
+      characterPinned,
+    })
     setSavedFeedback(true)
     setTimeout(() => setSavedFeedback(false), 2000)
   }
@@ -568,6 +589,7 @@ export default function HouseModal({
               justifyContent: 'center',
             }}
           >
+            {/* ── CONTAINER TRANSFORMADO (zoom + pan) ── */}
             <div
               style={{
                 transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
@@ -582,6 +604,8 @@ export default function HouseModal({
                 wallRightTile={selectedWallRightTile}
                 overlap={currentOverlap}
               />
+
+              {/* Baús de presente */}
               {gifts.map((gift) => (
                 <div
                   key={gift.id}
@@ -603,6 +627,20 @@ export default function HouseModal({
                   />
                 </div>
               ))}
+
+              {/* ── PERSONAGEM — escala e se move junto com a casa ── */}
+              {characterConfig && characterPos && (
+                <CharacterDoll
+                  config={characterConfig}
+                  colorVariants={characterColorVariants ?? {}}
+                  width={120}
+                  sceneScale={scale}
+                  initialPosition={characterPos}
+                  onPositionChange={setCharacterPos}
+                  pinned={characterPinned}
+                  onPinnedChange={setCharacterPinned}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1184,7 +1222,6 @@ export default function HouseModal({
               border: T.borderVal,
             }}
           >
-            {/* Header */}
             <div
               style={{
                 display: 'flex',
@@ -1459,7 +1496,6 @@ export default function HouseModal({
               alignItems: 'stretch',
             }}
           >
-            {/* Header */}
             <div
               style={{
                 padding: '24px 20px 16px',

@@ -1362,6 +1362,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             myName={displayName}
             partnerName={otherName}
             onClose={() => setShowHouse(false)}
+            characterConfig={characterConfig}
+            characterColorVariants={characterConfig?.colorVariants ?? {}}
             onOpenShop={(itemId?: string) => {
               setShowHouse(false)
               setShopInitialItem(itemId)
