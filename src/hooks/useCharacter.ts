@@ -1,6 +1,6 @@
 // src/hooks/useCharacter.ts
 import { useEffect, useState, useCallback } from 'react'
-import { ref, onValue, set, remove } from 'firebase/database'
+import { ref, onValue, set, remove, update } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { CharacterConfig, DEFAULT_CHARACTER_CONFIG } from '../assets/character/index'
 import {
@@ -125,6 +125,37 @@ export function useCharacter(uid: string | null) {
       if (!uid) return
       setConfig(next)
       await set(ref(db, `users/${uid}/character`), next)
+
+      // Sincroniza ids usados com o inventário
+      const singles = [
+        'body',
+        'hair',
+        'bangs',
+        'eyebrows',
+        'eyelashes',
+        'mouth',
+        'pupils',
+        'top',
+        'bottom',
+        'dress',
+        'shoes',
+        'saia_costas',
+        'saia_top',
+      ] as const
+      const updates: Record<string, boolean> = {}
+      for (const key of singles) {
+        const id = next[key]
+        if (id) updates[`users/${uid}/inventory/${id}`] = true
+      }
+      for (const key of MULTI_KEYS) {
+        const ids = next[key as keyof CharacterConfig] as string[]
+        for (const id of ids) {
+          if (id) updates[`users/${uid}/inventory/${id}`] = true
+        }
+      }
+      if (Object.keys(updates).length > 0) {
+        await update(ref(db, '/'), updates)
+      }
     },
     [uid]
   )

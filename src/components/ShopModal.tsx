@@ -616,7 +616,8 @@ function ItemCard({
         alignItems: 'center',
         gap: 6,
         cursor: 'pointer',
-        opacity: !available && !owned ? 0.5 : 1,
+        opacity: owned ? 0.6 : !available && !owned ? 0.5 : 1,
+        pointerEvents: 'auto',
         transition: 'transform 0.12s, box-shadow 0.12s',
         position: 'relative',
       }}
@@ -1322,7 +1323,9 @@ interface ShopModalProps {
 }
 
 export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: ShopModalProps) {
+  console.log('ShopModal uid:', uid)
   const { coins, characterOwned, wishlist, buy, isOwned, toggleWishlist } = useShop(uid)
+  console.log('characterOwned', [...characterOwned])
 
   const [mainTab, setMainTab] = useState<MainTab>('casa')
   const [houseSubTab, setHouseSubTab] = useState<HouseSubTab>('floor')
@@ -1419,8 +1422,10 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
 
   const addToClothesCart = (piece: CharacterPiece) => {
     if (clothesCart.find((p) => p.id === piece.id)) return
+    if (characterOwned.has(piece.id)) return
     setClothesCart((prev) => [...prev, piece])
   }
+
   const removeFromClothesCart = (pieceId: string) => {
     setClothesCart((prev) => prev.filter((p) => p.id !== pieceId))
   }
@@ -2559,34 +2564,32 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                       gap: 8,
                     }}
                   >
-                    {charPieces
-                      .filter((p) => !characterOwned.has(p.id))
-                      .map((p) => (
-                        <ItemCard
-                          key={p.id}
-                          id={p.id}
-                          label={p.label}
-                          cost={p.cost ?? 0}
-                          owned={false}
-                          canAfford={coins >= (p.cost ?? 0)}
-                          available={true}
-                          isCharacter
-                          isSmallPiece={SMALL_PIECE_CATEGORIES.has(p.category)}
-                          isMediumPiece={MEDIUM_PIECE_CATEGORIES.has(p.category)}
-                          piece={p}
-                          selected={cart.some((c) => c.id === p.id)}
-                          inCart={clothesCart.some((c) => c.id === p.id)}
-                          tryOnVariants={tryOnVariants}
-                          onPreview={() => {
-                            setCart((prev) => applyExclusion(prev, p))
-                            setClothesPreviewOpen(true)
-                          }}
-                          onAddCart={() => addToClothesCart(p)}
-                          isWishlisted={wishlist.has(p.id)}
-                          onToggleWishlist={() => toggleWishlist(p.id)}
-                          onBuy={() => handleBuyPiece(p)}
-                        />
-                      ))}
+                    {charPieces.map((p) => (
+                      <ItemCard
+                        key={p.id}
+                        id={p.id}
+                        label={p.label}
+                        cost={p.cost ?? 0}
+                        owned={characterOwned.has(p.id)}
+                        canAfford={coins >= (p.cost ?? 0)}
+                        available={true}
+                        isCharacter
+                        isSmallPiece={SMALL_PIECE_CATEGORIES.has(p.category)}
+                        isMediumPiece={MEDIUM_PIECE_CATEGORIES.has(p.category)}
+                        piece={p}
+                        selected={cart.some((c) => c.id === p.id)}
+                        inCart={clothesCart.some((c) => c.id === p.id)}
+                        tryOnVariants={tryOnVariants}
+                        onPreview={() => {
+                          setCart((prev) => applyExclusion(prev, p))
+                          setClothesPreviewOpen(true)
+                        }}
+                        onAddCart={() => addToClothesCart(p)}
+                        isWishlisted={wishlist.has(p.id)}
+                        onToggleWishlist={() => toggleWishlist(p.id)}
+                        onBuy={() => handleBuyPiece(p)}
+                      />
+                    ))}
                   </div>
                 )}
               </div>

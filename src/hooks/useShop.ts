@@ -27,6 +27,7 @@ import {
   type ShopCategory,
 } from '../shop/shopPrices'
 import { ALL_PIECES, type CharacterPiece } from '../assets/character/index'
+import { FIRST_TIME_UNLOCKED_IDS } from '../assets/character/firstTimeConfig'
 
 // ─────────────────────────────────────────────
 // WISHLIST
@@ -195,26 +196,24 @@ export function subscribeHouseInventory(callback: (owned: Set<string>) => void):
 // ─────────────────────────────────────────────
 // SUBSCRIBE — inventário de roupas (por uid)
 // ─────────────────────────────────────────────
-
 export function subscribeCharacterInventory(
   uid: string,
   callback: (owned: Set<string>) => void
 ): () => void {
+  console.log('subscribeCharacterInventory chamado com uid:', uid)
   const r = ref(db, `users/${uid}/inventory`)
   const handler = onValue(r, (snap) => {
     const val = snap.val() as Record<string, boolean> | null
+    console.log('inventory snap path:', `users/${uid}/inventory`, 'val:', val)
     const owned = new Set<string>(val ? Object.keys(val).filter((k) => val[k] === true) : [])
-    // Inclui peças gratuitas (cost === 0) do index.ts
     ALL_PIECES.forEach((p) => {
       if (p.free || p.cost === 0) owned.add(p.id)
     })
-    // Inclui defaults explícitos
     DEFAULT_CHARACTER_UNLOCKED.forEach((id) => owned.add(id))
-    callback(owned)
+    callback(new Set(owned))
   })
   return () => off(r, 'value', handler)
 }
-
 // ─────────────────────────────────────────────
 // WRITE — comprar item
 // Atomicidade manual: checar saldo → debitar → salvar inventário
@@ -278,29 +277,76 @@ export async function unlockItemFree(
 // Chama uma vez quando o usuário faz login pela primeira vez.
 // Verifica se já foi inicializado antes de escrever.
 // ─────────────────────────────────────────────
-
 export async function initDefaultInventory(uid: string): Promise<void> {
-  // Checa se já foi inicializado
   const flagSnap = await get(ref(db, `users/${uid}/inventoryInitialized`))
   if (flagSnap.val() === true) return
 
   const updates: Record<string, unknown> = {}
 
-  // Roupas default do personagem
+  // Roupas default
   DEFAULT_CHARACTER_UNLOCKED.forEach((id) => {
     updates[`users/${uid}/inventory/${id}`] = true
   })
 
-  // Peças gratuitas do index.ts (cost === 0)
+  FIRST_TIME_UNLOCKED_IDS.forEach((id) => {
+    updates[`users/${uid}/inventory/${id}`] = true
+  })
+  // Peças gratuitas
   ALL_PIECES.forEach((p) => {
     if (p.free || p.cost === 0) {
       updates[`users/${uid}/inventory/${p.id}`] = true
     }
   })
 
-  // Marca como inicializado
-  updates[`users/${uid}/inventoryInitialized`] = true
+  // Migração: copia ids do character config pro inventário
+  const charSnap = await get(ref(db, `users/${uid}/character`))
+  if (charSnap.exists()) {
+    const config = charSnap.val() as Record<string, unknown>
+    const singles = [
+      'body',
+      'hair',
+      'bangs',
+      'eyebrows',
+      'eyelashes',
+      'mouth',
+      'pupils',
+      'top',
+      'bottom',
+      'dress',
+      'shoes',
+      'saia_costas',
+      'saia_top',
+    ]
+    for (const key of singles) {
+      const id = config[key] as string | null
+      if (id) updates[`users/${uid}/inventory/${id}`] = true
+    }
+    const multiKeys = [
+      'hair_back',
+      'hair_bonus',
+      'gloves',
+      'beard',
+      'accessory',
+      'accessory_cima',
+      'accessory_topo',
+      'jaqueta',
+      'tattoo',
+      'bottom_over',
+    ]
+    for (const key of multiKeys) {
+      const val = config[key]
+      const ids: string[] = Array.isArray(val)
+        ? val
+        : val && typeof val === 'object'
+          ? Object.values(val as Record<string, string>)
+          : []
+      for (const id of ids) {
+        if (id) updates[`users/${uid}/inventory/${id}`] = true
+      }
+    }
+  }
 
+  updates[`users/${uid}/inventoryInitialized`] = true
   await update(ref(db), updates)
 }
 
