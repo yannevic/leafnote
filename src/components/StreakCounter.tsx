@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStreak } from '../hooks/useStreak'
+import { formatMilestoneDays } from '../lib/streak'
 import {
   Bird,
   Lock,
@@ -11,6 +12,7 @@ import {
   Heart,
   X,
   ChevronRight,
+  Check,
 } from 'lucide-react'
 
 const MILESTONES = [
@@ -49,7 +51,16 @@ function getNext(days: number) {
 const BAR_GRADIENT = 'linear-gradient(90deg, #e8607a, #fda4b4)'
 
 export default function StreakCounter() {
-  const { streak, loading, days, setStart, reset } = useStreak()
+  const {
+    streak,
+    loading,
+    days,
+    setStart,
+    reset,
+    milestoneChecks,
+    currentMilestones,
+    handleCheck,
+  } = useStreak()
   const [showPanel, setShowPanel] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -347,11 +358,13 @@ export default function StreakCounter() {
               marcos
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {MILESTONES.map((m) => {
-                const reached = days >= m.days
+              {currentMilestones.map((targetDay, i) => {
+                const m = MILESTONES[i]
+                const reached = days >= targetDay
+                const checked = milestoneChecks[targetDay] ?? false
                 return (
                   <div
-                    key={m.days}
+                    key={targetDay}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -370,10 +383,41 @@ export default function StreakCounter() {
                         fontWeight: 700,
                         color: reached ? '#3d1a10' : 'rgba(61,26,16,0.4)',
                         fontFamily: 'Baloo 2, sans-serif',
+                        flex: 1,
                       }}
                     >
-                      {m.days} dias — {m.title}
+                      {formatMilestoneDays(targetDay)} — {m.title}
                     </span>
+                    {reached && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCheck(targetDay)
+                        }}
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 6,
+                          border: checked
+                            ? '1.5px solid rgba(74,122,74,0.5)'
+                            : '1.5px solid rgba(232,160,176,0.5)',
+                          background: checked ? 'rgba(74,122,74,0.15)' : 'rgba(253,242,246,0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          padding: 0,
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <Check
+                          size={10}
+                          strokeWidth={2.5}
+                          color={checked ? '#4a7a4a' : 'rgba(232,160,176,0.6)'}
+                        />
+                      </button>
+                    )}
                   </div>
                 )
               })}
