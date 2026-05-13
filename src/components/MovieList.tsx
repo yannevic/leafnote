@@ -541,6 +541,36 @@ function WatchedCard({
           </div>
           <div style={{ fontSize: 10, color: T.textLabel, marginBottom: 2 }}>{dateLabel}</div>
           {avgStars !== null && <StarRating value={avgStars} readonly />}
+
+          {!expanded && (myRating?.comment || partnerRating?.comment) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginTop: 2 }}>
+              {[
+                myRating?.comment ? { comment: myRating.comment, nick: displayName } : null,
+                partnerRating?.comment
+                  ? { comment: partnerRating.comment, nick: partnerName }
+                  : null,
+              ]
+                .filter(Boolean)
+                .map((r) => (
+                  <div
+                    key={r!.nick}
+                    style={{
+                      fontSize: 10,
+                      color: T.textSub,
+                      fontStyle: 'italic',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    &ldquo;{r!.comment}&rdquo;{' '}
+                    <span style={{ fontStyle: 'normal', fontWeight: 800, color: T.textLabel }}>
+                      — {r!.nick}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
         <div style={{ color: T.textLabel }}>
           {expanded ? (

@@ -77,12 +77,7 @@ export function useNotificationCenter({
       const r = ref(db, boardItemsPath(boardId))
       const handler = onValue(r, (snap) => {
         const data = (snap.val() ?? {}) as Record<string, AnyBoardItem>
-        console.log('items:', Object.keys(data).length, 'uid:', uid)
-        Object.values(data).forEach((item) => {
-          if (item.type === 'special-letter') {
-            console.log('special-letter:', item.id, 'createdBy:', item.createdBy, 'uid:', uid)
-          }
-        })
+
         const boardLabel =
           boardId === DEFAULT_BOARD_ID ? 'mural principal' : (extraBoardNames[boardId] ?? boardId)
 

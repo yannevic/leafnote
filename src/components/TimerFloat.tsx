@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import useSound from 'use-sound'
+import timerEndSound from '../assets/sounds/timer-end.mp3'
 import { Play, Pause, RotateCcw, X } from 'lucide-react'
 import type { TimerState } from './Timer'
 
@@ -25,6 +27,8 @@ export default function TimerFloat({ state, onChange, onDismiss }: Props) {
   const [_tick, setTick] = useState(0)
   const [pos, setPos] = useState({ x: 80, y: -1 })
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
+  const [playEnd] = useSound(timerEndSound, { volume: 0.8 })
+  const firedRef = useRef(false)
 
   useEffect(() => {
     setPos((p) => ({ ...p, y: window.innerHeight - 90 }))
@@ -35,6 +39,18 @@ export default function TimerFloat({ state, onChange, onDismiss }: Props) {
     const id = setInterval(() => setTick((t) => t + 1), 500)
     return () => clearInterval(id)
   }, [state.running])
+
+  useEffect(() => {
+    if (!state.running || state.mode !== 'countdown') {
+      firedRef.current = false
+      return
+    }
+    const display = computeDisplay(state)
+    if (display <= 0 && !firedRef.current) {
+      firedRef.current = true
+      playEnd()
+    }
+  }, [_tick, state.running, state.mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {

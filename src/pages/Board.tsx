@@ -5,7 +5,18 @@ import { useNotifications } from '../hooks/useNotifications'
 import { auth } from '../lib/firebase'
 import { updateProfile } from 'firebase/auth'
 import HouseModal from '../components/HouseModal'
-import { House, ShoppingBag, X, Wallet } from 'lucide-react'
+import {
+  House,
+  ShoppingBag,
+  X,
+  Wallet,
+  Trash2,
+  RotateCcw,
+  StickyNote,
+  Pencil,
+  CheckCheck,
+  Tag as Tag2,
+} from 'lucide-react'
 
 import {
   BoardItemType,
@@ -1667,7 +1678,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(44,20,8,0.45)',
+              background: 'rgba(61,26,16,0.4)',
+              backdropFilter: 'blur(4px)',
               zIndex: 200,
               display: 'flex',
               alignItems: 'center',
@@ -1677,153 +1689,175 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                width: 360,
-                background: '#fdf6f0',
-                border: '2px solid #d4aa80',
-                borderRadius: 14,
-                boxShadow: '0 12px 40px rgba(44,20,8,0.3)',
+                width: 380,
+                maxHeight: '80vh',
+                display: 'flex',
+                flexDirection: 'column',
+                background:
+                  'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+                border: '1.5px solid rgba(232,160,176,0.4)',
+                borderRadius: 20,
+                boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+                backdropFilter: 'blur(18px) saturate(1.4)',
                 fontFamily: 'Baloo 2, sans-serif',
                 overflow: 'hidden',
               }}
             >
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #d4956a 0%, #c4845a 100%)',
-                  padding: '14px 20px',
-                  borderBottom: '1.5px solid #d4aa80',
+                  padding: '14px 18px 12px',
+                  borderBottom: '2px dashed rgba(232,160,176,0.4)',
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexShrink: 0,
                 }}
               >
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#3d2408' }}>🗑️ lixeira</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <Trash2 size={14} color="rgba(232,96,122,0.8)" strokeWidth={2} />
+                  <span style={{ fontSize: 15, fontWeight: 800, color: '#3d1a10' }}>lixeira</span>
+                  {trashedItems.length > 0 && (
+                    <span style={{ fontSize: 10, color: '#e8607a', fontWeight: 700 }}>
+                      {trashedItems.length} {trashedItems.length === 1 ? 'item' : 'itens'}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleTrashClose}
                   style={{
-                    background: 'rgba(255,255,255,0.4)',
-                    border: '1px solid #d4aa80',
-                    borderRadius: 8,
+                    background: 'rgba(232,96,122,0.12)',
+                    border: '1px solid rgba(232,96,122,0.3)',
+                    borderRadius: 10,
                     cursor: 'pointer',
-                    fontSize: 12,
-                    color: '#3d2408',
-                    padding: '5px 12px',
+                    fontSize: 10,
+                    fontWeight: 800,
+                    color: '#e8607a',
+                    padding: '4px 10px',
                     fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
                   }}
                 >
-                  esvaziar e fechar
+                  <Trash2 size={10} strokeWidth={2} /> esvaziar e fechar
                 </button>
               </div>
-              <div style={{ padding: '12px 16px', maxHeight: 360, overflowY: 'auto' }}>
-                {trashedItems.length === 0 && (
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px 14px' }}>
+                {trashedItems.length === 0 ? (
                   <div
                     style={{
-                      fontSize: 12,
-                      color: '#8b6914',
-                      opacity: 0.6,
                       textAlign: 'center',
-                      padding: '24px 0',
+                      color: 'rgba(61,26,16,0.4)',
+                      fontSize: 12,
+                      padding: '40px 0',
                     }}
                   >
-                    lixeira vazia 🌸
+                    lixeira vazia
                   </div>
-                )}
-                {trashedItems.map((item) => {
-                  const ICONS: Record<string, string> = {
-                    postit: '🗒️',
-                    checklist: '✅',
-                    drawing: '✏️',
-                    tag: '🏷️',
-                    letter: '💌',
-                  }
-                  const NAMES: Record<string, string> = {
-                    postit: 'Post-it',
-                    checklist: 'Checklist',
-                    drawing: 'Desenho',
-                    tag: 'Tag',
-                    letter: 'Cartinha',
-                  }
-                  const label =
-                    item.type === 'postit'
-                      ? (item as PostItItem).title ||
-                        (item as PostItItem).content?.slice(0, 28) ||
-                        'sem conteúdo'
-                      : item.type === 'checklist'
-                        ? (item as ChecklistItem).title || 'checklist'
-                        : item.type === 'letter'
-                          ? `de: ${(item as LetterItem).from || '?'}`
-                          : item.type === 'tag'
-                            ? (item as TagItem).label
-                            : 'desenho'
-                  return (
-                    <div
-                      key={item.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '8px 10px',
-                        borderRadius: 8,
-                        background: 'rgba(212,170,128,0.12)',
-                        border: '1px solid #d4aa8044',
-                        marginBottom: 6,
-                      }}
-                    >
-                      <span style={{ fontSize: 18 }}>{ICONS[item.type]}</span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#3d2408' }}>
-                          {NAMES[item.type]}
+                ) : (
+                  trashedItems.map((item) => {
+                    const NAMES: Record<string, string> = {
+                      postit: 'post-it',
+                      checklist: 'checklist',
+                      drawing: 'desenho',
+                      tag: 'tag',
+                      letter: 'cartinha',
+                    }
+                    const label =
+                      item.type === 'postit'
+                        ? (item as PostItItem).title ||
+                          (item as PostItItem).content?.slice(0, 28) ||
+                          'sem conteúdo'
+                        : item.type === 'checklist'
+                          ? (item as ChecklistItem).title || 'checklist'
+                          : item.type === 'letter'
+                            ? `de: ${(item as LetterItem).from || '?'}`
+                            : item.type === 'tag'
+                              ? (item as TagItem).label
+                              : 'desenho'
+                    const ICON_MAP: Record<string, React.ReactNode> = {
+                      postit: <StickyNote size={14} strokeWidth={2} color="rgba(122,48,64,0.6)" />,
+                      checklist: (
+                        <CheckCheck size={14} strokeWidth={2} color="rgba(122,48,64,0.6)" />
+                      ),
+                      drawing: <Pencil size={14} strokeWidth={2} color="rgba(122,48,64,0.6)" />,
+                      tag: <Tag2 size={14} strokeWidth={2} color="rgba(122,48,64,0.6)" />,
+                      letter: <Mail size={14} strokeWidth={2} color="rgba(122,48,64,0.6)" />,
+                    }
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          background: 'rgba(253,242,246,0.7)',
+                          border: '1.5px solid rgba(232,160,176,0.3)',
+                          borderRadius: 12,
+                          marginBottom: 6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '8px 10px',
+                        }}
+                      >
+                        <div style={{ flexShrink: 0 }}>{ICON_MAP[item.type]}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: '#3d1a10' }}>
+                            {NAMES[item.type] ?? item.type}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 9,
+                              color: 'rgba(122,48,64,0.55)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {label}
+                          </div>
                         </div>
-                        <div
+                        <button
+                          onClick={() => handleRestore(item.id)}
                           style={{
-                            fontSize: 9,
-                            color: '#8b6914',
-                            opacity: 0.8,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
+                            background: 'rgba(74,122,74,0.15)',
+                            border: '1px solid rgba(74,122,74,0.35)',
+                            borderRadius: 8,
+                            padding: '4px 10px',
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: '#4A7A4A',
+                            cursor: 'pointer',
+                            fontFamily: 'Baloo 2, sans-serif',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            flexShrink: 0,
                           }}
                         >
-                          {label}
-                        </div>
+                          <RotateCcw size={10} strokeWidth={2} /> restaurar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteForever(item.id)}
+                          style={{
+                            width: 26,
+                            height: 26,
+                            borderRadius: 8,
+                            border: 'none',
+                            background: 'rgba(232,96,122,0.12)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <X size={11} strokeWidth={2.5} color="#e8607a" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleRestore(item.id)}
-                        style={{
-                          background: 'linear-gradient(135deg, #7FB87F, #4A7A4A)',
-                          border: 'none',
-                          borderRadius: 7,
-                          padding: '5px 10px',
-                          fontSize: 9,
-                          color: '#fff',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          fontFamily: 'Baloo 2, sans-serif',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        restaurar
-                      </button>
-                      <button
-                        onClick={() => handleDeleteForever(item.id)}
-                        style={{
-                          background: 'none',
-                          border: '1px solid #e8607a',
-                          borderRadius: 7,
-                          padding: '5px 10px',
-                          fontSize: 9,
-                          color: '#e8607a',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          fontFamily: 'Baloo 2, sans-serif',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        apagar
-                      </button>
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                )}
               </div>
             </div>
           </div>
