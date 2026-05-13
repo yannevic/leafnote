@@ -76,6 +76,26 @@ export async function addCalendarEvent(
   await push(ref(db, path), event)
 }
 
+export async function addCalendarEventReturningId(
+  dateKey: string,
+  event: Omit<CalendarEvent, 'id'>
+): Promise<string | null> {
+  const path = `${CALENDAR_PATH}/${dateKey}/entries`
+  const result = await push(ref(db, path), event)
+  return result.key
+}
+
+export async function moveCalendarEvent(
+  oldDateKey: string,
+  oldEventId: string,
+  newDateKey: string,
+  event: Omit<CalendarEvent, 'id'>
+): Promise<string | null> {
+  await remove(ref(db, `${CALENDAR_PATH}/${oldDateKey}/entries/${oldEventId}`))
+  const result = await push(ref(db, `${CALENDAR_PATH}/${newDateKey}/entries`), event)
+  return result.key
+}
+
 export async function removeCalendarEvent(dateKey: string, eventId: string): Promise<void> {
   await remove(ref(db, `${CALENDAR_PATH}/${dateKey}/entries/${eventId}`))
 }

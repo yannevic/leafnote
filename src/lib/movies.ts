@@ -28,6 +28,8 @@ export interface Movie {
   watchCount?: number
   trashed?: boolean
   trashedAt?: number
+  calendarEventId?: string
+  calendarEventDateKey?: string
 }
 
 const PATH = 'movies'

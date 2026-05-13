@@ -13,7 +13,7 @@ import {
   deleteMoviePermanently,
   reorderWishlist,
 } from '../lib/movies'
-import { addCalendarEvent, toDateKey } from '../lib/calendar'
+import { addCalendarEventReturningId, moveCalendarEvent, toDateKey } from '../lib/calendar'
 
 export default function useMovies(uid: string, displayName: string) {
   const [movies, setMovies] = useState<Movie[]>([])
@@ -42,6 +42,18 @@ export default function useMovies(uid: string, displayName: string) {
       const today = new Date().toISOString().split('T')[0]
       const now = new Date()
       const wishlistCount = movies.filter((m) => m.status === 'wishlist').length
+      const [year, month, day] = today.split('-').map(Number)
+      const dateKey = toDateKey(year, month - 1, day)
+
+      let calendarEventId: string | null = null
+      if (status === 'watched') {
+        calendarEventId = await addCalendarEventReturningId(dateKey, {
+          text: `🎬 assistimos: ${title}`,
+          time: null,
+          createdBy: displayName,
+        })
+      }
+
       const movie: Omit<Movie, 'id'> = {
         title,
         poster,
@@ -53,19 +65,10 @@ export default function useMovies(uid: string, displayName: string) {
         ratings: {},
         watchCount: status === 'watched' ? 1 : 0,
         ...(status === 'wishlist' && { wishlistOrder: wishlistCount }),
+        ...(calendarEventId && { calendarEventId, calendarEventDateKey: dateKey }),
       }
 
       await addMovie(movie)
-
-      if (status === 'watched') {
-        const [year, month, day] = today.split('-').map(Number)
-        const dateKey = toDateKey(year, month - 1, day)
-        await addCalendarEvent(dateKey, {
-          text: `🎬 assistimos: ${title}`,
-          time: null,
-          createdBy: displayName,
-        })
-      }
       return 'ok'
     },
     [displayName, movies]
@@ -90,23 +93,63 @@ export default function useMovies(uid: string, displayName: string) {
           (m) => m.title.toLowerCase() === (found?.title ?? '').toLowerCase()
         )
         const maxCount = Math.max(...allWithTitle.map((m) => m.watchCount ?? 0))
-        const newCount = maxCount + 1
-        await updateMovieField(movieId, 'watchCount', newCount)
+        await updateMovieField(movieId, 'watchCount', maxCount + 1)
+
         const [year, month, day] = today.split('-').map(Number)
         const dateKey = toDateKey(year, month - 1, day)
-        await addCalendarEvent(dateKey, {
+        const eventId = await addCalendarEventReturningId(dateKey, {
           text: `🎬 assistimos: ${title}`,
           time: null,
           createdBy: displayName,
         })
+        if (eventId) {
+          await updateMovieField(movieId, 'calendarEventId', eventId)
+          await updateMovieField(movieId, 'calendarEventDateKey', dateKey)
+        }
       }
     },
     [displayName, movies]
   )
 
-  const changeDate = useCallback(async (movieId: string, date: string) => {
-    await updateMovieField(movieId, 'watchedAt', date)
-  }, [])
+  const changeDate = useCallback(
+    async (movieId: string, date: string) => {
+      await updateMovieField(movieId, 'watchedAt', date)
+      const found = movies.find((m) => m.id === movieId)
+      if (!found) return
+
+      const [year, month, day] = date.split('-').map(Number)
+      const newDateKey = toDateKey(year, month - 1, day)
+
+      if (found.calendarEventId && found.calendarEventDateKey) {
+        const newEventId = await moveCalendarEvent(
+          found.calendarEventDateKey,
+          found.calendarEventId,
+          newDateKey,
+          {
+            text: `🎬 assistimos: ${found.title}`,
+            time: null,
+            createdBy: displayName,
+          }
+        )
+        if (newEventId) {
+          await updateMovieField(movieId, 'calendarEventId', newEventId)
+          await updateMovieField(movieId, 'calendarEventDateKey', newDateKey)
+        }
+      } else {
+        // filme antigo sem referência — cria o evento na nova data
+        const newEventId = await addCalendarEventReturningId(newDateKey, {
+          text: `🎬 assistimos: ${found.title}`,
+          time: null,
+          createdBy: displayName,
+        })
+        if (newEventId) {
+          await updateMovieField(movieId, 'calendarEventId', newEventId)
+          await updateMovieField(movieId, 'calendarEventDateKey', newDateKey)
+        }
+      }
+    },
+    [displayName, movies]
+  )
 
   const saveProgress = useCallback(async (movieId: string, progress: MovieProgress) => {
     await updateMovieField(movieId, 'progress', progress)
