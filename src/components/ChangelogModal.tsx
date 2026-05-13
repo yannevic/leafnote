@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.2': [
+    "✨ botão de finanças adicionado à roda de atalhos do mural",
+    "💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)",
+  ],
+
   '3.0.1': [
     '✨ presets de personagem — até 6 slots, nome customizado, grade 2x2, aplicar/excluir com um clique',
     '✨ nossa casinha — cena isométrica com chão, paredes e fundo personalizáveis',
