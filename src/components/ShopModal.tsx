@@ -15,6 +15,7 @@ import {
   useShop,
   getCharacterShopPieces,
   sendGift,
+  subscribePartnerInventory,
   type BuyResult,
   type Gift,
 } from '../hooks/useShop'
@@ -785,7 +786,7 @@ function ItemCard({
       </span>
 
       {/* Ação */}
-      {owned ? (
+      {owned && !onAddCart ? (
         <span
           style={{
             fontSize: 10,
@@ -796,6 +797,48 @@ function ItemCard({
         >
           no guarda-roupa
         </span>
+      ) : owned && onAddCart ? (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onAddCart()
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            background: inCart ? 'rgba(74,122,74,0.15)' : T.btnIcon,
+            border: `1.5px solid ${inCart ? 'rgba(74,122,74,0.4)' : T.border}`,
+            borderRadius: 20,
+            padding: '4px 10px',
+            width: '100%',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
+        >
+          <GiftIcon size={11} color={inCart ? T.ownedText : T.textLabel} strokeWidth={2} />
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+              fontSize: 11,
+              fontWeight: 800,
+              fontFamily: 'Baloo 2, sans-serif',
+              color: inCart ? T.ownedText : T.text,
+            }}
+          >
+            {inCart ? (
+              'no carrinho'
+            ) : (
+              <>
+                presentear <PiMoneyWavyLight size={12} />
+                {finalCost}
+              </>
+            )}
+          </span>
+        </button>
       ) : !available ? (
         <span style={{ fontSize: 10, color: T.textSub, fontFamily: 'Baloo 2, sans-serif' }}>
           indisponível
@@ -1325,6 +1368,11 @@ interface ShopModalProps {
 export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: ShopModalProps) {
   console.log('ShopModal uid:', uid)
   const { coins, characterOwned, wishlist, buy, isOwned, toggleWishlist } = useShop(uid)
+  const [partnerOwned, setPartnerOwned] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    if (!partnerUid) return
+    return subscribePartnerInventory(partnerUid, setPartnerOwned)
+  }, [partnerUid])
   console.log('characterOwned', [...characterOwned])
 
   const [mainTab, setMainTab] = useState<MainTab>('casa')
@@ -1422,7 +1470,6 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
 
   const addToClothesCart = (piece: CharacterPiece) => {
     if (clothesCart.find((p) => p.id === piece.id)) return
-    if (characterOwned.has(piece.id)) return
     setClothesCart((prev) => [...prev, piece])
   }
 
@@ -1431,6 +1478,11 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   }
   const clothesCartUnowned = clothesCart.filter((p) => !characterOwned.has(p.id))
   const clothesCartTotal = clothesCartUnowned.reduce((sum, p) => sum + (p.cost ?? 0), 0)
+  const clothesCartForPartner = clothesCart.filter((p) => !partnerOwned.has(p.id))
+  const clothesCartForPartnerTotal = clothesCartForPartner.reduce(
+    (sum, p) => sum + (p.cost ?? 0),
+    0
+  )
 
   const toggleHouseCart = (item: ShopItem) => {
     setHouseCart((prev) =>
@@ -1528,7 +1580,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       const itemsToGift: ShopItem[] = confirm.isCart
         ? houseCart
         : confirm.isClothesCart
-          ? clothesCartUnowned.map((p) => ({
+          ? clothesCartForPartner.map((p) => ({
               id: p.id,
               label: p.label,
               category: 'character' as const,
@@ -1635,14 +1687,18 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   const confirmCost = confirm.isCart
     ? houseCartTotal
     : confirm.isClothesCart
-      ? clothesCartTotal
+      ? confirm.isGift
+        ? clothesCartForPartnerTotal
+        : clothesCartTotal
       : confirm.item
         ? getDiscountedCost(confirm.item)
         : (confirm.piece?.cost ?? 0)
   const confirmLabel = confirm.isCart
     ? `${houseCart.length} ${houseCart.length === 1 ? 'item' : 'itens'}`
     : confirm.isClothesCart
-      ? `${clothesCartUnowned.length} ${clothesCartUnowned.length === 1 ? 'item' : 'itens'}`
+      ? confirm.isGift
+        ? `${clothesCartForPartner.length} ${clothesCartForPartner.length === 1 ? 'item' : 'itens'}`
+        : `${clothesCartUnowned.length} ${clothesCartUnowned.length === 1 ? 'item' : 'itens'}`
       : (confirm.item?.label ?? confirm.piece?.label ?? '')
   const confirmCanAfford = coins >= confirmCost
 
@@ -2361,44 +2417,46 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                     })}
                   </div>
 
-                  {clothesCartUnowned.length > 0 && (
+                  {clothesCart.length > 0 && (
                     <>
-                      <div
-                        style={{
-                          padding: '6px 10px',
-                          borderTop: T.borderDashed,
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <span
+                      {clothesCartUnowned.length > 0 && (
+                        <div
                           style={{
-                            fontSize: 10,
-                            fontWeight: 800,
-                            color: T.textLabel,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.8px',
-                            fontFamily: 'Baloo 2, sans-serif',
-                          }}
-                        >
-                          total
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 800,
-                            color: T.text,
+                            padding: '6px 10px',
+                            borderTop: T.borderDashed,
                             display: 'flex',
+                            justifyContent: 'space-between',
                             alignItems: 'center',
-                            gap: 3,
-                            fontFamily: 'Baloo 2, sans-serif',
                           }}
                         >
-                          <PiMoneyWavyLight size={14} />
-                          {clothesCartTotal}
-                        </span>
-                      </div>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 800,
+                              color: T.textLabel,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.8px',
+                              fontFamily: 'Baloo 2, sans-serif',
+                            }}
+                          >
+                            total
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 800,
+                              color: T.text,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 3,
+                              fontFamily: 'Baloo 2, sans-serif',
+                            }}
+                          >
+                            <PiMoneyWavyLight size={14} />
+                            {clothesCartTotal}
+                          </span>
+                        </div>
+                      )}
                       <div
                         style={{
                           padding: '0 10px 8px',
@@ -2407,31 +2465,34 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                           gap: 5,
                         }}
                       >
-                        <button
-                          onClick={() =>
-                            setConfirm({
-                              item: null,
-                              piece: clothesCartUnowned[0],
-                              open: true,
-                              isClothesCart: true,
-                            })
-                          }
-                          style={cartBtnStyle(coins >= clothesCartTotal)}
-                        >
-                          <Check size={11} strokeWidth={2.5} /> comprar tudo
-                        </button>
-                        {partnerUid && (
+                        {clothesCartUnowned.length > 0 && (
                           <button
-                            onClick={() => {
-                              setGiftMode(true)
+                            onClick={() =>
                               setConfirm({
                                 item: null,
                                 piece: clothesCartUnowned[0],
                                 open: true,
                                 isClothesCart: true,
                               })
+                            }
+                            style={cartBtnStyle(coins >= clothesCartTotal)}
+                          >
+                            <Check size={11} strokeWidth={2.5} /> comprar tudo
+                          </button>
+                        )}
+                        {partnerUid && clothesCartForPartner.length > 0 && (
+                          <button
+                            onClick={() => {
+                              setGiftMode(true)
+                              setConfirm({
+                                item: null,
+                                piece: clothesCartForPartner[0],
+                                open: true,
+                                isClothesCart: true,
+                                isGift: true,
+                              })
                             }}
-                            style={cartBtnStyle(coins >= clothesCartTotal, true)}
+                            style={cartBtnStyle(coins >= clothesCartForPartnerTotal, true)}
                           >
                             <GiftIcon size={11} strokeWidth={2} /> presentear
                           </button>
@@ -2584,7 +2645,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                           setCart((prev) => applyExclusion(prev, p))
                           setClothesPreviewOpen(true)
                         }}
-                        onAddCart={() => addToClothesCart(p)}
+                        onAddCart={partnerUid ? () => addToClothesCart(p) : undefined}
                         isWishlisted={wishlist.has(p.id)}
                         onToggleWishlist={() => toggleWishlist(p.id)}
                         onBuy={() => handleBuyPiece(p)}

@@ -195,7 +195,9 @@ export function subscribeHouseInventory(callback: (owned: Set<string>) => void):
 
 // ─────────────────────────────────────────────
 // SUBSCRIBE — inventário de roupas (por uid)
+// Injeta peças gratuitas e defaults — usado para o próprio usuário.
 // ─────────────────────────────────────────────
+
 export function subscribeCharacterInventory(
   uid: string,
   callback: (owned: Set<string>) => void
@@ -214,6 +216,24 @@ export function subscribeCharacterInventory(
   })
   return () => off(r, 'value', handler)
 }
+
+// ─────────────────────────────────────────────
+// SUBSCRIBE — inventário do parceiro (sem injetar defaults)
+// Usado para checar o que o parceiro já tem antes de presentear.
+// ─────────────────────────────────────────────
+
+export function subscribePartnerInventory(
+  uid: string,
+  callback: (owned: Set<string>) => void
+): () => void {
+  const r = ref(db, `users/${uid}/inventory`)
+  const handler = onValue(r, (snap) => {
+    const val = snap.val() as Record<string, boolean> | null
+    callback(new Set(val ? Object.keys(val).filter((k) => val[k] === true) : []))
+  })
+  return () => off(r, 'value', handler)
+}
+
 // ─────────────────────────────────────────────
 // WRITE — comprar item
 // Atomicidade manual: checar saldo → debitar → salvar inventário
@@ -277,6 +297,7 @@ export async function unlockItemFree(
 // Chama uma vez quando o usuário faz login pela primeira vez.
 // Verifica se já foi inicializado antes de escrever.
 // ─────────────────────────────────────────────
+
 export async function initDefaultInventory(uid: string): Promise<void> {
   const flagSnap = await get(ref(db, `users/${uid}/inventoryInitialized`))
   if (flagSnap.val() === true) return
@@ -401,6 +422,13 @@ export function useShop(uid: string): UseShopReturn {
       unsubWishlist()
     }
   }, [uid])
+
+  useEffect(() => {
+    if (!uid || wishlist.size === 0) return
+    const toRemove = [...wishlist].filter((id) => characterOwned.has(id) || houseOwned.has(id))
+    if (toRemove.length === 0) return
+    toRemove.forEach((id) => toggleWishlistItem(uid, id))
+  }, [characterOwned, houseOwned, wishlist, uid])
 
   const buy = useCallback((item: ShopItem) => buyItem(uid, item), [uid])
 
