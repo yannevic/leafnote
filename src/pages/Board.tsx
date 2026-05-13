@@ -5,7 +5,7 @@ import { useNotifications } from '../hooks/useNotifications'
 import { auth } from '../lib/firebase'
 import { updateProfile } from 'firebase/auth'
 import HouseModal from '../components/HouseModal'
-import { House, ShoppingBag, X } from 'lucide-react'
+import { House, ShoppingBag, X, Wallet } from 'lucide-react'
 
 import {
   BoardItemType,
@@ -61,6 +61,7 @@ import CycleModal from '../components/CycleModal'
 import CharacterModal from '../components/CharacterModal'
 import { useCharacter } from '../hooks/useCharacter'
 import { ShopModal } from '../components/ShopModal'
+import FinanceModal from '../components/Finance/FinanceModal'
 import type { CyclePinItem as CyclePinItemType } from '../types/board'
 import { subscribeAllCycles, computeCycleState } from '../lib/cycle'
 import type { CycleData } from '../lib/cycle'
@@ -158,6 +159,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showCharacter, setShowCharacter] = useState(false)
   const [showHouse, setShowHouse] = useState(false)
   const [showShop, setShowShop] = useState(false)
+  const [showFinance, setShowFinance] = useState(false)
   const [shopInitialItem, setShopInitialItem] = useState<string | undefined>()
   const [expandedMenu, setExpandedMenu] = useState(false)
   const [cycleToast, setCycleToast] = useState<string | null>(null)
@@ -869,7 +871,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               WebkitBackdropFilter: 'blur(6px)',
               transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.03s, opacity 0.25s 0.03s',
               transform: expandedMenu
-                ? 'translate(calc(-50% + -53px), calc(-50% + -53px)) scale(1)'
+                ? 'translate(calc(-50% + -48px), calc(-50% + -60px)) scale(1)'
                 : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
               pointerEvents: expandedMenu ? 'auto' : 'none',
@@ -887,6 +889,49 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               }}
             >
               loja
+            </span>
+          </div>
+
+          {/* Finanças — entre loja e casa */}
+          <div
+            onClick={() => setShowFinance(true)}
+            title="finanças"
+            style={{
+              position: 'absolute',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'rgba(196,149,106,0.48)',
+              border: '1.5px solid rgba(175,120,70,0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              color: 'rgba(61,36,8,0.8)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.04s, opacity 0.25s 0.04s',
+              transform: expandedMenu
+                ? 'translate(calc(-50% + -75px), calc(-50% + -13px)) scale(1)'
+                : 'translate(-50%, -50%) scale(0.3)',
+              opacity: expandedMenu ? 1 : 0,
+              pointerEvents: expandedMenu ? 'auto' : 'none',
+              top: '50%',
+              left: '50%',
+            }}
+          >
+            <Wallet size={17} strokeWidth={1.8} />
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'rgba(61,36,8,0.75)',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              finanças
             </span>
           </div>
 
@@ -912,7 +957,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               WebkitBackdropFilter: 'blur(6px)',
               transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.06s, opacity 0.25s 0.06s',
               transform: expandedMenu
-                ? 'translate(calc(-50% + -75px), calc(-50% + 0px)) scale(1)'
+                ? 'translate(calc(-50% + -60px), calc(-50% + 48px)) scale(1)'
                 : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
               pointerEvents: expandedMenu ? 'auto' : 'none',
@@ -955,7 +1000,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               WebkitBackdropFilter: 'blur(6px)',
               transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.09s, opacity 0.25s 0.09s',
               transform: expandedMenu
-                ? 'translate(calc(-50% + -53px), calc(-50% + 53px)) scale(1)'
+                ? 'translate(calc(-50% + -24px), calc(-50% + 72px)) scale(1)'
                 : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
               pointerEvents: expandedMenu ? 'auto' : 'none',
@@ -998,7 +1043,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               WebkitBackdropFilter: 'blur(6px)',
               transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.12s, opacity 0.25s 0.12s',
               transform: expandedMenu
-                ? 'translate(calc(-50% + 0px), calc(-50% + 75px)) scale(1)'
+                ? 'translate(calc(-50% + 24px), calc(-50% + 72px)) scale(1)'
                 : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
               pointerEvents: expandedMenu ? 'auto' : 'none',
@@ -1041,7 +1086,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               WebkitBackdropFilter: 'blur(6px)',
               transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.15s, opacity 0.25s 0.15s',
               transform: expandedMenu
-                ? 'translate(calc(-50% + 53px), calc(-50% + 53px)) scale(1)'
+                ? 'translate(calc(-50% + 60px), calc(-50% + 48px)) scale(1)'
                 : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
               pointerEvents: expandedMenu ? 'auto' : 'none',
@@ -1084,7 +1129,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               WebkitBackdropFilter: 'blur(6px)',
               transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.18s, opacity 0.25s 0.18s',
               transform: expandedMenu
-                ? 'translate(calc(-50% + 75px), calc(-50% + 0px)) scale(1)'
+                ? 'translate(calc(-50% + 75px), calc(-50% + -13px)) scale(1)'
                 : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
               pointerEvents: expandedMenu ? 'auto' : 'none',
@@ -1127,7 +1172,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               WebkitBackdropFilter: 'blur(6px)',
               transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.21s, opacity 0.25s 0.21s',
               transform: expandedMenu
-                ? 'translate(calc(-50% + 53px), calc(-50% + -53px)) scale(1)'
+                ? 'translate(calc(-50% + 48px), calc(-50% + -60px)) scale(1)'
                 : 'translate(-50%, -50%) scale(0.3)',
               opacity: expandedMenu ? 1 : 0,
               pointerEvents: expandedMenu ? 'auto' : 'none',
@@ -2136,6 +2181,17 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             </div>
           )
         })()}
+
+      {showFinance && (
+        <FinanceModal
+          uid={uid}
+          partnerUid={partnerUid ?? ''}
+          myNick={displayName}
+          partnerNick={otherName}
+          onClose={() => setShowFinance(false)}
+        />
+      )}
+
       {!showWidgets &&
         !timerDismissed &&
         (timerState.running || timerState.elapsed > 0 || timerState.finished) && (
