@@ -190,7 +190,7 @@ export async function waterPlant(
   // estágio calculado pela quantidade de dias regados: a cada daysNeeded dias completos sobe 1 estágio
   // começa no estágio 1, então: stage = floor(daysWatered / daysNeeded) + 1, máx 5
   // não usa + 1 extra para não inflar — ex: incomum, 8 dias → floor(8/3)+1 = 3 (errado com +1 extra)
-  const calculatedStage = Math.min(5, Math.floor((newDaysWatered - 1) / daysNeeded) + 1)
+  const calculatedStage = Math.min(5, Math.floor(newDaysWatered / daysNeeded) + 1)
   const newStage = Math.min(plant.stage + 1, calculatedStage)
 
   await update(plantRef, {
@@ -257,7 +257,7 @@ export async function saveEventRoll(
   if (!bothRolled) return { done: false, flowerType: null }
 
   // Soma dos dois rolls (ou dobra o único roll no modo pânico)
-  const sum = panicMode ? myRoll : myRoll + partnerRoll
+  const sum = panicMode ? myRoll * 2 : myRoll + partnerRoll
   const flowerType = getFlowerFromSum(sum)
 
   await addSeed(flowerType)
