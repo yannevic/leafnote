@@ -14,7 +14,8 @@ import {
 import GardenGuideModal from './GardenGuideModal'
 import SeedExchangeModal from './SeedExchangeModal'
 import { useGarden } from '../../hooks/useGarden'
-import { FLOWERS, SeedData, SEED_SELL_VALUE, FlowerType, MAX_PLANTS } from '../../lib/garden'
+import { FLOWERS, SeedData, SEED_SELL_VALUE, FlowerType } from '../../lib/garden'
+import SlotUpgradeModal from './SlotUpgradeModal'
 import Plant from './Plant'
 import FlowerModal from './FlowerModal'
 import SeedRollModal from './SeedRollModal'
@@ -58,6 +59,8 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
     sellSeed,
     sellFlower,
     removePlant,
+    maxPlants,
+    buySlot,
   } = useGarden(uid, partnerUid)
 
   const [page, setPage] = useState(0)
@@ -67,13 +70,14 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const [closedEventIds, setClosedEventIds] = useState<string[]>([])
   const [showExchangeModal, setShowExchangeModal] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
+  const [showSlotModal, setShowSlotModal] = useState(false)
   const [sellFeedback, setSellFeedback] = useState<string | null>(null)
 
   const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
   const selectedPlant = plants.find((p) => p.id === selectedPlantId) ?? null
 
-  const hasSpace = plants.length < MAX_PLANTS
+  const hasSpace = plants.length < maxPlants
 
   // Label e estado do botão plantar
   const plantBtnDisabled = seeds.length === 0 || !hasSpace || !canPlant
@@ -198,13 +202,36 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                     letterSpacing: '0.6px',
                   }}
                 >
-                  {plants.length}/{MAX_PLANTS}
+                  {plants.length}/{maxPlants}
                 </span>
               </h2>
             </div>
 
             {/* Botões do cabeçalho: guia, troca, pânico, fechar, moedas */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={() => setShowSlotModal(true)}
+                title="expandir jardim"
+                style={{
+                  background: 'rgba(200,120,140,0.15)',
+                  border: 'none',
+                  borderRadius: 8,
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: 'rgba(122,48,64,0.6)',
+                  lineHeight: 1,
+                }}
+              >
+                +
+              </button>
+
               <button
                 onClick={() => setShowGuideModal(true)}
                 title="como funciona o jardim?"
@@ -814,6 +841,18 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
         <SeedExchangeModal seeds={seeds} onClose={() => setShowExchangeModal(false)} />
       )}
       {showGuideModal && <GardenGuideModal onClose={() => setShowGuideModal(false)} />}
+      {showSlotModal && (
+        <SlotUpgradeModal
+          currentMax={maxPlants}
+          coins={coins}
+          onBuy={async () => {
+            const result = await buySlot()
+            if (result.success) setSellFeedback(`+1 vaso desbloqueado!`)
+            return result
+          }}
+          onClose={() => setShowSlotModal(false)}
+        />
+      )}
     </>
   )
 }

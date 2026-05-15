@@ -23,7 +23,9 @@ import {
   subscribeCoins,
   sellSeed,
   sellFlower,
-  MAX_PLANTS,
+  BASE_MAX_PLANTS,
+  subscribeMaxPlants,
+  buySlot,
 } from '../lib/garden'
 
 export function useGarden(uid: string, partnerUid: string) {
@@ -35,6 +37,7 @@ export function useGarden(uid: string, partnerUid: string) {
   const [welcomeRolls, setWelcomeRolls] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [coins, setCoins] = useState(0)
+  const [maxPlants, setMaxPlants] = useState(BASE_MAX_PLANTS)
 
   useEffect(() => {
     const unsubPlants = subscribePlants((data) => {
@@ -76,6 +79,11 @@ export function useGarden(uid: string, partnerUid: string) {
 
   useEffect(() => {
     const unsub = subscribeCoins(setCoins)
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    const unsub = subscribeMaxPlants(setMaxPlants)
     return unsub
   }, [])
 
@@ -133,7 +141,7 @@ export function useGarden(uid: string, partnerUid: string) {
     return event ? event.rolls?.[partnerUid] != null : false
   }
 
-  const canPlant = canPlantToday(plants) && plants.length < MAX_PLANTS
+  const canPlant = canPlantToday(plants) && plants.length < maxPlants
   const welcomePending = !welcomeGiven
   const partnerRolledWelcome = welcomeRolls[partnerUid] != null
   const iAlreadyRolledWelcome = welcomeRolls[uid] != null
@@ -148,6 +156,10 @@ export function useGarden(uid: string, partnerUid: string) {
 
   const handleRemovePlant = async (plantId: string): Promise<void> => {
     await remove(ref(db, `garden/plants/${plantId}`))
+  }
+
+  const handleBuySlot = async (): Promise<{ success: boolean; cost: number }> => {
+    return buySlot(maxPlants, coins)
   }
 
   return {
@@ -174,5 +186,7 @@ export function useGarden(uid: string, partnerUid: string) {
     sellSeed: handleSellSeed,
     sellFlower: handleSellFlower,
     removePlant: handleRemovePlant,
+    maxPlants,
+    buySlot: handleBuySlot,
   }
 }

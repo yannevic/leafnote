@@ -395,6 +395,32 @@ export function getExchangeOptions(tier: FlowerRarity, selectedTypes: FlowerType
   return [...sameTier, ...nextTierFlowers]
 }
 
+// ─── Slots do jardim ──────────────────────────────────────────────────────────
+
+export const SLOT_PRICES = [80, 180, 320, 500]
+export const MAX_SLOTS = BASE_MAX_PLANTS + SLOT_PRICES.length // 8
+
+export function subscribeMaxPlants(callback: (max: number) => void): () => void {
+  const r = ref(db, 'garden/maxPlants')
+  const handler = onValue(r, (snap) => {
+    callback((snap.val() as number) ?? BASE_MAX_PLANTS)
+  })
+  return () => off(r, 'value', handler)
+}
+
+export async function buySlot(
+  currentMax: number,
+  coins: number
+): Promise<{ success: boolean; cost: number }> {
+  const slotIndex = currentMax - BASE_MAX_PLANTS
+  if (slotIndex >= SLOT_PRICES.length) return { success: false, cost: 0 }
+  const cost = SLOT_PRICES[slotIndex]
+  if (coins < cost) return { success: false, cost }
+  await addCoins(-cost)
+  await set(ref(db, 'garden/maxPlants'), currentMax + 1)
+  return { success: true, cost }
+}
+
 export async function exchangeSeeds(seedIds: string[], rewardType: FlowerType): Promise<void> {
   await Promise.all(seedIds.map((id) => remove(ref(db, `garden/seeds/${id}`))))
   await addSeed(rewardType)
