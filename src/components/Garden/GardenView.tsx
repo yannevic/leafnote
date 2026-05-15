@@ -76,6 +76,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
   const selectedPlant = plants.find((p) => p.id === selectedPlantId) ?? null
+  const selectedPlantIndex = plants.findIndex((p) => p.id === selectedPlantId)
 
   const hasSpace = plants.length < maxPlants
 
@@ -550,6 +551,10 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
           onClose={() => setSelectedPlantId(null)}
           onSellFlower={handleSellFlower}
           onRemovePlant={handleRemovePlant}
+          hasPrev={selectedPlantIndex > 0}
+          hasNext={selectedPlantIndex < plants.length - 1}
+          onPrev={() => setSelectedPlantId(plants[selectedPlantIndex - 1]?.id ?? null)}
+          onNext={() => setSelectedPlantId(plants[selectedPlantIndex + 1]?.id ?? null)}
         />
       )}
 

@@ -1,4 +1,4 @@
-import { X, Droplets, Droplet } from 'lucide-react'
+import { X, Droplets, Droplet, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   PlantData,
   FLOWERS,
@@ -50,6 +50,10 @@ interface FlowerModalProps {
   onClose: () => void
   onSellFlower: (plantId: string, flowerType: FlowerType) => Promise<number>
   onRemovePlant: (plantId: string) => Promise<void>
+  onPrev?: () => void
+  onNext?: () => void
+  hasPrev?: boolean
+  hasNext?: boolean
 }
 
 export default function FlowerModal({
@@ -61,6 +65,10 @@ export default function FlowerModal({
   onClose,
   onSellFlower,
   onRemovePlant,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
 }: FlowerModalProps) {
   const info = FLOWERS[plant.flowerType]
   const imgSrc = getFlowerImage(plant.flowerType, plant.stage)
@@ -135,7 +143,36 @@ export default function FlowerModal({
             flexShrink: 0,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <button
+            onClick={onPrev}
+            disabled={!hasPrev}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              border: 'none',
+              background: hasPrev ? T.btnIcon : 'transparent',
+              cursor: hasPrev ? 'pointer' : 'default',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              flexShrink: 0,
+              opacity: hasPrev ? 1 : 0.2,
+            }}
+          >
+            <ChevronLeft size={14} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
+          </button>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              flex: 1,
+              justifyContent: 'center',
+            }}
+          >
             <TbPlant2 size={16} color={RARITY_COLOR[info.rarity]} />
             <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>{info.name}</span>
             <span
@@ -150,24 +187,46 @@ export default function FlowerModal({
               {info.rarity}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              border: 'none',
-              background: T.btnIcon,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 0,
-              flexShrink: 0,
-            }}
-          >
-            <X size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
-          </button>
+
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              onClick={onNext}
+              disabled={!hasNext}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: 'none',
+                background: hasNext ? T.btnIcon : 'transparent',
+                cursor: hasNext ? 'pointer' : 'default',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                opacity: hasNext ? 1 : 0.2,
+              }}
+            >
+              <ChevronRight size={14} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: 'none',
+                background: T.btnIcon,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                flexShrink: 0,
+              }}
+            >
+              <X size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
+            </button>
+          </div>
         </div>
 
         {/* Conteúdo */}
