@@ -10,6 +10,7 @@ import {
   addDays,
 } from '../lib/cycle'
 import { useCycle } from '../hooks/useCycle'
+import DatePicker from './DatePicker'
 
 interface Props {
   myUid: string
@@ -187,8 +188,16 @@ export default function CycleModal({ myUid, onClose }: Props) {
         justifyContent: 'center',
       }}
     >
+      <style>{`
+        .cycle-scroll::-webkit-scrollbar { width: 4px; }
+        .cycle-scroll::-webkit-scrollbar-track { background: transparent; }
+        .cycle-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+        .cycle-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+        .cycle-scroll { scrollbar-width: thin; scrollbar-color: rgba(232,160,176,0.55) transparent; }
+      `}</style>
       <div
         onClick={(e) => e.stopPropagation()}
+        className="cycle-scroll"
         style={{
           background:
             'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
@@ -261,6 +270,7 @@ export default function CycleModal({ myUid, onClose }: Props) {
           ))}
         </div>
 
+        {/* ── HISTÓRICO ── */}
         {tab === 'historico' &&
           (() => {
             const sorted = Object.entries(allCycles).sort(([a], [b]) => (a > b ? -1 : 1))
@@ -487,7 +497,7 @@ export default function CycleModal({ myUid, onClose }: Props) {
                         </div>
                       )}
 
-                      {/* edição inline */}
+                      {/* edição inline — 3 DatePickers */}
                       {isEditing && (
                         <div
                           style={{
@@ -498,39 +508,33 @@ export default function CycleModal({ myUid, onClose }: Props) {
                             paddingTop: 10,
                           }}
                         >
-                          <div>
-                            <label style={labelStyle}>data prevista</label>
-                            <input
-                              type="date"
-                              value={editData.predictedDate ?? ''}
-                              onChange={(e) =>
-                                setEditData((d) => ({ ...d, predictedDate: e.target.value }))
-                              }
-                              style={{ ...inputStyle, fontSize: 12 }}
-                            />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>data confirmada</label>
-                            <input
-                              type="date"
-                              value={editData.confirmedDate ?? ''}
-                              onChange={(e) =>
-                                setEditData((d) => ({ ...d, confirmedDate: e.target.value }))
-                              }
-                              style={{ ...inputStyle, fontSize: 12 }}
-                            />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>data de fim real</label>
-                            <input
-                              type="date"
-                              value={editData.actualEndDate ?? ''}
-                              onChange={(e) =>
-                                setEditData((d) => ({ ...d, actualEndDate: e.target.value }))
-                              }
-                              style={{ ...inputStyle, fontSize: 12 }}
-                            />
-                          </div>
+                          {/* ANTES: <input type="date" value={editData.predictedDate ?? ''} onChange={...} /> */}
+                          {/* DEPOIS: DatePicker */}
+                          <DatePicker
+                            label="data prevista"
+                            value={editData.predictedDate ?? ''}
+                            onChange={(v) => setEditData((d) => ({ ...d, predictedDate: v }))}
+                            placeholder="dd/mm/aaaa"
+                          />
+
+                          {/* ANTES: <input type="date" value={editData.confirmedDate ?? ''} onChange={...} /> */}
+                          {/* DEPOIS: DatePicker */}
+                          <DatePicker
+                            label="data confirmada"
+                            value={editData.confirmedDate ?? ''}
+                            onChange={(v) => setEditData((d) => ({ ...d, confirmedDate: v }))}
+                            placeholder="dd/mm/aaaa"
+                          />
+
+                          {/* ANTES: <input type="date" value={editData.actualEndDate ?? ''} onChange={...} /> */}
+                          {/* DEPOIS: DatePicker */}
+                          <DatePicker
+                            label="data de fim real"
+                            value={editData.actualEndDate ?? ''}
+                            onChange={(v) => setEditData((d) => ({ ...d, actualEndDate: v }))}
+                            placeholder="dd/mm/aaaa"
+                          />
+
                           <div>
                             <label style={labelStyle}>status</label>
                             <div style={{ display: 'flex', gap: 6 }}>
@@ -593,21 +597,25 @@ export default function CycleModal({ myUid, onClose }: Props) {
             )
           })()}
 
+        {/* ── ABA ATUAL ── */}
         {tab === 'atual' && (
           <>
             {/* novo ciclo */}
             {!hasCurrent && (
               <div style={sectionStyle}>
                 <p style={sectionTitle}>novo ciclo</p>
+
+                {/* ANTES: <input type="date" value={predictedDate} onChange={...} /> */}
+                {/* DEPOIS: DatePicker */}
                 <div>
-                  <label style={labelStyle}>data prevista para descer</label>
-                  <input
-                    type="date"
+                  <DatePicker
+                    label="data prevista para descer"
                     value={predictedDate}
-                    onChange={(e) => setPredictedDate(e.target.value)}
-                    style={inputStyle}
+                    onChange={setPredictedDate}
+                    placeholder="dd/mm/aaaa"
                   />
                 </div>
+
                 <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <label style={labelStyle}>dias de tpm antes</label>
@@ -632,6 +640,7 @@ export default function CycleModal({ myUid, onClose }: Props) {
                     />
                   </div>
                 </div>
+
                 {predictedDate && (
                   <p
                     style={{
@@ -663,15 +672,16 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 <p style={sectionTitle}>
                   previsão atual — {formatDate(currentCycle.data.predictedDate)}
                 </p>
-                <div>
-                  <label style={labelStyle}>ajustar data prevista</label>
-                  <input
-                    type="date"
-                    value={predictedDate}
-                    onChange={(e) => setPredictedDate(e.target.value)}
-                    style={inputStyle}
-                  />
-                </div>
+
+                {/* ANTES: <input type="date" value={predictedDate} onChange={...} /> */}
+                {/* DEPOIS: DatePicker */}
+                <DatePicker
+                  label="ajustar data prevista"
+                  value={predictedDate}
+                  onChange={setPredictedDate}
+                  placeholder="dd/mm/aaaa"
+                />
+
                 <div>
                   <label style={labelStyle}>dias de tpm antes</label>
                   <input
@@ -694,15 +704,16 @@ export default function CycleModal({ myUid, onClose }: Props) {
                 <div style={{ height: 1, background: 'rgba(232,160,176,0.3)', margin: '2px 0' }} />
 
                 <p style={sectionTitle}>confirmar que desceu</p>
-                <div>
-                  <label style={labelStyle}>data real que desceu</label>
-                  <input
-                    type="date"
-                    value={confirmedDate}
-                    onChange={(e) => setConfirmedDate(e.target.value)}
-                    style={inputStyle}
-                  />
-                </div>
+
+                {/* ANTES: <input type="date" value={confirmedDate} onChange={...} /> */}
+                {/* DEPOIS: DatePicker */}
+                <DatePicker
+                  label="data real que desceu"
+                  value={confirmedDate}
+                  onChange={setConfirmedDate}
+                  placeholder="dd/mm/aaaa"
+                />
+
                 <div>
                   <label style={labelStyle}>duração prevista (dias)</label>
                   <input
@@ -746,15 +757,16 @@ export default function CycleModal({ myUid, onClose }: Props) {
                     {formatDate(currentCycle.data.actualEndDate ?? currentCycle.data.endDate)}
                   </strong>
                 </p>
-                <div>
-                  <label style={labelStyle}>corrigir data de fim (opcional)</label>
-                  <input
-                    type="date"
-                    value={actualEndDate}
-                    onChange={(e) => setActualEndDate(e.target.value)}
-                    style={inputStyle}
-                  />
-                </div>
+
+                {/* ANTES: <input type="date" value={actualEndDate} onChange={...} /> */}
+                {/* DEPOIS: DatePicker */}
+                <DatePicker
+                  label="corrigir data de fim (opcional)"
+                  value={actualEndDate}
+                  onChange={setActualEndDate}
+                  placeholder="dd/mm/aaaa"
+                />
+
                 <button
                   onClick={handleEndCycle}
                   disabled={saving}
@@ -797,11 +809,10 @@ export default function CycleModal({ myUid, onClose }: Props) {
             )}
 
             {/* encerrado */}
-            {/* encerrado */}
             {isEnded && (
               <div style={sectionStyle}>
                 <p style={{ ...sectionTitle, textTransform: 'none', fontSize: 13 }}>
-                  ciclo encerrado 🌸 registre o próximo quando quiser.
+                  ciclo encerrado — registre o próximo quando quiser.
                 </p>
                 <button
                   onClick={() => {

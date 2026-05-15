@@ -22,6 +22,7 @@ import useMovies from '../hooks/useMovies'
 import { Movie, MovieStatus, addMovie, subscribeTrashedMovies } from '../lib/movies'
 import { useEffect, useRef, useState } from 'react'
 import type React from 'react'
+import DatePicker from './DatePicker'
 
 // ── Paleta leafnote ──────────────────────────────────────────
 const T = {
@@ -594,24 +595,13 @@ function WatchedCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Calendar size={12} color={T.textLabel} strokeWidth={2} />
             {editingDate ? (
-              <input
-                type="date"
+              <DatePicker
                 value={dateVal}
                 max={new Date().toISOString().split('T')[0]}
-                onChange={(e) => setDateVal(e.target.value)}
-                onBlur={() => {
-                  onChangeDate(movie.id, dateVal)
+                onChange={(v) => {
+                  setDateVal(v)
+                  onChangeDate(movie.id, v)
                   setEditingDate(false)
-                }}
-                autoFocus
-                style={{
-                  background: T.card,
-                  border: T.borderVal,
-                  borderRadius: 6,
-                  padding: '2px 8px',
-                  fontSize: 11,
-                  color: T.text,
-                  fontFamily: 'Baloo 2, sans-serif',
                 }}
               />
             ) : (

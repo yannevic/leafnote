@@ -11,6 +11,7 @@ import {
   PICKER_COLORS,
   formatCurrency,
 } from '../../lib/finance'
+import DatePicker from '../DatePicker'
 
 interface Props {
   uid: string
@@ -116,7 +117,6 @@ export default function TransactionForm({
     }
   }
 
-  // ícone dinâmico do lucide
   function LucideIcon({
     name,
     size = 14,
@@ -221,12 +221,7 @@ export default function TransactionForm({
         </div>
         <div style={{ flex: 1 }}>
           <span style={labelStyle}>data</span>
-          <input
-            style={inputStyle}
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <DatePicker value={date} onChange={setDate} placeholder="dd/mm/aaaa" />
         </div>
       </div>
 

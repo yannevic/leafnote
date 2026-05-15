@@ -5,6 +5,7 @@ import type { SpecialLetterLayout } from '../types/board'
 import { getAvailableDates, formatMmdd } from '../lib/specialDates'
 import type { SpecialDates } from '../lib/specialDates'
 import SpecialDatesModal from './SpecialDatesModal'
+import DatePicker from './DatePicker'
 
 interface Props {
   myNick: string
@@ -309,22 +310,7 @@ export default function SpecialLetterModal({
             >
               disponível para abrir a partir de
             </span>
-            <input
-              type="date"
-              value={availableFrom}
-              onChange={(e) => setAvailableFrom(e.target.value)}
-              style={{
-                fontFamily: 'Baloo 2, sans-serif',
-                fontSize: 13,
-                fontWeight: 600,
-                padding: '7px 12px',
-                borderRadius: 10,
-                border: '1.5px solid rgba(232,160,176,0.35)',
-                background: 'rgba(253,242,246,0.7)',
-                color: '#3d1a10',
-                outline: 'none',
-              }}
-            />
+            <DatePicker value={availableFrom} onChange={(v) => setAvailableFrom(v)} />
           </div>
 
           {/* Preview + textarea */}

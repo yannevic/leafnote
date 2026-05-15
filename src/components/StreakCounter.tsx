@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Check,
 } from 'lucide-react'
+import DatePicker from './DatePicker'
 
 const MILESTONES = [
   {
@@ -561,22 +562,11 @@ export default function StreakCounter() {
             >
               escolha a data de início do contador
             </div>
-            <input
-              type="date"
+
+            <DatePicker
               value={dateInput}
-              onChange={(e) => setDateInput(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 10,
-                border: '1.5px solid rgba(232,160,176,0.4)',
-                fontSize: 13,
-                fontFamily: 'Baloo 2, sans-serif',
-                color: '#3d1a10',
-                outline: 'none',
-                background: 'rgba(253,242,246,0.7)',
-                fontWeight: 600,
-              }}
+              onChange={(v) => setDateInput(v)}
             />
             <div style={{ display: 'flex', gap: 8 }}>
               <button

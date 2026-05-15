@@ -7,6 +7,7 @@ import GoalCard from './GoalCard'
 import DebtCard from './DebtCard'
 import * as LucideIcons from 'lucide-react'
 import { formatCurrency, PICKER_COLORS } from '../../lib/finance'
+import DatePicker from '../DatePicker'
 
 interface Props {
   uid: string
@@ -86,7 +87,6 @@ export default function FinanceModal({ uid, partnerUid, myNick, partnerNick, onC
 
           <span style={{ fontSize: 15, fontWeight: 800, color: '#3d1a10', flex: 1 }}>finanças</span>
 
-          {/* saldo do mês */}
           {!finance.loading && (
             <div
               style={{
@@ -125,14 +125,7 @@ export default function FinanceModal({ uid, partnerUid, myNick, partnerNick, onC
         <div style={{ margin: '10px 16px 0', borderTop: '2px dashed rgba(232,160,176,0.4)' }} />
 
         {/* ── Abas ── */}
-        <div
-          style={{
-            display: 'flex',
-            gap: 4,
-            padding: '10px 16px 0',
-            flexShrink: 0,
-          }}
-        >
+        <div style={{ display: 'flex', gap: 4, padding: '10px 16px 0', flexShrink: 0 }}>
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -166,11 +159,7 @@ export default function FinanceModal({ uid, partnerUid, myNick, partnerNick, onC
 
         {/* ── Conteúdo ── */}
         <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '12px 16px 16px',
-          }}
+          style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 16px' }}
           className="finance-scroll"
         >
           {finance.loading ? (
@@ -224,10 +213,11 @@ export default function FinanceModal({ uid, partnerUid, myNick, partnerNick, onC
   )
 }
 
+// ── OverviewTab — sem alterações ──────────────────────────────────────────────
+
 function OverviewTab({ finance }: { finance: ReturnType<typeof useFinance> }) {
   const { totalIncome, totalExpense, balance, monthTransactions, activeGoals } = finance
 
-  // resumo por categoria
   const byCategory: Record<string, number> = {}
   monthTransactions
     .filter((t) => t.type === 'expense')
@@ -242,7 +232,6 @@ function OverviewTab({ finance }: { finance: ReturnType<typeof useFinance> }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* mês */}
       <span
         style={{
           fontSize: 9,
@@ -255,7 +244,6 @@ function OverviewTab({ finance }: { finance: ReturnType<typeof useFinance> }) {
         {month}
       </span>
 
-      {/* cards ganho / gasto / saldo */}
       <div style={{ display: 'flex', gap: 6 }}>
         {[
           { label: 'ganhos', value: totalIncome, color: '#4A7A4A', bg: 'rgba(74,122,74,0.1)' },
@@ -299,7 +287,6 @@ function OverviewTab({ finance }: { finance: ReturnType<typeof useFinance> }) {
         ))}
       </div>
 
-      {/* gastos por categoria */}
       {categoryEntries.length > 0 && (
         <div
           style={{
@@ -347,7 +334,6 @@ function OverviewTab({ finance }: { finance: ReturnType<typeof useFinance> }) {
         </div>
       )}
 
-      {/* metas ativas resumo */}
       {activeGoals.length > 0 && (
         <div
           style={{
@@ -398,7 +384,6 @@ function OverviewTab({ finance }: { finance: ReturnType<typeof useFinance> }) {
         </div>
       )}
 
-      {/* últimos lançamentos */}
       {monthTransactions.length > 0 && (
         <div
           style={{
@@ -474,6 +459,8 @@ function OverviewTab({ finance }: { finance: ReturnType<typeof useFinance> }) {
   )
 }
 
+// ── TransactionsTab — sem alterações ─────────────────────────────────────────
+
 function TransactionsTab({
   finance,
   uid,
@@ -491,7 +478,6 @@ function TransactionsTab({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* botão novo */}
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
@@ -512,7 +498,6 @@ function TransactionsTab({
         </button>
       )}
 
-      {/* formulário */}
       {showForm && (
         <TransactionForm
           uid={uid}
@@ -537,7 +522,6 @@ function TransactionsTab({
         />
       )}
 
-      {/* lista */}
       <TransactionList
         transactions={finance.transactions}
         uid={uid}
@@ -550,6 +534,9 @@ function TransactionsTab({
     </div>
   )
 }
+
+// ── GoalsTab — DatePicker no lugar do input type="date" do prazo ──────────────
+
 function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; uid: string }) {
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
@@ -655,7 +642,6 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* botão nova meta */}
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
@@ -676,7 +662,6 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
         </button>
       )}
 
-      {/* formulário nova meta */}
       {showForm && (
         <div
           style={{
@@ -713,17 +698,17 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
               />
             </div>
             <div style={{ flex: 1 }}>
-              <span style={labelStyle}>prazo (opcional)</span>
-              <input
-                style={inputStyle}
-                type="date"
+              {/* ANTES: <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} /> */}
+              {/* DEPOIS: DatePicker customizado */}
+              <DatePicker
+                label="prazo (opcional)"
                 value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
+                onChange={setDeadline}
+                placeholder="dd/mm/aaaa"
               />
             </div>
           </div>
 
-          {/* ícone */}
           <div>
             <span style={labelStyle}>ícone</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -754,7 +739,6 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
             </div>
           </div>
 
-          {/* cor */}
           <div>
             <span style={labelStyle}>cor</span>
             <div style={{ display: 'flex', gap: 5 }}>
@@ -829,7 +813,6 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
         </div>
       )}
 
-      {/* cards de metas ativas */}
       {finance.activeGoals.length === 0 && !showForm && (
         <div
           style={{
@@ -850,18 +833,13 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
           goal={g}
           uid={uid}
           onDeposit={(goalId, current, amount, addedBy) =>
-            finance.deposit(goalId, current, {
-              amount,
-              addedBy,
-              date: new Date().toISOString(),
-            })
+            finance.deposit(goalId, current, { amount, addedBy, date: new Date().toISOString() })
           }
           onArchive={finance.archive}
           onCreateTransaction={finance.createTransaction}
         />
       ))}
 
-      {/* histórico arquivadas */}
       {finance.archivedGoals.length > 0 && (
         <div style={{ marginTop: 4 }}>
           <button
@@ -911,6 +889,8 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
     </div>
   )
 }
+
+// ── DebtsTab — DatePicker no lugar do input type="date" da data da dívida ─────
 
 function DebtsTab({
   finance,
@@ -987,7 +967,6 @@ function DebtsTab({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* aviso separação */}
       <div
         style={{
           padding: '6px 10px',
@@ -1002,7 +981,6 @@ function DebtsTab({
         dívidas são apenas para controle — não afetam o saldo do app
       </div>
 
-      {/* botão nova dívida */}
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
@@ -1023,7 +1001,6 @@ function DebtsTab({
         </button>
       )}
 
-      {/* formulário */}
       {showForm && (
         <div
           style={{
@@ -1036,7 +1013,6 @@ function DebtsTab({
             gap: 10,
           }}
         >
-          {/* quem deve */}
           <div>
             <span style={labelStyle}>quem deve</span>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -1083,7 +1059,6 @@ function DebtsTab({
             </div>
           </div>
 
-          {/* valor + data */}
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ flex: 1 }}>
               <span style={labelStyle}>valor (R$)</span>
@@ -1098,17 +1073,12 @@ function DebtsTab({
               />
             </div>
             <div style={{ flex: 1 }}>
-              <span style={labelStyle}>data</span>
-              <input
-                style={inputStyle}
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
+              {/* ANTES: <input type="date" value={date} onChange={(e) => setDate(e.target.value)} /> */}
+              {/* DEPOIS: DatePicker customizado */}
+              <DatePicker label="data" value={date} onChange={setDate} placeholder="dd/mm/aaaa" />
             </div>
           </div>
 
-          {/* descrição */}
           <div>
             <span style={labelStyle}>descrição (opcional)</span>
             <input
@@ -1172,7 +1142,6 @@ function DebtsTab({
         </div>
       )}
 
-      {/* dívidas ativas */}
       {finance.activeDebts.length === 0 && !showForm && (
         <div
           style={{
@@ -1199,7 +1168,6 @@ function DebtsTab({
         />
       ))}
 
-      {/* histórico pagas */}
       {finance.paidDebts.length > 0 && (
         <div style={{ marginTop: 4 }}>
           <button
