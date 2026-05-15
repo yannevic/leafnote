@@ -64,6 +64,7 @@ export default function CountdownPin({ item, zIndex, onUpdate, onDelete, onFocus
   const days = getDaysLeft(item.targetDate)
   const status = getStatus(days)
   const isToday = days <= 0
+  const pinColor = item.color ?? status.color
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -122,7 +123,7 @@ export default function CountdownPin({ item, zIndex, onUpdate, onDelete, onFocus
       <div
         style={{
           height: 3,
-          background: status.barColor,
+          background: pinColor,
           width: '100%',
         }}
       />
@@ -173,16 +174,16 @@ export default function CountdownPin({ item, zIndex, onUpdate, onDelete, onFocus
           style={{
             fontSize: 12,
             fontWeight: 700,
-            color: status.color,
+            color: pinColor,
             display: 'flex',
             alignItems: 'center',
             gap: 5,
           }}
         >
           {status.icon === 'clock' ? (
-            <Clock size={13} color={status.color} strokeWidth={2} />
+            <Clock size={13} color={pinColor} strokeWidth={2} />
           ) : (
-            <AlertTriangle size={13} color={status.color} strokeWidth={2} />
+            <AlertTriangle size={13} color={pinColor} strokeWidth={2} />
           )}
           {status.label}
         </div>
