@@ -397,7 +397,7 @@ export function getExchangeOptions(tier: FlowerRarity, selectedTypes: FlowerType
 
 // ─── Slots do jardim ──────────────────────────────────────────────────────────
 
-export const SLOT_PRICES = [80, 180, 320, 500]
+export const SLOT_PRICES = [80, 250, 500, 900]
 export const MAX_SLOTS = BASE_MAX_PLANTS + SLOT_PRICES.length // 8
 
 export function subscribeMaxPlants(callback: (max: number) => void): () => void {
