@@ -3,11 +3,13 @@ import { Check, ChevronDown } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import {
   Transaction,
+  Goal,
   Category,
   PaidBy,
   CATEGORIES,
   CATEGORY_ICONS,
   PICKER_COLORS,
+  formatCurrency,
 } from '../../lib/finance'
 
 interface Props {
@@ -15,7 +17,8 @@ interface Props {
   myNick: string
   partnerNick: string
   initial?: Transaction
-  onSave: (data: Omit<Transaction, 'id'>) => Promise<void>
+  activeGoals?: Goal[]
+  onSave: (data: Omit<Transaction, 'id'>, goalId?: string) => Promise<void>
   onCancel: () => void
 }
 
@@ -48,6 +51,7 @@ export default function TransactionForm({
   myNick,
   partnerNick,
   initial,
+  activeGoals = [],
   onSave,
   onCancel,
 }: Props) {
@@ -61,7 +65,9 @@ export default function TransactionForm({
   const [date, setDate] = useState(
     initial?.date?.slice(0, 10) ?? new Date().toISOString().slice(0, 10)
   )
+
   const [paidBy, setPaidBy] = useState<PaidBy>(initial?.paidBy ?? 'me')
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(initial?.goalId ?? null)
   const [showIcons, setShowIcons] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -86,20 +92,25 @@ export default function TransactionForm({
       return
     }
     setError('')
+
     setSaving(true)
     try {
-      await onSave({
-        type,
-        amount: Number(Number(amount).toFixed(2)),
-        description: description.trim(),
-        category,
-        ...(category === 'outro' && { categoryCustom: categoryCustom.trim() }),
-        icon,
-        color,
-        date: new Date(date + 'T12:00:00').toISOString(),
-        paidBy,
-        createdBy: uid,
-      })
+      await onSave(
+        {
+          type,
+          amount: Number(Number(amount).toFixed(2)),
+          description: description.trim(),
+          category,
+          ...(category === 'outro' && { categoryCustom: categoryCustom.trim() }),
+          icon,
+          color,
+          date: new Date(date + 'T12:00:00').toISOString(),
+          paidBy,
+          createdBy: uid,
+          ...(selectedGoalId && { goalId: selectedGoalId }),
+        },
+        selectedGoalId ?? undefined
+      )
     } finally {
       setSaving(false)
     }
@@ -403,6 +414,64 @@ export default function TransactionForm({
           ))}
         </div>
       </div>
+
+      {/* destinar a meta */}
+      {activeGoals.length > 0 && (
+        <div>
+          <span style={labelStyle}>destinar a uma meta (opcional)</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <button
+              onClick={() => setSelectedGoalId(null)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: 10,
+                border:
+                  selectedGoalId === null
+                    ? '1.5px solid rgba(232,160,176,0.5)'
+                    : '1.5px solid transparent',
+                background: selectedGoalId === null ? 'rgba(232,160,176,0.22)' : 'transparent',
+                color: selectedGoalId === null ? '#7a3040' : 'rgba(61,26,16,0.4)',
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontFamily: 'Baloo 2, sans-serif',
+                textAlign: 'left',
+              }}
+            >
+              nenhuma
+            </button>
+            {activeGoals.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => setSelectedGoalId(g.id)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 10,
+                  border:
+                    selectedGoalId === g.id
+                      ? `1.5px solid ${g.color}88`
+                      : '1.5px solid transparent',
+                  background: selectedGoalId === g.id ? g.color + '22' : 'transparent',
+                  color: selectedGoalId === g.id ? g.color : 'rgba(61,26,16,0.5)',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span>{g.title}</span>
+                <span style={{ fontSize: 10, opacity: 0.7 }}>
+                  {formatCurrency(g.current)} / {formatCurrency(g.target)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* erro */}
       {error && <span style={{ fontSize: 10, fontWeight: 700, color: '#e8607a' }}>{error}</span>}

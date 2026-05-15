@@ -3,11 +3,14 @@ import { Check, X, Plus, Archive, ChevronDown, ChevronUp } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { Goal, formatCurrency } from '../../lib/finance'
 
+import { Transaction } from '../../lib/finance'
+
 interface Props {
   goal: Goal
   uid: string
   onDeposit: (goalId: string, current: number, amount: number, addedBy: string) => Promise<void>
   onArchive: (id: string) => Promise<void>
+  onCreateTransaction?: (data: Omit<Transaction, 'id'>) => Promise<void>
 }
 
 function LucideIcon({
@@ -33,7 +36,7 @@ function LucideIcon({
   return <Icon size={size} strokeWidth={2} color={c} />
 }
 
-export default function GoalCard({ goal, uid, onDeposit, onArchive }: Props) {
+export default function GoalCard({ goal, uid, onDeposit, onArchive, onCreateTransaction }: Props) {
   const [showDeposit, setShowDeposit] = useState(false)
   const [depositVal, setDepositVal] = useState('')
   const [saving, setSaving] = useState(false)
@@ -48,6 +51,21 @@ export default function GoalCard({ goal, uid, onDeposit, onArchive }: Props) {
     setSaving(true)
     try {
       await onDeposit(goal.id, goal.current, val, uid)
+      if (onCreateTransaction) {
+        await onCreateTransaction({
+          type: 'expense',
+          amount: val,
+          description: `depósito: ${goal.title}`,
+          category: 'outro',
+          categoryCustom: 'meta',
+          icon: goal.icon,
+          color: goal.color,
+          date: new Date().toISOString(),
+          paidBy: 'me',
+          createdBy: uid,
+          goalId: goal.id,
+        })
+      }
       setDepositVal('')
       setShowDeposit(false)
     } finally {

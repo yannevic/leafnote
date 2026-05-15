@@ -518,8 +518,19 @@ function TransactionsTab({
           uid={uid}
           myNick={myNick}
           partnerNick={partnerNick}
-          onSave={async (data) => {
+          activeGoals={finance.activeGoals}
+          onSave={async (data, goalId) => {
             await finance.createTransaction(data)
+            if (goalId) {
+              const goal = finance.activeGoals.find((g) => g.id === goalId)
+              if (goal) {
+                await finance.deposit(goalId, goal.current, {
+                  amount: data.amount,
+                  addedBy: uid,
+                  date: new Date().toISOString(),
+                })
+              }
+            }
             setShowForm(false)
           }}
           onCancel={() => setShowForm(false)}
@@ -846,6 +857,7 @@ function GoalsTab({ finance, uid }: { finance: ReturnType<typeof useFinance>; ui
             })
           }
           onArchive={finance.archive}
+          onCreateTransaction={finance.createTransaction}
         />
       ))}
 

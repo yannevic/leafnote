@@ -28,6 +28,7 @@ export interface Transaction {
   date: string
   paidBy: PaidBy
   createdBy: string
+  goalId?: string
 }
 
 export interface GoalDeposit {
