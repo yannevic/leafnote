@@ -244,43 +244,44 @@ export default function TransactionForm({
       {/* categoria */}
       <div>
         <span style={labelStyle}>categoria</span>
-        <div style={{ position: 'relative' }}>
-          <select
-            style={{ ...inputStyle, appearance: 'none', paddingRight: 28, cursor: 'pointer' }}
-            value={category}
-            onChange={(e) => {
-              const c = e.target.value as Category
-              setCategory(c)
-              setIcon(CATEGORY_ICONS[c])
-            }}
-          >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
+              <button
+                key={c}
+                onClick={() => {
+                  setCategory(c)
+                  setIcon(CATEGORY_ICONS[c])
+                }}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: 10,
+                  border:
+                    category === c
+                      ? '1.5px solid rgba(232,160,176,0.5)'
+                      : '1.5px solid transparent',
+                  background: category === c ? 'rgba(232,160,176,0.22)' : 'rgba(253,242,246,0.5)',
+                  color: category === c ? '#7a3040' : 'rgba(61,26,16,0.4)',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  textTransform: 'capitalize',
+                }}
+              >
                 {c}
-              </option>
+              </button>
             ))}
-          </select>
-          <ChevronDown
-            size={12}
-            strokeWidth={2.5}
-            color="rgba(122,48,64,0.5)"
-            style={{
-              position: 'absolute',
-              right: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              pointerEvents: 'none',
-            }}
-          />
+          </div>
+          {category === 'outro' && (
+            <input
+              style={inputStyle}
+              placeholder="nome da categoria..."
+              value={categoryCustom}
+              onChange={(e) => setCategoryCustom(e.target.value)}
+            />
+          )}
         </div>
-        {category === 'outro' && (
-          <input
-            style={{ ...inputStyle, marginTop: 6 }}
-            placeholder="nome da categoria..."
-            value={categoryCustom}
-            onChange={(e) => setCategoryCustom(e.target.value)}
-          />
-        )}
       </div>
 
       {/* ícone + cor */}
@@ -313,7 +314,7 @@ export default function TransactionForm({
             >
               <LucideIcon name={icon} size={12} color={color} />
             </div>
-            <span style={{ flex: 1, textAlign: 'left', fontSize: 11 }}>{icon}</span>
+            <span style={{ flex: 1 }} />
             <ChevronDown size={11} strokeWidth={2.5} color="rgba(122,48,64,0.5)" />
           </button>
           {showIcons && (
