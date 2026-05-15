@@ -480,10 +480,8 @@ function randomFrom(arr: FlowerType[]): FlowerType {
 }
 
 export function getFlowerFromSum(sum: number): FlowerType {
-  if (sum <= 5) return randomFrom(COMMON_FLOWERS)
   if (sum <= 8) return randomFrom(COMMON_FLOWERS)
   if (sum <= 10) return randomFrom(UNCOMMON_FLOWERS)
-  if (sum <= 11) return randomFrom(UNCOMMON_FLOWERS)
   return randomFrom(RARE_FLOWERS)
 }
 
