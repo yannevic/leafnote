@@ -243,9 +243,9 @@ export default function GardenGuideModal({ onClose }: Props) {
                 {
                   label: 'tulipa, girassol, jasmim, violeta',
                   rarity: 'incomum' as const,
-                  value: 'soma 9–11',
+                  value: 'soma 9–10',
                 },
-                { label: 'orquídea, lírio', rarity: 'rara' as const, value: 'soma 12 (duplo 6!)' },
+                { label: 'orquídea, lírio', rarity: 'rara' as const, value: 'soma 11–12' },
                 { label: 'flor especial', rarity: 'epica' as const, value: 'streak de 30 dias' },
               ].map((row) => (
                 <Row
