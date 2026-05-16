@@ -441,6 +441,14 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     [trashItem]
   )
 
+  const handleDeletePin = useCallback(
+    (id: string) => {
+      deleteItem(id)
+      setItems((prev) => prev.filter((i) => i.id !== id))
+    },
+    [deleteItem]
+  )
+
   const handleRestore = useCallback(
     (id: string) => {
       restoreFromDeleted(id)
@@ -781,7 +789,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   item={item as CountdownPinItem}
                   zIndex={z}
                   onUpdate={handleUpdate as never}
-                  onDelete={handleDelete}
+                  onDelete={handleDeletePin}
                   onFocus={handleFocus}
                 />
               )
@@ -793,7 +801,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   item={item as CyclePinItemType}
                   zIndex={z}
                   onUpdate={handleUpdate as never}
-                  onDelete={handleDelete}
+                  onDelete={handleDeletePin}
                   onFocus={handleFocus}
                 />
               )
