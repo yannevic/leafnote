@@ -386,7 +386,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         saveItem(item)
         unlock('first_letter')
         const newLetterCount = letterCount + 1
-        console.log('[cartas] letterCount atual:', letterCount, '→ novo:', newLetterCount)
         if (newLetterCount >= 10) unlock('letters_10')
         if (newLetterCount >= 50) unlock('letters_50')
         setSelectedTool(null)
@@ -1541,12 +1540,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               saveItem(item as unknown as AnyBoardItem)
               unlock('first_special')
               const newSpecialCount = specialCount + 1
-              console.log(
-                '[cartas especiais] specialCount atual:',
-                specialCount,
-                '→ novo:',
-                newSpecialCount
-              )
               if (newSpecialCount >= 10) unlock('special_10')
               if (newSpecialCount >= 50) unlock('special_50')
             }}

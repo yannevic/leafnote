@@ -3,28 +3,28 @@ import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
   '3.0.4': [
-    "✨ botão de finanças adicionado à roda de atalhos do mural",
-    "💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)",
-    "✨ contador de dias sem brigar agora vira exatamente à meia-noite no horário de Brasília",
-    "✨ marcos do streak com botão de check compartilhado (cinza → verdinho) — ambos veem em tempo real",
-    "✨ marcos avançam em ciclos de 30 dias ao completar todos os checks",
-    "💄 labels dos marcos dinâmicos: \"7 dias\", \"1 mês e 7 dias\", \"2 meses\", etc.",
-    "🐛 data de assistido no calendário agora segue a data editada no card do filme",
+    '✨ botão de finanças adicionado à roda de atalhos do mural',
+    '💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)',
+    '✨ contador de dias sem brigar agora vira exatamente à meia-noite no horário de Brasília',
+    '✨ marcos do streak com botão de check compartilhado (cinza → verdinho) — ambos veem em tempo real',
+    '✨ marcos avançam em ciclos de 30 dias ao completar todos os checks',
+    '💄 labels dos marcos dinâmicos: "7 dias", "1 mês e 7 dias", "2 meses", etc.',
+    '🐛 data de assistido no calendário agora segue a data editada no card do filme',
   ],
 
   '3.0.3': [
-    "✨ botão de finanças adicionado à roda de atalhos do mural",
-    "💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)",
-    "✨ contador de dias sem brigar agora vira exatamente à meia-noite no horário de Brasília",
-    "✨ marcos do streak com botão de check compartilhado (cinza → verdinho) — ambos veem em tempo real",
-    "✨ marcos avançam em ciclos de 30 dias ao completar todos os checks",
-    "💄 labels dos marcos dinâmicos: \"7 dias\", \"1 mês e 7 dias\", \"2 meses\", etc.",
-    "🐛 data de assistido no calendário agora segue a data editada no card do filme",
+    '✨ botão de finanças adicionado à roda de atalhos do mural',
+    '💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)',
+    '✨ contador de dias sem brigar agora vira exatamente à meia-noite no horário de Brasília',
+    '✨ marcos do streak com botão de check compartilhado (cinza → verdinho) — ambos veem em tempo real',
+    '✨ marcos avançam em ciclos de 30 dias ao completar todos os checks',
+    '💄 labels dos marcos dinâmicos: "7 dias", "1 mês e 7 dias", "2 meses", etc.',
+    '🐛 data de assistido no calendário agora segue a data editada no card do filme',
   ],
 
   '3.0.2': [
-    "✨ botão de finanças adicionado à roda de atalhos do mural",
-    "💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)",
+    '✨ botão de finanças adicionado à roda de atalhos do mural',
+    '💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)',
   ],
 
   '3.0.1': [
@@ -392,15 +392,13 @@ export default function ChangelogModal() {
             overflowY: 'auto',
           }}
         >
-          {CHANGELOG[version].map((item, i) => (
+          {CHANGELOG[version].map((item) => (
             <li
               key={item}
               style={{
-                fontSize: i === 0 ? 15 : 13,
-                fontWeight: i === 0 ? 800 : 500,
-                color: i === 0 ? '#5a3010' : '#3d2408',
-                borderBottom: i === 0 ? '1px solid #d4aa8066' : 'none',
-                paddingBottom: i === 0 ? 10 : 0,
+                fontSize: 13,
+                fontWeight: 500,
+                color: '#3d2408',
               }}
             >
               {item}
@@ -424,7 +422,7 @@ export default function ChangelogModal() {
             cursor: 'pointer',
           }}
         >
-          que fofo! 🌿
+          entendi!
         </button>
       </div>
     </div>

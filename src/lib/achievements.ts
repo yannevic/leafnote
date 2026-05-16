@@ -717,7 +717,6 @@ export async function runBootstrap(params: BootstrapParams): Promise<void> {
 
   // ── Filmes e Séries ──
   // Filtra apenas itens assistidos (status === 'watched' OU status === 'assistido')
-  console.log('[bootstrap] movies recebidos:', JSON.stringify(movies))
   const watchedMovies = movies.filter(
     (m) =>
       (m.status === 'watched' || m.status === 'assistido') &&
