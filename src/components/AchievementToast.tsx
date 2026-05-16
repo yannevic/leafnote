@@ -99,7 +99,7 @@ export default function AchievementToast({ achievementId, onDone }: Props) {
           }}
         >
           <img
-            src={def.imagem}
+            src={def.imagem.startsWith('/') ? `.${def.imagem}` : def.imagem}
             alt={def.nome}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={(e) => {

@@ -13,6 +13,10 @@ import { FLOWERS, type FlowerType } from '../lib/garden'
 // TIPOS
 // ═══════════════════════════════════════
 
+function achievementImg(path: string): string {
+  return path.startsWith('/') ? `.${path}` : path
+}
+
 interface ProgressData {
   streakDays: number
   movies: { tipo: string; status: string }[]
@@ -315,7 +319,7 @@ function AchievementCard({
           }}
         >
           <img
-            src={def.imagem}
+            src={achievementImg(def.imagem)}
             alt=""
             style={{
               width: '100%',
@@ -405,7 +409,7 @@ function AchievementCard({
         }}
       >
         <img
-          src={def.imagem}
+          src={achievementImg(def.imagem)}
           alt={unlocked ? def.nome : ''}
           style={{
             width: '100%',
