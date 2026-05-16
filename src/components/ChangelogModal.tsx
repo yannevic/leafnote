@@ -2,6 +2,22 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.5': [
+    "✨ sistema completo de conquistas — 54 conquistas em 7 categorias (jardim, streak, cartas, finanças, filmes, namoro, secretas)",
+    "✨ recompensas individuais em moedas com resgate manual por conquista",
+    "✨ bônus de categoria ao completar todas as conquistas de um grupo",
+    "✨ bootstrap retroativo detecta conquistas já merecidas ao abrir o app",
+    "✨ modal de conquistas com grade por categoria, barra de progresso e dicas de como desbloquear",
+    "✨ toast animado ao desbloquear conquista nova",
+    "✨ sistema de expansão de slots do jardim (até 8 vasos)",
+    "✨ lançamentos financeiros vinculados a metas — depósito gera lançamento automático",
+    "🐛 cor escolhida no picker agora é aplicada corretamente ao pin do mural",
+    "✨ navegação entre plantas direto no modal da flor",
+    "💄 scroll e DatePicker padronizados no módulo de ciclo e demais modais",
+    "✨ probabilidade do dado rebalanceada — rara mais acessível (soma 11–12), incomum soma 9–10",
+    "✨ preços dos slots de expansão rebalanceados",
+  ],
+
   '3.0.4': [
     '✨ botão de finanças adicionado à roda de atalhos do mural',
     '💄 roda de 9 itens reorganizada em círculo perfeito (40° entre cada botão, raio 75px, ordem horária a partir do topo)',
