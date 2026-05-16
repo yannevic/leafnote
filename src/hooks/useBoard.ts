@@ -1,8 +1,8 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { ref, onValue, set, remove, off } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { AnyBoardItem } from '../types/board'
-import { boardItemsPath } from '../lib/boards'
+import { boardItemsPath, DEFAULT_BOARD_ID } from '../lib/boards'
 
 export function useBoard(
   _items: AnyBoardItem[],
@@ -88,4 +88,50 @@ export function useBoard(
   }, [])
 
   return { loaded: loaded.current, saveItem, deleteItem, trashItem, restoreItem, markMoving }
+}
+
+// ── Contador de cartas em todos os boards ──────────────────────────────────
+export function useLetterCounts(extraBoardIds: string[]) {
+  const [letterCount, setLetterCount] = useState(0)
+  const [specialCount, setSpecialCount] = useState(0)
+
+  useEffect(() => {
+    const allBoardIds = [DEFAULT_BOARD_ID, ...extraBoardIds]
+    const unsubs: (() => void)[] = []
+    const counts: Record<string, { letters: number; specials: number }> = {}
+
+    function recalc() {
+      let letters = 0
+      let specials = 0
+      for (const c of Object.values(counts)) {
+        letters += c.letters
+        specials += c.specials
+      }
+      setLetterCount(letters)
+      setSpecialCount(specials)
+    }
+
+    for (const boardId of allBoardIds) {
+      counts[boardId] = { letters: 0, specials: 0 }
+      const r = ref(db, boardItemsPath(boardId))
+      const handler = onValue(r, (snap) => {
+        const data = snap.val() as Record<string, AnyBoardItem> | null
+        let letters = 0
+        let specials = 0
+        if (data) {
+          for (const item of Object.values(data)) {
+            if (item.type === 'letter') letters++
+            if (item.type === 'special-letter') specials++
+          }
+        }
+        counts[boardId] = { letters, specials }
+        recalc()
+      })
+      unsubs.push(() => off(r, 'value', handler))
+    }
+
+    return () => unsubs.forEach((u) => u())
+  }, [extraBoardIds.join(',')])
+
+  return { letterCount, specialCount }
 }

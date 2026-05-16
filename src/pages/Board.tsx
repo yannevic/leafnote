@@ -1,10 +1,15 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useBoard } from '../hooks/useBoard'
+import { useLetterCounts } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useNotifications } from '../hooks/useNotifications'
 import { auth } from '../lib/firebase'
 import { updateProfile } from 'firebase/auth'
 import HouseModal from '../components/HouseModal'
+import { useStreak } from '../hooks/useStreak'
+import useMovies from '../hooks/useMovies'
+import { useFinance } from '../hooks/useFinance'
+import { useGarden } from '../hooks/useGarden'
 import {
   House,
   ShoppingBag,
@@ -26,6 +31,7 @@ import {
   TagItem,
   LetterItem,
 } from '../types/board'
+
 import Toolbar from '../components/Toolbar'
 import StreakCounter from '../components/StreakCounter'
 import PostIt from '../components/PostIt'
@@ -55,6 +61,7 @@ import {
   Layers,
   User,
   Sparkles,
+  Trophy,
 } from 'lucide-react'
 import SpecialLetterModal from '../components/SpecialLetterModal'
 import SpecialLetter from '../components/SpecialLetter'
@@ -76,6 +83,9 @@ import FinanceModal from '../components/Finance/FinanceModal'
 import type { CyclePinItem as CyclePinItemType } from '../types/board'
 import { subscribeAllCycles, computeCycleState } from '../lib/cycle'
 import type { CycleData } from '../lib/cycle'
+import { useAchievements } from '../hooks/useAchievements'
+import AchievementsModal from '../components/AchievementsModal'
+import AchievementToast from '../components/AchievementToast'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -171,6 +181,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showHouse, setShowHouse] = useState(false)
   const [showShop, setShowShop] = useState(false)
   const [showFinance, setShowFinance] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
   const [shopInitialItem, setShopInitialItem] = useState<string | undefined>()
   const [expandedMenu, setExpandedMenu] = useState(false)
   const [cycleToast, setCycleToast] = useState<string | null>(null)
@@ -195,7 +206,42 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     deletePreset,
   } = useCharacter(uid)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
+  const { days } = useStreak()
+  const { movies, moviesLoaded } = useMovies(uid, displayName)
+  const {
+    transactions,
+    activeGoals: goals,
+    activeDebts,
+    paidDebts,
+  } = useFinance(uid, partnerUid ?? '')
+  const { plants, seeds, coins, maxPlants } = useGarden(uid, partnerUid ?? '')
+  const { achievements, unlock, claim, categoryBonus, newlyUnlocked, clearNewlyUnlocked } =
+    useAchievements({
+      uid,
+      plants,
+      seeds,
+      coins,
+      maxPlants,
+      streakDays: days,
+      movies: movies.map((m) => ({ tipo: m.type, status: m.status })),
+      goals,
+      debts: [...activeDebts, ...paidDebts],
+      transactions,
+      datingDate: specialDates?.datingDate,
+      moviesLoaded, // <-- adiciona aqui
+    })
   const { extraBoards } = useBoards(uid)
+  const extraBoardIds = extraBoards.map((b: BoardMeta) => b.id)
+  const { letterCount, specialCount } = useLetterCounts(extraBoardIds)
+  // destrava conquistas retroativas de cartas já existentes
+  useEffect(() => {
+    if (letterCount >= 1) unlock('first_letter')
+    if (letterCount >= 10) unlock('letters_10')
+    if (letterCount >= 50) unlock('letters_50')
+    if (specialCount >= 1) unlock('first_special')
+    if (specialCount >= 10) unlock('special_10')
+    if (specialCount >= 50) unlock('special_50')
+  }, [letterCount, specialCount])
   const defaultBoard: BoardMeta = {
     id: DEFAULT_BOARD_ID,
     name: 'mural principal',
@@ -338,6 +384,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         }
         setItems((prev) => [...prev, item])
         saveItem(item)
+        unlock('first_letter')
+        const newLetterCount = letterCount + 1
+        console.log('[cartas] letterCount atual:', letterCount, '→ novo:', newLetterCount)
+        if (newLetterCount >= 10) unlock('letters_10')
+        if (newLetterCount >= 50) unlock('letters_50')
         setSelectedTool(null)
       } else if (selectedTool === 'drawing') {
         const item: DrawingItem = {
@@ -350,7 +401,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         setSelectedTool(null)
       }
     },
-    [editMode, selectedTool, uid, displayName, otherName, items]
+    [editMode, selectedTool, uid, displayName, otherName, items, unlock]
   )
 
   const handleUpdate = useCallback(
@@ -482,7 +533,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
       setPinColorPicker(null)
       setShowCalendar(false)
     },
-    [uid, saveItem, items]
+    [uid, saveItem, items, unlock]
   )
 
   const sortedItems = [...items].sort((a, b) => (a.zOrder ?? 0) - (b.zOrder ?? 0))
@@ -1205,7 +1256,30 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             </span>
           </div>
 
-          {/* Botão central */}
+          {/* Conquistas */}
+          <div
+            onClick={() => setShowAchievements(true)}
+            title="conquistas"
+            style={{
+              position: 'fixed',
+              bottom: 18,
+              right: 18,
+              zIndex: 48,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'rgba(196,149,106,0.35)',
+              border: '1.5px solid rgba(196,149,106,0.55)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+          >
+            <Trophy size={16} color="#8b6914" strokeWidth={2} />
+          </div>
 
           {/* Botão central */}
           <div
@@ -1465,6 +1539,16 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               }
               setItems((prev) => [...prev, item as unknown as AnyBoardItem])
               saveItem(item as unknown as AnyBoardItem)
+              unlock('first_special')
+              const newSpecialCount = specialCount + 1
+              console.log(
+                '[cartas especiais] specialCount atual:',
+                specialCount,
+                '→ novo:',
+                newSpecialCount
+              )
+              if (newSpecialCount >= 10) unlock('special_10')
+              if (newSpecialCount >= 50) unlock('special_50')
             }}
             onClose={() => setShowSpecialLetter(false)}
             onSaveDates={saveSpecialDates}
@@ -2238,6 +2322,35 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onDismiss={() => setTimerDismissed(true)}
           />
         )}
+      {newlyUnlocked.length > 0 && (
+        <AchievementToast achievementId={newlyUnlocked[0]} onDone={clearNewlyUnlocked} />
+      )}
+      {showAchievements && (
+        <AchievementsModal
+          achievements={achievements}
+          categoryBonus={categoryBonus}
+          onClose={() => setShowAchievements(false)}
+          onClaim={claim}
+          progress={{
+            streakDays: days,
+            movies: movies.map((m) => ({ tipo: m.type, status: m.status })),
+            goals,
+            debts: [...activeDebts, ...paidDebts],
+            transactions,
+            plants,
+            seeds,
+            coins,
+            maxPlants,
+            datingDate: specialDates?.datingDate,
+            letterCount,
+            specialCount,
+          }}
+          onClaimCategoryBonus={async (_cat) => {
+            // checkAndPayCategoryBonus já é chamado automaticamente no subscribe,
+            // mas se quiser forçar manualmente pode chamar aqui — não precisa fazer nada extra
+          }}
+        />
+      )}
     </>
   )
 }

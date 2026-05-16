@@ -17,9 +17,13 @@ import { addCalendarEventReturningId, moveCalendarEvent, toDateKey } from '../li
 
 export default function useMovies(uid: string, displayName: string) {
   const [movies, setMovies] = useState<Movie[]>([])
+  const [moviesLoaded, setMoviesLoaded] = useState(false)
 
   useEffect(() => {
-    return subscribeMovies(setMovies)
+    return subscribeMovies((data) => {
+      setMovies(data)
+      setMoviesLoaded(true)
+    })
   }, [])
 
   const addNewMovie = useCallback(
@@ -173,6 +177,7 @@ export default function useMovies(uid: string, displayName: string) {
 
   return {
     movies,
+    moviesLoaded,
     addNewMovie,
     rateMovie,
     changeStatus,

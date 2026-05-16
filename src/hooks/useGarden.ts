@@ -27,6 +27,7 @@ import {
   subscribeMaxPlants,
   buySlot,
 } from '../lib/garden'
+import { recordFlowerHistory } from '../lib/achievements'
 
 export function useGarden(uid: string, partnerUid: string) {
   const [plants, setPlants] = useState<PlantData[]>([])
@@ -90,9 +91,9 @@ export function useGarden(uid: string, partnerUid: string) {
   const water = async (plantId: string) => {
     await waterPlant(plantId, uid, partnerUid, panicMode)
   }
-
   const plant = async (seedId: string, flowerType: FlowerType) => {
     await plantSeed(seedId, flowerType)
+    await recordFlowerHistory(flowerType)
   }
 
   const addNewSeed = async (flowerType: FlowerType) => {
