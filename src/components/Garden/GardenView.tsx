@@ -26,6 +26,7 @@ interface GardenViewProps {
   partnerUid: string
   partnerName: string
   onClose: () => void
+  onUnlockAchievement?: (id: string) => void
 }
 
 const RARITY_COLOR: Record<string, string> = {
@@ -37,7 +38,13 @@ const RARITY_COLOR: Record<string, string> = {
 
 const PLANTS_PER_PAGE = 4
 
-export default function GardenView({ uid, partnerUid, partnerName, onClose }: GardenViewProps) {
+export default function GardenView({
+  uid,
+  partnerUid,
+  partnerName,
+  onClose,
+  onUnlockAchievement,
+}: GardenViewProps) {
   const {
     plants,
     seeds,
@@ -112,6 +119,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const handleConfirmSellSeed = async () => {
     if (!confirmSellSeed) return
     const value = await sellSeed(confirmSellSeed.id, confirmSellSeed.flowerType)
+    onUnlockAchievement?.('first_sell')
     setSellFeedback(`+${value} moedas`)
     setConfirmSellSeed(null)
     setTimeout(() => setSellFeedback(null), 2000)
@@ -119,6 +127,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
 
   const handleSellFlower = async (plantId: string, flowerType: FlowerType) => {
     const value = await sellFlower(plantId, flowerType)
+    onUnlockAchievement?.('first_sell')
     setSellFeedback(`+${value} moedas`)
     setSelectedPlantId(null)
     setTimeout(() => setSellFeedback(null), 2000)

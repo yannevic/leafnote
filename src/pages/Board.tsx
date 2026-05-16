@@ -1510,6 +1510,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             partnerUid={partnerUid ?? ''}
             partnerName={otherName}
             onClose={() => setShowGarden(false)}
+            onUnlockAchievement={unlock}
           />
         )}
         {showSpecialLetter && (

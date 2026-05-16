@@ -10,4 +10,4 @@
 ✨ navegação entre plantas direto no modal da flor |
 💄 scroll e DatePicker padronizados no módulo de ciclo e demais modais |
 ✨ probabilidade do dado rebalanceada — rara mais acessível (soma 11–12), incomum soma 9–10 |
-✨ preços dos slots de expansão rebalanceados |
+✨ preços dos slots de expansão rebalanceados | 
