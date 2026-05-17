@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.10': [
+    "✉️ carta livre — novo tipo de carta com editor completo de texto, papel, fonte e cores",
+    "✉️ carta livre — upload de fotos com arrastar, girar e redimensionar no preview",
+    "✉️ carta livre — stickers compráveis na loja, com arrastar, girar e redimensionar",
+    "✉️ carta livre — envelope animado roxo no mural, com bloqueio por data especial",
+    "✉️ carta livre — visualizador com envelope dourado animado ao abrir",
+    "✉️ carta livre — rascunho salvo automaticamente, botão limpar com confirmação",
+    "🏆 conquistas — toast não aparece mais ao reabrir o app",
+    "🔔 notificações — eventos dos próximos 3 dias e datas especiais unificados no sino",
+    "🔔 notificações — agrupados por dia, persiste \"visto\" no Firebase",
+    "🔔 notificações — som ao notificar evento de hoje ou amanhã",
+  ],
+
   '3.0.9': [
     "📌 deletar pin do calendário agora remove pra ambos em tempo real",
   ],
