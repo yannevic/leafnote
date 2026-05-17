@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.9': [
+    "📌 deletar pin do calendário agora remove pra ambos em tempo real",
+  ],
+
   '3.0.8': [
     "✨ sistema completo de conquistas — 54 conquistas em 7 categorias (jardim, streak, cartas, finanças, filmes, namoro, secretas)",
     "✨ recompensas individuais em moedas com resgate manual por conquista",
