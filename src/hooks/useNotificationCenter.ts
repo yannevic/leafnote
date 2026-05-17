@@ -7,11 +7,18 @@ import type { PlantData } from '../lib/garden'
 import { boardItemsPath, DEFAULT_BOARD_ID } from '../lib/boards'
 import { subscribeSpecialDates, getAvailableDates } from '../lib/specialDates'
 import type { SpecialDates } from '../lib/specialDates'
+import {
+  ref as dbRef,
+  onValue as dbOnValue,
+  off as dbOff,
+  set as dbSet,
+  get as dbGet,
+} from 'firebase/database'
 import moodSound from '../assets/sounds/mood.mp3'
 
 export interface AppNotification {
   id: string
-  type: 'letter' | 'special-letter' | 'garden-water' | 'special-date'
+  type: 'letter' | 'special-letter' | 'garden-water' | 'calendar-event'
   message: string
   boardId?: string
   boardName?: string
@@ -25,30 +32,6 @@ interface Props {
   partnerNick: string
   extraBoardNames: Record<string, string>
 }
-
-function getTodayAndTomorrow() {
-  const now = new Date()
-  const today = now.toLocaleDateString('en-CA')
-  const tomorrow = new Date(now)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  return { today, tomorrow: tomorrow.toLocaleDateString('en-CA') }
-}
-
-function toMmDd(ddmm: string): string {
-  if (!ddmm || ddmm.length < 5) return ''
-  const parts = ddmm.split('-')
-  return `${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
-}
-
-function checkDate(ddmm: string): 'today' | 'tomorrow' | null {
-  const mmdd = toMmDd(ddmm)
-  if (!mmdd) return null
-  const { today, tomorrow } = getTodayAndTomorrow()
-  if (mmdd === today.slice(5)) return 'today'
-  if (mmdd === tomorrow.slice(5)) return 'tomorrow'
-  return null
-}
-
 export function useNotificationCenter({
   uid,
   partnerUid,
@@ -63,6 +46,10 @@ export function useNotificationCenter({
 
   const dismiss = (id: string) => {
     setReadIds((prev) => new Set([...prev, id]))
+    // persiste no Firebase se for notif de calendário
+    if (id.startsWith('calendar-event-')) {
+      dbSet(dbRef(db, `users/${uid}/seenCalendarNotifs/${id}`), true)
+    }
   }
 
   // Cartas
@@ -173,37 +160,134 @@ export function useNotificationCenter({
     return () => off(r, 'value', handler)
   }, [uid, partnerUid])
 
-  // Datas especiais
+  // Datas especiais + eventos do calendário — unificados, agrupados por dia
   useEffect(() => {
     if (!uid || !partnerUid) return
-    const unsub = subscribeSpecialDates((dates: SpecialDates) => {
+
+    // carrega ids já vistos do Firebase
+    const seenRef = dbRef(db, `users/${uid}/seenCalendarNotifs`)
+    let seenIds = new Set<string>()
+
+    const run = (
+      dates: SpecialDates,
+      calendarData: Record<
+        string,
+        { entries?: Record<string, { text: string; time: string | null; createdBy: string }> }
+      >
+    ) => {
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+
+      // monta mapa de dias com eventos: { dateKey: string[] }
+      const dayEvents: Record<string, string[]> = {}
+
+      // 1. datas especiais
       const allDates = getAvailableDates(dates, uid, partnerUid, myNick, partnerNick)
-      const dateNotifs: AppNotification[] = []
-
       allDates.forEach((d) => {
-        const when = checkDate(d.mmdd)
-        if (!when) return
-        const notifId = `special-date-${d.key}-${when}`
-        const message =
-          when === 'today'
-            ? `hoje é ${d.label.toLowerCase()}!`
-            : `amanhã é ${d.label.toLowerCase()}!`
+        const parts = d.mmdd.split('-')
+        if (parts.length < 2) return
+        const dd = parseInt(parts[0], 10)
+        const mm = parseInt(parts[1], 10)
+        if (isNaN(dd) || isNaN(mm)) return
 
-        dateNotifs.push({ id: notifId, type: 'special-date', message })
+        for (let offset = 0; offset <= 3; offset++) {
+          const target = new Date(now)
+          target.setDate(now.getDate() + offset)
+          if (target.getMonth() + 1 === mm && target.getDate() === dd) {
+            const dateKey = target.toLocaleDateString('en-CA')
+            if (!dayEvents[dateKey]) dayEvents[dateKey] = []
+            dayEvents[dateKey].push(d.label.toLowerCase())
+          }
+        }
+      })
 
-        if (!playedDates.current.has(notifId)) {
+      // 2. eventos do calendário (próximos 3 dias)
+      for (let offset = 0; offset <= 3; offset++) {
+        const target = new Date(now)
+        target.setDate(now.getDate() + offset)
+        const dateKey = target.toLocaleDateString('en-CA')
+        const entries = calendarData[dateKey]?.entries ?? {}
+        Object.values(entries).forEach((entry) => {
+          if (!dayEvents[dateKey]) dayEvents[dateKey] = []
+          dayEvents[dateKey].push(entry.text.toLowerCase())
+        })
+      }
+
+      // monta notificações agrupadas por dia
+      const calendarNotifs: AppNotification[] = []
+
+      Object.entries(dayEvents).forEach(([dateKey, texts]) => {
+        if (texts.length === 0) return
+        const unique = [...new Set(texts)]
+        const target = new Date(dateKey + 'T00:00:00')
+        const diffDays = Math.round((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+        let prefix = ''
+        if (diffDays === 0) prefix = 'hoje'
+        else if (diffDays === 1) prefix = 'amanhã'
+        else prefix = `em ${diffDays} dias`
+
+        const message = `${prefix}: ${unique.join(', ')}`
+        const notifId = `calendar-event-${dateKey}`
+
+        if (seenIds.has(notifId)) return
+
+        calendarNotifs.push({
+          id: notifId,
+          type: 'calendar-event',
+          message,
+          dismissible: true,
+        })
+
+        // toca som só para hoje/amanhã
+        if (diffDays <= 1 && !playedDates.current.has(notifId)) {
           playedDates.current.add(notifId)
           play()
         }
       })
 
-      setNotifications((prev) => [...prev.filter((n) => n.type !== 'special-date'), ...dateNotifs])
+      setNotifications((prev) => [
+        ...prev.filter((n) => n.type !== 'calendar-event'),
+        ...calendarNotifs,
+      ])
+    }
+
+    // carrega seenIds primeiro, depois assina
+    let cleanupDates: (() => void) | null = null
+    let cleanupCal: (() => void) | null = null
+    let latestDates: SpecialDates | null = null
+    let latestCalendar: Record<
+      string,
+      { entries?: Record<string, { text: string; time: string | null; createdBy: string }> }
+    > = {}
+    let destroyed = false
+
+    dbGet(seenRef).then((snap) => {
+      if (destroyed) return
+      const val = (snap.val() ?? {}) as Record<string, boolean>
+      seenIds = new Set(Object.keys(val).filter((k) => val[k]))
+
+      cleanupDates = subscribeSpecialDates((dates) => {
+        latestDates = dates ?? ({} as unknown as SpecialDates)
+        run(latestDates, latestCalendar)
+      })
+
+      const calRef = dbRef(db, 'calendar')
+      const calHandler = dbOnValue(calRef, (snap) => {
+        latestCalendar = (snap.val() ?? {}) as typeof latestCalendar
+        run(latestDates ?? ({} as unknown as SpecialDates), latestCalendar)
+      })
+      cleanupCal = () => dbOff(calRef, 'value', calHandler)
     })
 
-    return () => unsub()
+    return () => {
+      destroyed = true
+      cleanupDates?.()
+      cleanupCal?.()
+    }
   }, [uid, partnerUid, myNick, partnerNick, play])
 
-  // Filtra lidas (só dismissíveis saem da lista)
+  // Filtra lidas
   const visible = notifications.filter((n) => !n.dismissible || !readIds.has(n.id))
 
   return { notifications: visible, dismiss }
