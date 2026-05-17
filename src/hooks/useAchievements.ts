@@ -112,10 +112,13 @@ export function useAchievements({
       const { records, categoryBonus: cb } = state
       const prev = prevAchievementsRef.current
 
-      // detecta novas conquistas para o toast
-      const newIds = Object.keys(records).filter((id) => !prev[id] && records[id])
-      if (newIds.length > 0) {
-        setNewlyUnlocked((old) => [...old, ...newIds])
+      // detecta novas conquistas para o toast — ignora primeira leitura
+      const isFirstLoad = Object.keys(prev).length === 0
+      if (!isFirstLoad) {
+        const newIds = Object.keys(records).filter((id) => !prev[id] && records[id])
+        if (newIds.length > 0) {
+          setNewlyUnlocked((old) => [...old, ...newIds])
+        }
       }
       prevAchievementsRef.current = records
       setAchievements(records)
