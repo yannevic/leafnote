@@ -64,6 +64,13 @@ import {
   Trophy,
 } from 'lucide-react'
 import SpecialLetterModal from '../components/SpecialLetterModal'
+import CustomLetterModal from '../components/CustomLetterModal'
+import CustomLetterViewer from '../components/CustomLetterViewer'
+import CustomLetterEnvelope from '../components/CustomLetterEnvelope'
+import type { CustomLetterBoardItem } from '../types/board'
+import { ref as dbRef, onValue } from 'firebase/database'
+import { db } from '../lib/firebase'
+import type { CustomLetterData } from '../types/board'
 import SpecialLetter from '../components/SpecialLetter'
 import type { SpecialLetterItem } from '../types/board'
 import { Mail } from 'lucide-react'
@@ -182,6 +189,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showShop, setShowShop] = useState(false)
   const [showFinance, setShowFinance] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [showCustomLetter, setShowCustomLetter] = useState(false)
+  const [openCustomLetterViewer, setOpenCustomLetterViewer] = useState<CustomLetterData | null>(
+    null
+  )
   const [shopInitialItem, setShopInitialItem] = useState<string | undefined>()
   const [expandedMenu, setExpandedMenu] = useState(false)
   const [cycleToast, setCycleToast] = useState<string | null>(null)
@@ -535,10 +546,14 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         targetDate: dateKey,
         color,
       }
+      console.log('onSent chamado, item:', item)
       setItems((prev) => [...prev, item as unknown as AnyBoardItem])
       saveItem(item as unknown as AnyBoardItem)
-      setPinColorPicker(null)
-      setShowCalendar(false)
+      unlock('first_special')
+      const newSpecialCount = specialCount + 1
+      if (newSpecialCount >= 10) unlock('special_10')
+      if (newSpecialCount >= 50) unlock('special_50')
+      setShowCustomLetter(false)
     },
     [uid, saveItem, items, unlock]
   )
@@ -803,6 +818,34 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   onUpdate={handleUpdate as never}
                   onDelete={handleDeletePin}
                   onFocus={handleFocus}
+                />
+              )
+            }
+            if (item.type === 'custom-letter') {
+              return (
+                <CustomLetterEnvelope
+                  key={item.id}
+                  item={item as CustomLetterBoardItem}
+                  isOwner={item.createdBy === uid}
+                  editMode={editMode}
+                  zIndex={z}
+                  onOpen={(id: string) => handleUpdate(id, { opened: true })}
+                  onOpenViewer={(i: CustomLetterBoardItem) => {
+                    const r = dbRef(db, `customLetters/${i.letterId}`)
+                    onValue(
+                      r,
+                      (snap) => {
+                        if (snap.exists()) setOpenCustomLetterViewer(snap.val() as CustomLetterData)
+                      },
+                      { onlyOnce: true }
+                    )
+                  }}
+                  onUpdate={handleUpdate as never}
+                  onDelete={handleDelete}
+                  onBringForward={handleBringForward}
+                  onSendBackward={handleSendBackward}
+                  onFocus={handleFocus}
+                  {...withContext(item)}
                 />
               )
             }
@@ -1554,6 +1597,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             }}
             onClose={() => setShowSpecialLetter(false)}
             onSaveDates={saveSpecialDates}
+            onOpenCustomLetter={() => setShowCustomLetter(true)}
           />
         )}
         {/* Menu de contexto — mover itens entre murais */}
@@ -2176,6 +2220,49 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
 
       {/* ─── Modais de carta fora do overflow:hidden — fix z-index no Electron ─── */}
 
+      {showCustomLetter && (
+        <CustomLetterModal
+          myNick={displayName}
+          partnerNick={otherName}
+          myUid={uid}
+          partnerUid={partnerUid ?? ''}
+          specialDates={specialDates}
+          onClose={() => setShowCustomLetter(false)}
+          onOpenShop={(packId) => {
+            setShowCustomLetter(false)
+            setShopInitialItem(packId)
+            setShowShop(true)
+          }}
+          onSent={(letterId, fromName, toName, fromUid, toUid, availableFrom, specialDateLabel) => {
+            const item: CustomLetterBoardItem = {
+              id: makeId(),
+              type: 'custom-letter',
+              x: 200,
+              y: 150,
+              z: nextZOrder(),
+              zOrder: nextZOrder(),
+              width: 110,
+              height: 100,
+              createdBy: uid,
+              updatedBy: uid,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              opened: false,
+              letterId,
+              fromName,
+              toName,
+              fromUid,
+              toUid,
+              ...(availableFrom ? { availableFrom } : {}),
+              ...(specialDateLabel ? { specialDateLabel } : {}),
+            }
+            setItems((prev) => [...prev, item as unknown as AnyBoardItem])
+            saveItem(item as unknown as AnyBoardItem)
+            setShowCustomLetter(false)
+          }}
+        />
+      )}
+
       {openLetter && (
         <LetterModal
           item={openLetter}
@@ -2304,6 +2391,13 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             </div>
           )
         })()}
+
+      {openCustomLetterViewer && (
+        <CustomLetterViewer
+          letter={openCustomLetterViewer}
+          onClose={() => setOpenCustomLetterViewer(null)}
+        />
+      )}
 
       {showFinance && (
         <FinanceModal

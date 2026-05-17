@@ -42,6 +42,16 @@ import {
 } from '../assets/character/index'
 import { FIRST_TIME_COLOR_VARIANTS } from '../assets/character/firstTimeConfig'
 import { PiMoneyWavyLight } from 'react-icons/pi'
+import { Lock, Sticker } from 'lucide-react'
+import { STICKER_PACKS } from '../assets/stickers/index'
+import {
+  subscribeOwnedStickers,
+  buyPack,
+  buySticker,
+  isPackFullyOwned,
+  getStickerIndividualPrice,
+  type OwnedStickers,
+} from '../lib/stickers'
 
 // ── Scrollbar custom global ──────────────────────────────────
 const SCROLLBAR_CSS = `
@@ -91,7 +101,7 @@ const T = {
 // TIPOS
 // ─────────────────────────────────────────────
 
-type MainTab = 'casa' | 'roupas'
+type MainTab = 'casa' | 'roupas' | 'stickers'
 type HouseSubTab = 'floor' | 'wall' | 'background'
 
 interface ConfirmState {
@@ -1380,6 +1390,56 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   const [charSubTab, setCharSubTab] = useState<string>('top')
   const [confirm, setConfirm] = useState<ConfirmState>({ item: null, piece: null, open: false })
   const [feedback, setFeedback] = useState<{ msg: string } | null>(null)
+  const [ownedStickers, setOwnedStickers] = useState<OwnedStickers>({})
+  const [expandedPack, setExpandedPack] = useState<string | null>(null)
+  const [stickerBuying, setStickerBuying] = useState(false)
+  const [stickerConfirm, setStickerConfirm] = useState<{
+    open: boolean
+    type: 'pack' | 'sticker'
+    packId?: string
+    stickerKey?: string
+    label: string
+    cost: number
+  } | null>(null)
+
+  useEffect(() => {
+    return subscribeOwnedStickers(uid, setOwnedStickers)
+  }, [uid])
+
+  const handleBuyPack = (packId: string) => {
+    const pack = STICKER_PACKS.find((p) => p.id === packId)
+    if (!pack) return
+    setStickerConfirm({ open: true, type: 'pack', packId, label: pack.label, cost: pack.price })
+  }
+
+  const handleBuyStickerIndividual = (stickerKey: string) => {
+    const price = getStickerIndividualPrice(stickerKey)
+    const pack = STICKER_PACKS.find((p) => p.stickers.some((s) => s.key === stickerKey))
+    const label = pack?.stickers.find((s) => s.key === stickerKey)?.key ?? stickerKey
+    setStickerConfirm({ open: true, type: 'sticker', stickerKey, label, cost: price })
+  }
+
+  const handleStickerConfirm = async () => {
+    if (!stickerConfirm) return
+    setStickerConfirm(null)
+    setStickerBuying(true)
+
+    let result: { success: boolean; error?: string }
+    if (stickerConfirm.type === 'pack' && stickerConfirm.packId) {
+      result = await buyPack(uid, stickerConfirm.packId, coins)
+      if (result.success) setFeedback({ msg: 'pack desbloqueado!' })
+    } else if (stickerConfirm.type === 'sticker' && stickerConfirm.stickerKey) {
+      result = await buySticker(uid, stickerConfirm.stickerKey, coins)
+      if (result.success) setFeedback({ msg: 'sticker desbloqueado!' })
+    } else {
+      result = { success: false }
+    }
+
+    setStickerBuying(false)
+    if (!result.success) setFeedback({ msg: result.error ?? 'erro ao comprar' })
+    setTimeout(() => setFeedback(null), 2500)
+  }
+
   const [giftMode, setGiftMode] = useState(false)
   const [giftMessage, setGiftMessage] = useState('')
   const [giftColor, setGiftColor] = useState<Gift['color']>('purple')
@@ -1402,6 +1462,13 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
       setCharSubTab(piece.category)
       setClothesCart([piece])
       setClothesPreviewOpen(true)
+      return
+    }
+    const stickerPack = STICKER_PACKS.find((p) => p.id === initialItemId)
+    if (stickerPack) {
+      setMainTab('stickers')
+      setExpandedPack(initialItemId)
+      return
     }
   }, [initialItemId])
 
@@ -1809,6 +1876,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
           [
             { key: 'casa', label: 'ambiente', icon: <Layers size={13} strokeWidth={2} /> },
             { key: 'roupas', label: 'roupas', icon: <Shirt size={13} strokeWidth={2} /> },
+            { key: 'stickers', label: 'stickers', icon: <Sticker size={13} strokeWidth={2} /> },
           ] as { key: MainTab; label: string; icon: React.ReactNode }[]
         ).map((tab) => {
           const isActive = mainTab === tab.key
@@ -1840,6 +1908,257 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
 
       {/* ── CONTEÚDO ── */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* ───── ABA STICKERS ───── */}
+        {mainTab === 'stickers' && (
+          <div
+            className="shop-scroll"
+            style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 32px' }}
+          >
+            {STICKER_PACKS.map((pack) => {
+              const fullyOwned = isPackFullyOwned(pack.id, ownedStickers)
+              const isExpanded = expandedPack === pack.id
+              const ownedCount = pack.stickers.filter((s) => ownedStickers[s.key]).length
+              const canAffordPack = coins >= pack.price
+
+              return (
+                <div
+                  key={pack.id}
+                  style={{
+                    marginBottom: 12,
+                    border: `1.5px solid ${fullyOwned ? T.ownedBorder : T.border}`,
+                    borderRadius: 14,
+                    background: fullyOwned ? T.ownedBg : T.card,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Cabeçalho do pack */}
+                  <div
+                    onClick={() => setExpandedPack(isExpanded ? null : pack.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '10px 14px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {/* Preview */}
+                    <div
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 10,
+                        background: 'rgba(232,160,176,0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <img
+                        src={`./stickers/${pack.preview}`}
+                        style={{ width: 56, height: 56, objectFit: 'contain' }}
+                        alt={pack.label}
+                      />
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 800,
+                            color: T.text,
+                            fontFamily: 'Baloo 2, sans-serif',
+                          }}
+                        >
+                          {pack.label}
+                        </span>
+                        {fullyOwned && (
+                          <span
+                            style={{
+                              fontSize: 9,
+                              fontWeight: 800,
+                              color: T.ownedText,
+                              background: T.ownedBg,
+                              border: `1px solid ${T.ownedBorder}`,
+                              borderRadius: 20,
+                              padding: '1px 7px',
+                              fontFamily: 'Baloo 2, sans-serif',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 3,
+                            }}
+                          >
+                            <Check size={9} strokeWidth={3} /> completo
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: T.textSub,
+                            fontFamily: 'Baloo 2, sans-serif',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {ownedCount}/{pack.stickers.length} stickers
+                        </span>
+                        {!fullyOwned && (
+                          <span
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 3,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              color: T.text,
+                              fontFamily: 'Baloo 2, sans-serif',
+                            }}
+                          >
+                            <PiMoneyWavyLight size={12} /> {pack.price}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Botão comprar pack */}
+                    {!fullyOwned && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleBuyPack(pack.id)
+                        }}
+                        disabled={stickerBuying || !canAffordPack}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: 20,
+                          border: 'none',
+                          background: canAffordPack ? T.btnPrimary : 'rgba(232,160,176,0.2)',
+                          color: canAffordPack ? T.text : T.textSub,
+                          fontFamily: 'Baloo 2, sans-serif',
+                          fontWeight: 800,
+                          fontSize: 11,
+                          cursor: canAffordPack ? 'pointer' : 'not-allowed',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <ShoppingCart size={11} strokeWidth={2} />
+                        pack
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Grid de stickers expandido */}
+                  {isExpanded && (
+                    <div style={{ borderTop: T.borderDashed, padding: '10px 14px 14px' }}>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+                          gap: 8,
+                        }}
+                      >
+                        {pack.stickers.map((sticker) => {
+                          const owned = !!ownedStickers[sticker.key]
+                          const indivPrice = getStickerIndividualPrice(sticker.key)
+                          const canAfford = coins >= indivPrice
+                          return (
+                            <div
+                              key={sticker.key}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '8px 4px 6px',
+                                borderRadius: 10,
+                                border: `1.5px solid ${owned ? T.ownedBorder : T.border}`,
+                                background: owned ? T.ownedBg : T.card,
+                                position: 'relative',
+                              }}
+                            >
+                              {/* Imagem */}
+                              <div style={{ position: 'relative', width: 60, height: 60 }}>
+                                <img
+                                  src={`./stickers/${sticker.file}`}
+                                  style={{
+                                    width: 60,
+                                    height: 60,
+                                    objectFit: 'contain',
+                                    filter: owned ? 'none' : 'grayscale(1) opacity(0.4)',
+                                  }}
+                                  alt={sticker.key}
+                                />
+                                {!owned && (
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      inset: 0,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    }}
+                                  >
+                                    <Lock size={14} color="rgba(122,48,64,0.5)" strokeWidth={2} />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Ação */}
+                              {owned ? (
+                                <span
+                                  style={{
+                                    fontSize: 9,
+                                    fontWeight: 800,
+                                    color: T.ownedText,
+                                    fontFamily: 'Baloo 2, sans-serif',
+                                  }}
+                                >
+                                  desbloq.
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleBuyStickerIndividual(sticker.key)}
+                                  disabled={stickerBuying || !canAfford}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    padding: '2px 6px',
+                                    borderRadius: 20,
+                                    border: 'none',
+                                    background: canAfford ? T.btnIcon : 'rgba(232,160,176,0.1)',
+                                    color: canAfford ? T.text : T.textSub,
+                                    fontSize: 9,
+                                    fontWeight: 800,
+                                    fontFamily: 'Baloo 2, sans-serif',
+                                    cursor: canAfford ? 'pointer' : 'not-allowed',
+                                  }}
+                                >
+                                  <PiMoneyWavyLight size={10} /> {indivPrice}
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
         {/* ───── ABA AMBIENTE ───── */}
         {mainTab === 'casa' && (
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
@@ -2705,6 +3024,26 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
             setGiftMessage('')
             setGiftColor('purple')
           }}
+        />
+      )}
+
+      {stickerConfirm?.open && (
+        <ConfirmModal
+          label={
+            stickerConfirm.type === 'pack' ? `pack ${stickerConfirm.label}` : stickerConfirm.label
+          }
+          cost={stickerConfirm.cost}
+          coins={coins}
+          canAfford={coins >= stickerConfirm.cost}
+          hasPartner={false}
+          giftMode={false}
+          giftMessage=""
+          onGiftModeChange={() => {}}
+          onGiftMessageChange={() => {}}
+          giftColor="purple"
+          onGiftColorChange={() => {}}
+          onConfirm={handleStickerConfirm}
+          onCancel={() => setStickerConfirm(null)}
         />
       )}
 

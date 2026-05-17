@@ -27,6 +27,8 @@ const ITEM_TYPE_LABEL: Record<string, string> = {
   drawing: 'um desenho',
   tag: 'uma tag',
   letter: 'uma cartinha',
+  'special-letter': 'uma carta especial',
+  'custom-letter': 'uma carta especial',
 }
 
 export function useNotifications(uid: string, partnerUid: string, partnerName: string) {
