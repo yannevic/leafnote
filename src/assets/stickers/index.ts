@@ -14,7 +14,7 @@ export interface StickerPack {
 export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'axolot',
-    label: 'Axolotl',
+    label: 'Axolot',
     price: 55,
     preview: 'axolot/1.png',
     stickers: Array.from({ length: 21 }, (_, i) => ({

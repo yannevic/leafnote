@@ -959,26 +959,6 @@ export default function CustomLetterModal({
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <button
-                          onClick={() => setSelectedDateKey('')}
-                          style={{
-                            padding: '4px 10px',
-                            borderRadius: 8,
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: 10,
-                            fontWeight: 800,
-                            fontFamily: 'Baloo 2, sans-serif',
-                            background:
-                              selectedDateKey === ''
-                                ? 'rgba(232,160,176,0.45)'
-                                : 'rgba(232,160,176,0.12)',
-                            color: '#3d1a10',
-                            textAlign: 'left',
-                          }}
-                        >
-                          nenhuma
-                        </button>
                         {availableDates.map((d) => (
                           <button
                             key={d.key}

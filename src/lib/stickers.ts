@@ -32,9 +32,12 @@ export async function buyPack(
 ): Promise<{ success: boolean; error?: string }> {
   const pack = STICKER_PACKS.find((p) => p.id === packId)
   if (!pack) return { success: false, error: 'pack não encontrado' }
-  if (coins < pack.price) return { success: false, error: 'moedas insuficientes' }
 
-  await addCoins(-pack.price)
+  const owned = await getOwnedStickers(_uid)
+  const price = getPackRemainingPrice(packId, owned)
+  if (coins < price) return { success: false, error: 'moedas insuficientes' }
+
+  await addCoins(-price)
 
   const updates: Record<string, true> = {}
   pack.stickers.forEach((s) => {
@@ -72,4 +75,14 @@ export function isPackFullyOwned(packId: string, owned: OwnedStickers): boolean 
   const pack = STICKER_PACKS.find((p) => p.id === packId)
   if (!pack) return false
   return pack.stickers.every((s) => owned[s.key] === true)
+}
+
+export function getPackRemainingPrice(packId: string, owned: OwnedStickers): number {
+  const pack = STICKER_PACKS.find((p) => p.id === packId)
+  if (!pack) return 0
+  const ownedCount = pack.stickers.filter((s) => owned[s.key]).length
+  if (ownedCount >= pack.stickers.length) return 0
+  const pricePerSticker = pack.price / pack.stickers.length
+  const remaining = pack.stickers.length - ownedCount
+  return Math.ceil(pricePerSticker * remaining)
 }

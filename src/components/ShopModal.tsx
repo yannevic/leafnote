@@ -50,6 +50,7 @@ import {
   buySticker,
   isPackFullyOwned,
   getStickerIndividualPrice,
+  getPackRemainingPrice,
   type OwnedStickers,
 } from '../lib/stickers'
 
@@ -1409,7 +1410,9 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   const handleBuyPack = (packId: string) => {
     const pack = STICKER_PACKS.find((p) => p.id === packId)
     if (!pack) return
-    setStickerConfirm({ open: true, type: 'pack', packId, label: pack.label, cost: pack.price })
+    const currentOwned = ownedStickers
+    const price = getPackRemainingPrice(packId, currentOwned)
+    setStickerConfirm({ open: true, type: 'pack', packId, label: pack.label, cost: price })
   }
 
   const handleBuyStickerIndividual = (stickerKey: string) => {
@@ -1918,7 +1921,8 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
               const fullyOwned = isPackFullyOwned(pack.id, ownedStickers)
               const isExpanded = expandedPack === pack.id
               const ownedCount = pack.stickers.filter((s) => ownedStickers[s.key]).length
-              const canAffordPack = coins >= pack.price
+              const packPrice = getPackRemainingPrice(pack.id, ownedStickers)
+              const canAffordPack = coins >= packPrice
 
               return (
                 <div
@@ -2021,7 +2025,23 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
                               fontFamily: 'Baloo 2, sans-serif',
                             }}
                           >
-                            <PiMoneyWavyLight size={12} /> {pack.price}
+                            <PiMoneyWavyLight size={12} />
+                            {ownedCount > 0 ? (
+                              <>
+                                <span
+                                  style={{
+                                    textDecoration: 'line-through',
+                                    opacity: 0.4,
+                                    fontSize: 9,
+                                  }}
+                                >
+                                  {pack.price}
+                                </span>{' '}
+                                {packPrice}
+                              </>
+                            ) : (
+                              packPrice
+                            )}
                           </span>
                         )}
                       </div>
