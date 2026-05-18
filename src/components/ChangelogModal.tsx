@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.12': [
+    "🐛 jardim — corrige tela branca ao confirmar troca de sementes",
+    "🐛 conquistas — dica de flores faltantes usa histórico de plantadas em vez do inventário",
+    "🎨 stickers no mural — painel flutuante glass com packs, cadeado e atalho pra loja",
+    "💰 stickers — preços dos packs rebalanceados (35–65 moedas)",
+  ],
+
   '3.0.11': [
     "🐛 jardim — corrige tela branca ao confirmar troca de sementes\r\n🐛 conquistas — dica de flores faltantes usa histórico de plantadas em vez do inventário",
   ],
