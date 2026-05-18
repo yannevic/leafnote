@@ -270,7 +270,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     deletePreset,
   } = useCharacter(uid)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
-  const { days } = useStreak()
+  const { days } = useStreak(uid, displayName)
   const { movies, moviesLoaded } = useMovies(uid, displayName)
   const {
     transactions,
@@ -1811,7 +1811,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           trashCount={trashedItems.length}
           onOpenStickerPicker={() => setStickerPickerPos({ x: 300, y: 200 })}
         />
-        <StreakCounter />
+        <StreakCounter uid={uid} nick={displayName} />
         {showCalendar && (
           <WeekCalendar
             displayName={displayName}

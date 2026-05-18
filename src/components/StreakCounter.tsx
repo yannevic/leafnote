@@ -13,45 +13,39 @@ import {
   X,
   ChevronRight,
   Check,
+  Shuffle,
+  Zap,
+  Clock,
 } from 'lucide-react'
 import DatePicker from './DatePicker'
 
-const MILESTONES = [
-  {
-    days: 7,
-    title: '1 semana!',
-    prize: 'Escrevam uma cartinha fofa um pro outro e escolham juntos um prêmio especial',
-  },
-  {
-    days: 14,
-    title: '2 semanas!',
-    prize: 'Peçam a comida favorita de cada um e jantem juntos em chamada',
-  },
-  {
-    days: 21,
-    title: '3 semanas!',
-    prize: 'Noite de jogos relaxantes juntos em chamada — escolham um jogo fofo pra jogar',
-  },
-  {
-    days: 30,
-    title: '1 mês! Super prêmio!',
-    prize:
-      'Filme com pipoca ao mesmo tempo em chamada e noite especial — e uma semente épica foi adicionada ao jardim de vocês!',
-  },
-]
+const SPECIAL_PRIZE =
+  'Filme com pipoca ao mesmo tempo em chamada e noite especial — e uma semente épica foi adicionada ao jardim de vocês!'
 
-function getMilestone(days: number) {
-  return [...MILESTONES].reverse().find((m) => days >= m.days) ?? null
+function getMilestoneTitle(targetDay: number): string {
+  const weeks = targetDay / 7
+  if (targetDay % 30 === 0) {
+    const months = targetDay / 30
+    return `${months} ${months === 1 ? 'mês' : 'meses'}! Super prêmio!`
+  }
+  return `${weeks} semana${weeks !== 1 ? 's' : ''}!`
 }
 
-function getNext(days: number) {
-  return MILESTONES.find((m) => days < m.days) ?? null
+function getMilestonePrize(targetDay: number): string | null {
+  return targetDay % 30 === 0 ? SPECIAL_PRIZE : null
 }
 
-// Gradiente da barra por urgência (igual CountdownPin)
+function getCurrentMilestone(days: number, milestones: number[]) {
+  return [...milestones].reverse().find((m) => days >= m) ?? null
+}
+
+function getNextMilestone(days: number) {
+  return (Math.floor(days / 7) + 1) * 7
+}
+
 const BAR_GRADIENT = 'linear-gradient(90deg, #e8607a, #fda4b4)'
 
-export default function StreakCounter() {
+export default function StreakCounter({ uid, nick }: { uid: string; nick: string }) {
   const {
     streak,
     loading,
@@ -61,15 +55,24 @@ export default function StreakCounter() {
     milestoneChecks,
     currentMilestones,
     handleCheck,
-  } = useStreak()
+    weeklyChallengeName,
+    hasWeeklyThisWeek,
+    currentStreakWeek,
+    iRequested,
+    partnerRequested,
+    requestSorteo,
+    confirmSorteo,
+    panicSorteo,
+  } = useStreak(uid, nick)
+
   const [showPanel, setShowPanel] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [dateInput, setDateInput] = useState('')
   const [showMilestone, setShowMilestone] = useState(false)
 
-  const milestone = getMilestone(days)
-  const next = getNext(days)
+  const milestoneDay = getCurrentMilestone(days, currentMilestones)
+  const nextMilestoneDay = getNextMilestone(days)
 
   const handleSetDate = async () => {
     if (!dateInput) return
@@ -83,9 +86,8 @@ export default function StreakCounter() {
     setShowPanel(false)
   }
 
-  const progressPct = next
-    ? Math.min(100, ((days - (milestone?.days ?? 0)) / (next.days - (milestone?.days ?? 0))) * 100)
-    : 100
+  const prevMark = milestoneDay ?? 0
+  const progressPct = Math.min(100, ((days - prevMark) / (nextMilestoneDay - prevMark)) * 100)
 
   if (loading) return null
 
@@ -114,9 +116,7 @@ export default function StreakCounter() {
           minWidth: 120,
         }}
       >
-        {/* barra de cor no topo */}
         <div style={{ height: 3, background: BAR_GRADIENT, width: '100%' }} />
-
         <div style={{ padding: '7px 13px 8px', display: 'flex', alignItems: 'center', gap: 7 }}>
           <Bird size={15} strokeWidth={2} style={{ color: 'rgba(122,48,64,0.6)', flexShrink: 0 }} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
@@ -159,12 +159,10 @@ export default function StreakCounter() {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* barra de cor no topo */}
           <div style={{ height: 3, background: BAR_GRADIENT, width: '100%' }} />
 
           {/* Header */}
           <div style={{ padding: '14px 16px 12px', position: 'relative' }}>
-            {/* botão fechar */}
             <button
               onClick={() => setShowPanel(false)}
               style={{
@@ -186,7 +184,6 @@ export default function StreakCounter() {
               <X size={10} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
             </button>
 
-            {/* sublabel */}
             <div
               style={{
                 fontSize: 9,
@@ -204,7 +201,6 @@ export default function StreakCounter() {
               dias sem brigar
             </div>
 
-            {/* contador grande */}
             <div
               style={{
                 fontSize: 36,
@@ -229,8 +225,7 @@ export default function StreakCounter() {
               )}
             </div>
 
-            {/* barra de progresso pro próximo marco */}
-            {streak?.startDate && next && (
+            {streak?.startDate && (
               <div style={{ marginTop: 8 }}>
                 <div
                   style={{
@@ -246,7 +241,7 @@ export default function StreakCounter() {
                   }}
                 >
                   <ChevronRight size={9} strokeWidth={2.5} color="rgba(122,48,64,0.55)" />
-                  próximo marco: {next.days} dias
+                  próximo marco: {nextMilestoneDay} dias
                 </div>
                 <div
                   style={{
@@ -270,7 +265,7 @@ export default function StreakCounter() {
               </div>
             )}
 
-            {streak?.startDate && !next && (
+            {streak?.startDate && false && (
               <div
                 style={{
                   fontSize: 10,
@@ -288,11 +283,10 @@ export default function StreakCounter() {
             )}
           </div>
 
-          {/* separador */}
           <div style={{ borderTop: '2px dashed rgba(232,160,176,0.4)', margin: '0 16px' }} />
 
           {/* Marco atual */}
-          {milestone && (
+          {milestoneDay !== null && (
             <>
               <div
                 onClick={() => setShowMilestone(true)}
@@ -321,7 +315,7 @@ export default function StreakCounter() {
                 </div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 800, color: '#3d1a10' }}>
-                    {milestone.title}
+                    {getMilestoneTitle(milestoneDay!)}
                   </div>
                   <div
                     style={{
@@ -338,11 +332,196 @@ export default function StreakCounter() {
                   </div>
                 </div>
               </div>
-
-              {/* separador */}
               <div style={{ borderTop: '2px dashed rgba(232,160,176,0.4)', margin: '0 16px' }} />
             </>
           )}
+
+          {/* Meta da semana */}
+          <div style={{ padding: '10px 16px' }}>
+            <div
+              style={{
+                fontSize: 9,
+                fontWeight: 800,
+                color: 'rgba(122,48,64,0.55)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+                marginBottom: 7,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <Star size={9} strokeWidth={2} color="rgba(122,48,64,0.55)" />
+              meta da semana
+            </div>
+            {currentStreakWeek === 0 ? (
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'rgba(122,48,64,0.4)',
+                  background: 'rgba(232,160,176,0.08)',
+                  border: '1.5px solid rgba(232,160,176,0.2)',
+                  borderRadius: 10,
+                  padding: '8px 11px',
+                  lineHeight: 1.55,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Lock
+                  size={11}
+                  strokeWidth={2}
+                  color="rgba(122,48,64,0.35)"
+                  style={{ flexShrink: 0 }}
+                />
+                disponível após 7 dias sem brigar!!
+              </div>
+            ) : hasWeeklyThisWeek ? (
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'rgba(61,26,16,0.7)',
+                  background: 'rgba(253,242,246,0.55)',
+                  border: '1.5px solid rgba(232,160,176,0.25)',
+                  borderRadius: 10,
+                  padding: '8px 11px',
+                  lineHeight: 1.55,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 6,
+                }}
+              >
+                <Gift
+                  size={11}
+                  strokeWidth={2}
+                  color="rgba(122,48,64,0.5)"
+                  style={{ flexShrink: 0, marginTop: 2 }}
+                />
+                {weeklyChallengeName}
+              </div>
+            ) : iRequested ? (
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'rgba(122,48,64,0.6)',
+                  background: 'rgba(232,160,176,0.1)',
+                  border: '1.5px solid rgba(232,160,176,0.25)',
+                  borderRadius: 10,
+                  padding: '8px 11px',
+                  lineHeight: 1.55,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Clock
+                  size={11}
+                  strokeWidth={2}
+                  color="rgba(122,48,64,0.5)"
+                  style={{ flexShrink: 0 }}
+                />
+                aguardando confirmação do parceiro...
+              </div>
+            ) : partnerRequested ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: 'rgba(61,26,16,0.65)',
+                    background: 'rgba(253,242,246,0.55)',
+                    border: '1.5px solid rgba(232,160,176,0.25)',
+                    borderRadius: 10,
+                    padding: '7px 11px',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  seu parceiro quer sortear a meta desta semana!
+                </div>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    await confirmSorteo()
+                  }}
+                  style={{
+                    padding: '6px 0',
+                    borderRadius: 10,
+                    background: 'rgba(232,160,176,0.55)',
+                    border: 'none',
+                    color: '#3d1a10',
+                    fontWeight: 800,
+                    fontSize: 11,
+                    cursor: 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 5,
+                  }}
+                >
+                  <Shuffle size={11} strokeWidth={2} />
+                  confirmar e sortear!
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    await requestSorteo()
+                  }}
+                  style={{
+                    padding: '6px 0',
+                    borderRadius: 10,
+                    background: 'rgba(232,160,176,0.55)',
+                    border: 'none',
+                    color: '#3d1a10',
+                    fontWeight: 800,
+                    fontSize: 11,
+                    cursor: 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 5,
+                  }}
+                >
+                  <Shuffle size={11} strokeWidth={2} />
+                  sortear meta da semana
+                </button>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    await panicSorteo()
+                  }}
+                  style={{
+                    padding: '5px 0',
+                    borderRadius: 10,
+                    background: 'transparent',
+                    border: '1.5px solid rgba(232,160,176,0.35)',
+                    color: 'rgba(61,26,16,0.45)',
+                    fontWeight: 800,
+                    fontSize: 10,
+                    cursor: 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 5,
+                  }}
+                >
+                  <Zap size={10} strokeWidth={2} />
+                  sortear sozinho (pânico)
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div style={{ borderTop: '2px dashed rgba(232,160,176,0.4)', margin: '0 16px' }} />
 
           {/* Marcos */}
           <div style={{ padding: '10px 16px' }}>
@@ -359,8 +538,7 @@ export default function StreakCounter() {
               marcos
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {currentMilestones.map((targetDay, i) => {
-                const m = MILESTONES[i]
+              {currentMilestones.map((targetDay) => {
                 const reached = days >= targetDay
                 const checked = milestoneChecks[targetDay] ?? false
                 return (
@@ -387,7 +565,7 @@ export default function StreakCounter() {
                         flex: 1,
                       }}
                     >
-                      {formatMilestoneDays(targetDay)} — {m.title}
+                      {formatMilestoneDays(targetDay)} — {getMilestoneTitle(targetDay)}
                     </span>
                     {reached && (
                       <button
@@ -425,7 +603,6 @@ export default function StreakCounter() {
             </div>
           </div>
 
-          {/* separador */}
           <div style={{ borderTop: '2px dashed rgba(232,160,176,0.4)', margin: '0 16px' }} />
 
           {/* Ações */}
@@ -562,7 +739,6 @@ export default function StreakCounter() {
             >
               escolha a data de início do contador
             </div>
-
             <DatePicker
               value={dateInput}
               max={new Date().toISOString().split('T')[0]}
@@ -640,10 +816,7 @@ export default function StreakCounter() {
               position: 'relative',
             }}
           >
-            {/* barra de cor no topo */}
             <div style={{ height: 3, background: BAR_GRADIENT, width: '100%' }} />
-
-            {/* botão fechar */}
             <button
               onClick={() => setShowConfirm(false)}
               style={{
@@ -664,7 +837,6 @@ export default function StreakCounter() {
             >
               <X size={10} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
             </button>
-
             <div
               style={{
                 padding: '14px 16px 16px',
@@ -675,7 +847,6 @@ export default function StreakCounter() {
                 textAlign: 'center',
               }}
             >
-              {/* ícone */}
               <div
                 style={{
                   width: 40,
@@ -690,14 +861,8 @@ export default function StreakCounter() {
               >
                 <HeartCrack size={18} strokeWidth={1.8} color="#e8607a" />
               </div>
-
-              {/* título */}
               <div style={{ fontSize: 14, fontWeight: 900, color: '#3d1a10' }}>tem certeza?</div>
-
-              {/* separador */}
               <div style={{ borderTop: '2px dashed rgba(232,160,176,0.4)', width: '100%' }} />
-
-              {/* texto */}
               <div
                 style={{
                   fontSize: 11,
@@ -715,8 +880,6 @@ export default function StreakCounter() {
                 isso vai zerar o contador e reiniciar do zero hoje. mas tá tudo bem, a gente se
                 resolve!
               </div>
-
-              {/* botões */}
               <div style={{ display: 'flex', gap: 7, width: '100%' }}>
                 <button
                   onClick={() => setShowConfirm(false)}
@@ -764,7 +927,7 @@ export default function StreakCounter() {
       )}
 
       {/* ── Modal: prêmio do marco ── */}
-      {showMilestone && milestone && (
+      {showMilestone && milestoneDay !== null && (
         <div
           style={{
             position: 'fixed',
@@ -795,10 +958,7 @@ export default function StreakCounter() {
               position: 'relative',
             }}
           >
-            {/* barra de cor no topo */}
             <div style={{ height: 3, background: BAR_GRADIENT, width: '100%' }} />
-
-            {/* botão fechar */}
             <button
               onClick={() => setShowMilestone(false)}
               style={{
@@ -819,7 +979,6 @@ export default function StreakCounter() {
             >
               <X size={10} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
             </button>
-
             <div
               style={{
                 padding: '14px 16px 16px',
@@ -830,7 +989,6 @@ export default function StreakCounter() {
                 textAlign: 'center',
               }}
             >
-              {/* ícone */}
               <div
                 style={{
                   width: 40,
@@ -845,16 +1003,10 @@ export default function StreakCounter() {
               >
                 <Trophy size={18} strokeWidth={1.8} color="rgba(122,48,64,0.65)" />
               </div>
-
-              {/* título */}
               <div style={{ fontSize: 14, fontWeight: 900, color: '#3d1a10', lineHeight: 1.2 }}>
-                {milestone.title}
+                {getMilestoneTitle(milestoneDay!)}
               </div>
-
-              {/* separador */}
               <div style={{ borderTop: '2px dashed rgba(232,160,176,0.4)', width: '100%' }} />
-
-              {/* prêmio */}
               <div
                 style={{
                   fontSize: 11,
@@ -878,10 +1030,10 @@ export default function StreakCounter() {
                   color="rgba(122,48,64,0.5)"
                   style={{ flexShrink: 0, marginTop: 2 }}
                 />
-                {milestone.prize}
+                {getMilestonePrize(milestoneDay!) ??
+                  weeklyChallengeName ??
+                  'meta da semana sorteada!'}
               </div>
-
-              {/* botão */}
               <button
                 onClick={() => setShowMilestone(false)}
                 style={{

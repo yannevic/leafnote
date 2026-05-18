@@ -15,14 +15,15 @@ import {
   get as dbGet,
 } from 'firebase/database'
 import moodSound from '../assets/sounds/mood.mp3'
+import { subscribeWeeklyPending } from '../lib/streak'
 
 export interface AppNotification {
   id: string
-  type: 'letter' | 'special-letter' | 'garden-water' | 'calendar-event'
+  type: 'letter' | 'special-letter' | 'garden-water' | 'calendar-event' | 'weekly-sorteo'
   message: string
   boardId?: string
   boardName?: string
-  dismissible?: boolean // pode ser marcada como lida manualmente
+  dismissible?: boolean
 }
 
 interface Props {
@@ -286,6 +287,26 @@ export function useNotificationCenter({
       cleanupCal?.()
     }
   }, [uid, partnerUid, myNick, partnerNick, play])
+
+  // adiciona antes de: const visible = notifications.filter(...)
+  useEffect(() => {
+    const unsub = subscribeWeeklyPending(
+      (pending: { requestedBy: string; requestedByNick: string } | null) => {
+        if (!pending || pending.requestedBy === uid) {
+          setNotifications((prev) => prev.filter((n) => n.type !== 'weekly-sorteo'))
+          return
+        }
+        const notif: AppNotification = {
+          id: 'weekly-sorteo-pending',
+          type: 'weekly-sorteo',
+          message: `${pending.requestedByNick} quer sortear a meta da semana — abra o painel da streak pra confirmar`,
+          dismissible: false,
+        }
+        setNotifications((prev) => [...prev.filter((n) => n.type !== 'weekly-sorteo'), notif])
+      }
+    )
+    return unsub
+  }, [uid])
 
   // Filtra lidas
   const visible = notifications.filter((n) => !n.dismissible || !readIds.has(n.id))

@@ -9,16 +9,36 @@ import {
   subscribeMilestoneChecks,
   toggleMilestoneCheck,
   resetMilestoneChecks,
+  subscribeWeeklyChallenge,
+  subscribeWeeklyPending,
+  requestWeeklySorteo,
+  confirmWeeklySorteo,
+  panicWeeklySorteo,
+  isCurrentStreakWeek,
+  getCurrentStreakWeek,
+  WEEKLY_CHALLENGES,
   type MilestoneChecks,
+  type WeeklyChallenge,
+  type WeeklyPending,
 } from '../lib/streak'
 import type { StreakData } from '../lib/streak'
 
 const BASE_MILESTONES = [7, 14, 21, 30]
 
-export function useStreak() {
+function buildCurrentMilestones(days: number): number[] {
+  // mostra o ciclo atual de 4 marcos (ex: 7-30, 37-60, 61-90...)
+  const cycleSize = 30
+  const currentCycle = Math.floor(Math.max(0, days) / cycleSize)
+  const offset = currentCycle * cycleSize
+  return BASE_MILESTONES.map((d) => d + offset)
+}
+
+export function useStreak(uid?: string, nick?: string) {
   const [streakData, setStreakData] = useState<StreakData | null>(null)
   const [loading, setLoading] = useState(true)
   const [milestoneChecks, setMilestoneChecks] = useState<MilestoneChecks>({})
+  const [weeklyChallenge, setWeeklyChallenge] = useState<WeeklyChallenge | null>(null)
+  const [weeklyPending, setWeeklyPending] = useState<WeeklyPending | null>(null)
 
   useEffect(() => {
     const unsub = subscribeStreak((data) => {
@@ -33,6 +53,16 @@ export function useStreak() {
     return unsub
   }, [])
 
+  useEffect(() => {
+    const unsub = subscribeWeeklyChallenge(setWeeklyChallenge)
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    const unsub = subscribeWeeklyPending(setWeeklyPending)
+    return unsub
+  }, [])
+
   const days = streakData?.startDate ? calcDays(streakData.startDate) : 0
   const checkedRef = useRef(false)
 
@@ -44,27 +74,19 @@ export function useStreak() {
       const { addSeed } = await import('../lib/garden')
       await addSeed('especial')
       await claimSpecialSeedReward()
+      // sorteia a meta do mês automaticamente, sem precisar do parceiro
+      await panicWeeklySorteo(days)
     })
   }, [days])
 
-  // Descobre o cycle offset real: quantos grupos completos de 4 checks existem
-  const allKeys = Object.keys(milestoneChecks)
-    .map(Number)
-    .sort((a, b) => a - b)
-  const completedCycles = Math.floor(allKeys.length / 4)
-  const currentOffset = completedCycles * 30
-
-  const currentMilestones = BASE_MILESTONES.map((d) => d + currentOffset)
+  const currentMilestones = buildCurrentMilestones(days)
 
   const handleCheck = useCallback(
     async (day: number) => {
       const current = milestoneChecks[day] ?? false
       await toggleMilestoneCheck(day, !current)
-
-      // Se marcou o último marco do ciclo atual, reseta e avança
       const lastOfCycle = currentMilestones[currentMilestones.length - 1]
       if (day === lastOfCycle && !current) {
-        // Aguarda um tick pra garantir que o Firebase atualizou
         setTimeout(async () => {
           await resetMilestoneChecks()
         }, 800)
@@ -82,6 +104,24 @@ export function useStreak() {
     await resetMilestoneChecks()
   }, [])
 
+  const requestSorteo = useCallback(async () => {
+    if (!uid || !nick) return
+    await requestWeeklySorteo(uid, nick)
+  }, [uid, nick])
+
+  const confirmSorteo = useCallback(async () => {
+    await confirmWeeklySorteo(days)
+  }, [days])
+
+  const panicSorteo = useCallback(async () => {
+    await panicWeeklySorteo(days)
+  }, [days])
+
+  const hasWeeklyThisWeek = isCurrentStreakWeek(weeklyChallenge, days)
+  const currentStreakWeek = getCurrentStreakWeek(days)
+  const iRequested = weeklyPending?.requestedBy === uid
+  const partnerRequested = !!weeklyPending && !iRequested
+
   return {
     streak: streakData,
     loading,
@@ -91,5 +131,16 @@ export function useStreak() {
     milestoneChecks,
     currentMilestones,
     handleCheck,
+    weeklyChallenge,
+    weeklyChallengeName:
+      weeklyChallenge !== null ? WEEKLY_CHALLENGES[weeklyChallenge.challengeIndex] : null,
+    weeklyPending,
+    hasWeeklyThisWeek,
+    currentStreakWeek,
+    iRequested,
+    partnerRequested,
+    requestSorteo,
+    confirmSorteo,
+    panicSorteo,
   }
 }

@@ -90,3 +90,84 @@ export function formatMilestoneDays(days: number): string {
   if (rest === 0) return `${months} ${months === 1 ? 'mês' : 'meses'}`
   return `${months} ${months === 1 ? 'mês' : 'meses'} e ${rest} dia${rest !== 1 ? 's' : ''}`
 }
+
+// adiciona depois de formatMilestoneDays
+
+export const WEEKLY_CHALLENGES = [
+  'Trocar couplezinho',
+  'Escrevam uma cartinha fofa um pro outro e escolham juntos um prêmio especial',
+  'Escolher a foto de perfil do outro por 24h',
+  'Dia de Gartic e StopotS',
+  'Dia inteiro apenas falando english, all right?',
+  'Dá um lanchinho de presente pro perdedor (decidido nos dados ou jokenpô! md5)',
+  'Façam um quiz impossível valendo castigos fofos',
+  'Dia de quebra-cabeça juntos',
+  'Noite de jogos relaxantes juntos em chamada — escolham um jogo fofo pra jogar, deu briga na escolha? sorteio!',
+  'Filme com pipoca ao mesmo tempo em chamada e noite especial',
+]
+
+export interface WeeklyChallenge {
+  challengeIndex: number
+  weekKey: string
+  previousIndex: number
+}
+
+export interface WeeklyPending {
+  requestedBy: string
+  requestedByNick: string
+}
+
+const WEEKLY_PATH = 'streak/weeklyChallenge'
+const WEEKLY_PENDING_PATH = 'streak/weeklyPending'
+export async function confirmWeeklySorteo(days: number): Promise<WeeklyChallenge> {
+  const snap = await get(ref(db, WEEKLY_PATH))
+  const current = snap.val() as WeeklyChallenge | null
+  const prev = current?.challengeIndex ?? -1
+  const next = drawChallenge(prev)
+  const challenge: WeeklyChallenge = {
+    challengeIndex: next,
+    weekKey: String(getCurrentStreakWeek(days)),
+    previousIndex: prev,
+  }
+  await set(ref(db, WEEKLY_PATH), challenge)
+  await set(ref(db, WEEKLY_PENDING_PATH), null)
+  return challenge
+}
+
+export async function panicWeeklySorteo(days: number): Promise<WeeklyChallenge> {
+  return confirmWeeklySorteo(days)
+}
+
+export function subscribeWeeklyChallenge(callback: (data: WeeklyChallenge | null) => void) {
+  const r = ref(db, WEEKLY_PATH)
+  onValue(r, (snap) => callback((snap.val() as WeeklyChallenge) ?? null))
+  return () => off(r, 'value')
+}
+
+export function subscribeWeeklyPending(callback: (data: WeeklyPending | null) => void) {
+  const r = ref(db, WEEKLY_PENDING_PATH)
+  onValue(r, (snap) => callback((snap.val() as WeeklyPending) ?? null))
+  return () => off(r, 'value')
+}
+
+function drawChallenge(previousIndex: number): number {
+  const available = WEEKLY_CHALLENGES.map((_, i) => i).filter((i) => i !== previousIndex)
+  return available[Math.floor(Math.random() * available.length)]
+}
+
+export async function requestWeeklySorteo(uid: string, nick: string): Promise<void> {
+  await set(ref(db, WEEKLY_PENDING_PATH), { requestedBy: uid, requestedByNick: nick })
+}
+export function getCurrentStreakWeek(days: number): number {
+  // retorna o marco atual: 7, 14, 21, 30, 37, 44...
+  // 0 se ainda não chegou em 7
+  if (days < 7) return 0
+  return Math.floor(days / 7) * 7
+}
+
+export function isCurrentStreakWeek(challenge: WeeklyChallenge | null, days: number): boolean {
+  if (!challenge) return false
+  const currentMilestone = getCurrentStreakWeek(days)
+  if (currentMilestone === 0) return false
+  return challenge.weekKey === String(currentMilestone)
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Mail, Sprout, X, CalendarHeart, Lock, Check, CheckCheck } from 'lucide-react'
+import { Bell, Mail, Sprout, X, CalendarHeart, Lock, Check, CheckCheck, Star } from 'lucide-react'
 import type { AppNotification } from '../hooks/useNotificationCenter'
 
 interface Props {
@@ -15,6 +15,7 @@ export default function NotificationCenter({ notifications, onDismiss }: Props) 
     if (n.type === 'garden-water') return <Sprout size={14} color="#7FB87F" strokeWidth={2} />
     if (n.type === 'calendar-event')
       return <CalendarHeart size={14} color="#c87090" strokeWidth={2} />
+    if (n.type === 'weekly-sorteo') return <Star size={14} color="#c87090" strokeWidth={2} />
     if (n.dismissible) return <Lock size={14} color="#E8A0B0" strokeWidth={2} />
     return <Mail size={14} color="#E8A0B0" strokeWidth={2} />
   }
