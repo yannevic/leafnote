@@ -25,6 +25,7 @@ interface ProgressData {
   transactions: unknown[]
   plants: { flowerType: string }[]
   seeds: { flowerType: string }[]
+  flowerHistory: string[]
   coins: number
   maxPlants: number
   datingDate?: string | null
@@ -101,9 +102,7 @@ function getHint(id: string, progress: ProgressData): string | null {
   ).length
   const paidDebts = p.debts.filter((d) => d.paid).length
 
-  const allFlowerIds = [
-    ...new Set([...p.plants.map((x) => x.flowerType), ...p.seeds.map((x) => x.flowerType)]),
-  ]
+  const allFlowerIds = p.flowerHistory ?? []
 
   const COMUM = ['rosa', 'margarida', 'peonia', 'papoula', 'lavanda']
   const INCOMUM = ['tulipa', 'girassol', 'jasmin', 'violeta']

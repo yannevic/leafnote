@@ -42,8 +42,8 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [limitWarning, setLimitWarning] = useState(false)
 
-  const selectedTier: FlowerRarity | null =
-    selected.length > 0 ? FLOWERS[seeds.find((s) => s.id === selected[0])!.flowerType].rarity : null
+  const firstSeed = selected.length > 0 ? seeds.find((s) => s.id === selected[0]) : undefined
+  const selectedTier: FlowerRarity | null = firstSeed ? FLOWERS[firstSeed.flowerType].rarity : null
 
   const selectedTypes = selected.map((id) => seeds.find((s) => s.id === id)!.flowerType)
   const exchangeOptions: FlowerType[] = selectedTier
@@ -84,6 +84,7 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
     setSelected([])
     setChosenReward(null)
     setConfirmed(false)
+    onClose()
   }
 
   return (

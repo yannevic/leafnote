@@ -93,6 +93,7 @@ import type { CycleData } from '../lib/cycle'
 import { useAchievements } from '../hooks/useAchievements'
 import AchievementsModal from '../components/AchievementsModal'
 import AchievementToast from '../components/AchievementToast'
+import { subscribeFlowerHistory } from '../lib/achievements'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -197,10 +198,16 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [expandedMenu, setExpandedMenu] = useState(false)
   const [cycleToast, setCycleToast] = useState<string | null>(null)
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
+  const [flowerHistory, setFlowerHistory] = useState<string[]>([])
   const [cyclePicker, setCyclePicker] = useState<{ key: string; data: CycleData }[] | null>(null)
 
   useEffect(() => {
     const unsub = subscribeAllCycles(setAllCycles)
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    const unsub = subscribeFlowerHistory(setFlowerHistory)
     return unsub
   }, [])
 
@@ -2435,6 +2442,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             transactions,
             plants,
             seeds,
+            flowerHistory,
             coins,
             maxPlants,
             datingDate: specialDates?.datingDate,
