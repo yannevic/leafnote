@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.15': [
+    "🐛 controles do sticker sumindo antes de alcançar o botão de rotação",
+    "🐛 corrige unlock indevido de flores e tooltip cortado no modal de conquistas e novas conquistas de sticker",
+    "✨ novo pack de stickers de lol",
+    "🐛 corrige lógica de liberação e sorteio da meta semanal na streak",
+  ],
+
   '3.0.14': [
     "🐛 controles do sticker sumindo antes de alcançar o botão de rotação",
     "🐛 corrige unlock indevido de flores e tooltip cortado no modal de conquistas e novas conquistas de sticker",
