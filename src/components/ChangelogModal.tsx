@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.11': [
+    "🐛 jardim — corrige tela branca ao confirmar troca de sementes\r\n🐛 conquistas — dica de flores faltantes usa histórico de plantadas em vez do inventário",
+  ],
+
   '3.0.10': [
     "✉️ carta livre — novo tipo de carta com editor completo de texto, papel, fonte e cores",
     "✉️ carta livre — upload de fotos com arrastar, girar e redimensionar no preview",
