@@ -293,4 +293,14 @@ export const STICKER_PACKS: StickerPack[] = [
       'valentine',
     ].map((n) => ({ key: `valentines1-${n}`, file: `valentines-1/${n}.png` })),
   },
+  {
+    id: 'lol',
+    label: 'League of Legends',
+    price: 65,
+    preview: 'lol/1.png',
+    stickers: Array.from({ length: 30 }, (_, i) => ({
+      key: `lol-${i + 1}`,
+      file: `lol/${i + 1}.png`,
+    })),
+  },
 ]

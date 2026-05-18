@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Trophy, Lock, Gift, CheckCircle } from 'lucide-react'
 import {
   ACHIEVEMENTS,
@@ -31,6 +31,9 @@ interface ProgressData {
   datingDate?: string | null
   letterCount?: number
   specialCount?: number
+  ownedPackCount?: number
+  totalPackCount?: number
+  uniqueStickersOnBoard?: number
 }
 
 interface Props {
@@ -53,6 +56,7 @@ const CATEGORIES: { id: AchievementCategory; label: string }[] = [
   { id: 'financas', label: 'Finanças' },
   { id: 'filmes', label: 'Filmes e Séries' },
   { id: 'namoro', label: 'Namoro' },
+  { id: 'stickers', label: 'Stickers' },
   { id: 'secreta', label: 'Secretas' },
 ]
 
@@ -253,6 +257,23 @@ function getHint(id: string, progress: ProgressData): string | null {
       return `${p.specialCount ?? 0}/10 cartas especiais`
     case 'special_50':
       return `${p.specialCount ?? 0}/50 cartas especiais`
+    // ── Stickers — packs ──
+    case 'sticker_pack_1':
+      return (p.ownedPackCount ?? 0) === 0 ? 'comprem o primeiro pack de stickers' : null
+    case 'sticker_pack_3':
+      return `${p.ownedPackCount ?? 0}/3 packs comprados`
+    case 'sticker_pack_all':
+      return `${p.ownedPackCount ?? 0}/${p.totalPackCount ?? '?'} packs comprados`
+
+    // ── Stickers — únicos no mural ──
+    case 'sticker_unique_1':
+      return (p.uniqueStickersOnBoard ?? 0) === 0 ? 'coloquem o primeiro sticker no mural' : null
+    case 'sticker_unique_10':
+      return `${p.uniqueStickersOnBoard ?? 0}/10 stickers diferentes no mural`
+    case 'sticker_unique_25':
+      return `${p.uniqueStickersOnBoard ?? 0}/25 stickers diferentes no mural`
+    case 'sticker_unique_50':
+      return `${p.uniqueStickersOnBoard ?? 0}/50 stickers diferentes no mural`
 
     default:
       return null
@@ -276,6 +297,17 @@ function AchievementCard({
 }) {
   const [claiming, setClaiming] = useState(false)
   const [showHint, setShowHint] = useState(false)
+  const [hintPos, setHintPos] = useState<{ x: number; y: number } | null>(null)
+  useEffect(() => {
+    if (!showHint) return
+    const el = document.querySelector('.achievement-scroll')
+    const close = () => {
+      setShowHint(false)
+      setHintPos(null)
+    }
+    el?.addEventListener('scroll', close)
+    return () => el?.removeEventListener('scroll', close)
+  }, [showHint])
   const hint = !record && progress ? getHint(def.id, progress) : null
   const unlocked = !!record
   const isSecret = def.categoria === 'secreta'
@@ -434,7 +466,6 @@ function AchievementCard({
           </div>
         )}
       </div>
-
       <span
         style={{
           fontSize: 10.5,
@@ -446,7 +477,6 @@ function AchievementCard({
       >
         {def.nome}
       </span>
-
       <span
         style={{
           fontSize: 9,
@@ -459,7 +489,6 @@ function AchievementCard({
       >
         {def.descricao}
       </span>
-
       {unlocked && record && (
         <span
           style={{
@@ -473,7 +502,6 @@ function AchievementCard({
           {formatDate(record.unlockedAt)}
         </span>
       )}
-
       {/* botão resgatar ou badge "resgatado" */}
       {unlocked && def.recompensa > 0 && (
         <div style={{ marginTop: 3, width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -520,12 +548,16 @@ function AchievementCard({
           )}
         </div>
       )}
-
       {/* botão de dica nas bloqueadas */}
+
       {!unlocked && hint && (
         <div style={{ position: 'relative', marginTop: 2 }}>
           <button
-            onClick={() => setShowHint((v) => !v)}
+            onClick={(e) => {
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+              setHintPos({ x: rect.left + rect.width / 2, y: rect.top })
+              setShowHint((v) => !v)
+            }}
             style={{
               width: 18,
               height: 18,
@@ -546,13 +578,13 @@ function AchievementCard({
           >
             ?
           </button>
-          {showHint && (
+          {showHint && hintPos && (
             <div
               style={{
-                position: 'absolute',
-                bottom: 22,
-                left: '50%',
-                transform: 'translateX(-50%)',
+                position: 'fixed',
+                top: hintPos.y - 8,
+                left: hintPos.x,
+                transform: 'translate(-50%, -100%)',
                 background: 'rgba(253,246,240,0.97)',
                 border: '1.5px solid rgba(196,149,106,0.4)',
                 borderRadius: 8,
@@ -562,7 +594,7 @@ function AchievementCard({
                 color: '#3d1a10',
                 fontFamily: 'Baloo 2, sans-serif',
                 boxShadow: '0 3px 12px rgba(44,20,8,0.15)',
-                zIndex: 10,
+                zIndex: 9999,
                 pointerEvents: 'none',
                 lineHeight: 1.4,
                 maxWidth: 160,
@@ -575,7 +607,6 @@ function AchievementCard({
           )}
         </div>
       )}
-
       {/* listra dourada no topo das desbloqueadas */}
       {unlocked && (
         <div
@@ -712,6 +743,9 @@ export default function AchievementsModal({
         {/* ── Scroll de categorias ── */}
         <div
           className="achievement-scroll"
+          onScroll={() => {
+            /* precisa fechar todos os hints abertos */
+          }}
           style={{
             overflowY: 'auto',
             padding: '14px 22px 22px',

@@ -62,6 +62,9 @@ interface UseAchievementsParams {
   transactions: unknown[]
   moviesLoaded?: boolean
   datingDate: string | undefined | null
+  ownedPackCount: number
+  totalPackCount: number
+  uniqueStickersOnBoard: number
 }
 
 interface UseAchievementsReturn {
@@ -90,6 +93,9 @@ export function useAchievements({
   transactions,
   moviesLoaded,
   datingDate,
+  ownedPackCount,
+  totalPackCount,
+  uniqueStickersOnBoard,
 }: UseAchievementsParams): UseAchievementsReturn {
   const [achievements, setAchievements] = useState<AchievementsMap>({})
   const [categoryBonus, setCategoryBonus] = useState<Partial<Record<AchievementCategory, boolean>>>(
@@ -173,6 +179,9 @@ export function useAchievements({
       transactions,
       datingStartDate: parseDatingDate(datingDate),
       flowersByRarity: buildFlowersByRarity(),
+      ownedPackCount,
+      totalPackCount,
+      uniqueStickersOnBoard,
     })
   }, [
     uid,
@@ -208,6 +217,9 @@ export function useAchievements({
         transactions,
         datingStartDate: parseDatingDate(datingDate),
         flowersByRarity: buildFlowersByRarity(),
+        ownedPackCount,
+        totalPackCount,
+        uniqueStickersOnBoard,
       })
     }, 5000)
     return () => clearTimeout(timer)
@@ -221,6 +233,22 @@ export function useAchievements({
     },
     [uid]
   )
+
+  // ── Unlock em tempo real — stickers ──
+  useEffect(() => {
+    if (!uid || uid === 'anon') return
+    if (ownedPackCount >= 1) void unlock('sticker_pack_1')
+    if (ownedPackCount >= 3) void unlock('sticker_pack_3')
+    if (ownedPackCount >= totalPackCount && totalPackCount > 0) void unlock('sticker_pack_all')
+  }, [ownedPackCount, totalPackCount, uid])
+
+  useEffect(() => {
+    if (!uid || uid === 'anon') return
+    if (uniqueStickersOnBoard >= 1) void unlock('sticker_unique_1')
+    if (uniqueStickersOnBoard >= 10) void unlock('sticker_unique_10')
+    if (uniqueStickersOnBoard >= 25) void unlock('sticker_unique_25')
+    if (uniqueStickersOnBoard >= 50) void unlock('sticker_unique_50')
+  }, [uniqueStickersOnBoard, uid])
 
   // ── Resgatar recompensa individual ──
   const claim = useCallback(async (id: string) => {

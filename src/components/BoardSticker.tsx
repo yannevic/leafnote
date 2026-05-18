@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, RotateCw } from 'lucide-react'
 import { STICKER_PACKS } from '../assets/stickers/index'
 import type { BoardStickerItem } from '../types/board'
 
@@ -14,6 +14,11 @@ interface Props {
   onFocus: (id: string) => void
   onContextMenu?: (e: React.MouseEvent) => void
 }
+
+// Padding ao redor do sticker — precisa ser >= ao offset negativo mais extremo dos controles
+const PAD_TOP = 36 // botão de rotação fica em top:-20, delete em top:-8 → precisa de 36+
+const PAD_SIDE = 24 // delete/resize ficam em ±8, frente/trás em -8
+const PAD_BOTTOM = 24
 
 export default function BoardSticker({
   item,
@@ -62,19 +67,29 @@ export default function BoardSticker({
       data-item
       onMouseDown={onMouseDown}
       onContextMenu={onContextMenu}
-      onMouseEnter={() => setShowMenu(true)}
-      onMouseLeave={() => setShowMenu(false)}
+      onMouseEnter={() => editMode && setShowMenu(true)}
+      onMouseLeave={(e) => {
+        // Ignora se o destino ainda é um filho do container (botões absolutos incluídos)
+        const related = e.relatedTarget as Node | null
+        if (related && (e.currentTarget as HTMLElement).contains(related)) return
+        setShowMenu(false)
+      }}
       style={{
         position: 'absolute',
-        left: item.x,
-        top: item.y,
-        width: item.width,
-        height: item.height,
+        left: item.x - PAD_SIDE,
+        top: item.y - PAD_TOP, // ← recua mais para cima para cobrir o botão de rotação
+        width: item.width + PAD_SIDE * 2,
+        height: item.height + PAD_TOP + PAD_BOTTOM,
+        paddingTop: PAD_TOP,
+        paddingLeft: PAD_SIDE,
+        paddingRight: PAD_SIDE,
+        paddingBottom: PAD_BOTTOM,
         zIndex,
         transform: `rotate(${item.rotation ?? 0}deg)`,
         transformOrigin: 'center center',
         cursor: editMode ? 'grab' : 'default',
         userSelect: 'none',
+        boxSizing: 'border-box',
       }}
     >
       <img
@@ -86,14 +101,14 @@ export default function BoardSticker({
 
       {editMode && showMenu && (
         <>
-          {/* deletar */}
+          {/* deletar — topo direito */}
           <button
             onMouseDown={(e) => e.stopPropagation()}
             onClick={() => onDelete(item.id)}
             style={{
               position: 'absolute',
-              top: -8,
-              right: -8,
+              top: PAD_TOP - 26, // alinha visualmente no canto da imagem
+              right: PAD_SIDE - 26,
               width: 18,
               height: 18,
               borderRadius: '50%',
@@ -109,7 +124,7 @@ export default function BoardSticker({
             <X size={9} color="#fff" />
           </button>
 
-          {/* girar — topo centro */}
+          {/* girar — topo centro, agora DENTRO do padding */}
           <div
             onMouseDown={(e) => {
               e.stopPropagation()
@@ -132,18 +147,23 @@ export default function BoardSticker({
             }}
             style={{
               position: 'absolute',
-              top: -20,
+              top: 6, // dentro da área de padding (PAD_TOP=36, sobra espaço)
               left: '50%',
               transform: 'translateX(-50%)',
-              width: 14,
-              height: 14,
+              width: 18,
+              height: 18,
               borderRadius: '50%',
               background: '#9B7FD4',
               border: '2px solid #fff',
               cursor: 'crosshair',
               zIndex: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-          />
+          >
+            <RotateCw size={10} color="#fff" />
+          </div>
 
           {/* redimensionar — canto inferior direito */}
           <div
@@ -170,8 +190,8 @@ export default function BoardSticker({
             }}
             style={{
               position: 'absolute',
-              bottom: -6,
-              right: -6,
+              bottom: PAD_BOTTOM - 20,
+              right: PAD_SIDE - 20,
               width: 14,
               height: 14,
               borderRadius: 4,
@@ -182,9 +202,16 @@ export default function BoardSticker({
             }}
           />
 
-          {/* frente/trás */}
+          {/* frente/trás — topo esquerdo */}
           <div
-            style={{ position: 'absolute', top: -8, left: -8, display: 'flex', gap: 3, zIndex: 10 }}
+            style={{
+              position: 'absolute',
+              top: PAD_TOP - 26,
+              left: PAD_SIDE - 8,
+              display: 'flex',
+              gap: 3,
+              zIndex: 10,
+            }}
           >
             <button
               onMouseDown={(e) => e.stopPropagation()}

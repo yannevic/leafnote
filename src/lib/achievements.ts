@@ -13,6 +13,7 @@ export type AchievementCategory =
   | 'financas'
   | 'filmes'
   | 'namoro'
+  | 'stickers'
   | 'secreta'
 
 export interface AchievementDef {
@@ -44,6 +45,7 @@ export const CATEGORY_BONUS: Record<AchievementCategory, number> = {
   financas: 15,
   filmes: 18,
   namoro: 20,
+  stickers: 12,
   secreta: 0,
 }
 
@@ -464,6 +466,66 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     recompensa: 28,
   },
 
+  // ── STICKERS — uso no mural ─────────
+  {
+    id: 'sticker_unique_1',
+    nome: 'Primeira Figurinha',
+    descricao: 'Colocaram o primeiro sticker no mural',
+    categoria: 'stickers',
+    imagem: '/achievements/sticker_unique_1.png',
+    recompensa: 1,
+  },
+  {
+    id: 'sticker_unique_10',
+    nome: 'Mural Animado',
+    descricao: '10 stickers diferentes espalhados pelos murais',
+    categoria: 'stickers',
+    imagem: '/achievements/sticker_unique_10.png',
+    recompensa: 3,
+  },
+  {
+    id: 'sticker_unique_25',
+    nome: 'Colecionadores',
+    descricao: '25 stickers diferentes nos murais',
+    categoria: 'stickers',
+    imagem: '/achievements/sticker_unique_25.png',
+    recompensa: 6,
+  },
+  {
+    id: 'sticker_unique_50',
+    nome: 'Álbum Completo',
+    descricao: '50 stickers diferentes espalhados por todos os murais',
+    categoria: 'stickers',
+    imagem: '/achievements/sticker_unique_50.png',
+    recompensa: 12,
+  },
+
+  // ── STICKERS — coleção de packs ─────
+  {
+    id: 'sticker_pack_1',
+    nome: 'Primeiros Adesivos',
+    descricao: 'Compraram o primeiro pack de stickers',
+    categoria: 'stickers',
+    imagem: '/achievements/sticker_pack_1.png',
+    recompensa: 2,
+  },
+  {
+    id: 'sticker_pack_3',
+    nome: 'Vitrine de Stickers',
+    descricao: 'Já têm 3 packs de stickers na coleção',
+    categoria: 'stickers',
+    imagem: '/achievements/sticker_pack_3.png',
+    recompensa: 5,
+  },
+  {
+    id: 'sticker_pack_all',
+    nome: 'Coleção Perfeita',
+    descricao: 'Desbloquearam todos os packs de stickers',
+    categoria: 'stickers',
+    imagem: '/achievements/sticker_pack_all.png',
+    recompensa: 15,
+  },
+
   // ── SECRETAS ────────────────────────
   {
     id: 'secret_morar',
@@ -636,12 +698,11 @@ export function subscribeFlowerHistory(callback: (types: string[]) => void): () 
 // ═══════════════════════════════════════
 // BOOTSTRAP — verificação inicial
 // ═══════════════════════════════════════
-
 interface BootstrapParams {
   uid: string
   plants: { flowerType: string }[]
   seeds: { flowerType: string }[]
-  flowerHistory: string[] // histórico permanente de flores já plantadas
+  flowerHistory: string[]
   coins: number
   maxPlants: number
   streakDays: number
@@ -656,6 +717,9 @@ interface BootstrapParams {
     rara: string[]
     all: string[]
   }
+  ownedPackCount: number
+  totalPackCount: number
+  uniqueStickersOnBoard: number
 }
 
 export async function runBootstrap(params: BootstrapParams): Promise<void> {
@@ -665,7 +729,6 @@ export async function runBootstrap(params: BootstrapParams): Promise<void> {
   const {
     uid,
     plants,
-    seeds,
     flowerHistory,
     coins,
     maxPlants,
@@ -681,14 +744,9 @@ export async function runBootstrap(params: BootstrapParams): Promise<void> {
   const unlock = (id: string) => unlockAchievementBackfill(id, uid)
 
   // Histórico: combina plantas atuais + sementes + histórico permanente
-  const allFlowerIds = [
-    ...new Set([
-      ...plants.map((p) => p.flowerType),
-      ...seeds.map((s) => s.flowerType),
-      ...flowerHistory,
-    ]),
-  ]
-  const hasAll = (list: string[]) => list.every((f) => allFlowerIds.includes(f))
+  // por:
+  const allFlowerIds = [...new Set([...flowerHistory])]
+  const hasAll = (list: string[]) => list.length > 0 && list.every((f) => allFlowerIds.includes(f))
 
   // ── Jardim ──
   if (plants.length >= 1 || flowerHistory.length >= 1) await unlock('first_plant')
@@ -780,6 +838,17 @@ export async function runBootstrap(params: BootstrapParams): Promise<void> {
     if (diffYears >= 2) await unlock('dating_2y')
     if (diffYears >= 3) await unlock('dating_3y')
   }
+
+  // ── Stickers — packs ──
+  if (params.ownedPackCount >= 1) await unlock('sticker_pack_1')
+  if (params.ownedPackCount >= 3) await unlock('sticker_pack_3')
+  if (params.ownedPackCount >= params.totalPackCount) await unlock('sticker_pack_all')
+
+  // ── Stickers — únicos no mural ──
+  if (params.uniqueStickersOnBoard >= 1) await unlock('sticker_unique_1')
+  if (params.uniqueStickersOnBoard >= 10) await unlock('sticker_unique_10')
+  if (params.uniqueStickersOnBoard >= 25) await unlock('sticker_unique_25')
+  if (params.uniqueStickersOnBoard >= 50) await unlock('sticker_unique_50')
 
   await markBootstrapped()
 }

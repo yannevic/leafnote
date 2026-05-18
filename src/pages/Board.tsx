@@ -97,6 +97,8 @@ import { useAchievements } from '../hooks/useAchievements'
 import AchievementsModal from '../components/AchievementsModal'
 import AchievementToast from '../components/AchievementToast'
 import { subscribeFlowerHistory } from '../lib/achievements'
+import { ref as stickerRef, onValue as stickerOnValue, off as stickerOff } from 'firebase/database'
+import { STICKER_PACKS } from '../assets/stickers/index'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -203,7 +205,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [cycleToast, setCycleToast] = useState<string | null>(null)
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
   const [flowerHistory, setFlowerHistory] = useState<string[]>([])
+  const [ownedPacks, setOwnedPacks] = useState<Record<string, boolean>>({})
+  const [uniqueStickersOnBoard, setUniqueStickersOnBoard] = useState(0)
   const [cyclePicker, setCyclePicker] = useState<{ key: string; data: CycleData }[] | null>(null)
+  const { extraBoards } = useBoards(uid)
+  const extraBoardIds = extraBoards.map((b: BoardMeta) => b.id)
 
   useEffect(() => {
     const unsub = subscribeAllCycles(setAllCycles)
@@ -214,6 +220,42 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     const unsub = subscribeFlowerHistory(setFlowerHistory)
     return unsub
   }, [])
+  useEffect(() => {
+    const r = stickerRef(db, 'customLetterStickers/shared/owned')
+    const handler = stickerOnValue(r, (snap) => {
+      setOwnedPacks((snap.val() ?? {}) as Record<string, boolean>)
+    })
+    return () => stickerOff(r, 'value', handler)
+  }, [])
+  useEffect(() => {
+    const allBoardIds = [DEFAULT_BOARD_ID, ...extraBoardIds]
+    const keysByBoard: Record<string, Set<string>> = {}
+    const unsubs: (() => void)[] = []
+
+    function recalc() {
+      const all = new Set<string>()
+      for (const s of Object.values(keysByBoard)) s.forEach((k) => all.add(k))
+      setUniqueStickersOnBoard(all.size)
+    }
+
+    for (const boardId of allBoardIds) {
+      keysByBoard[boardId] = new Set()
+      const path = boardId === DEFAULT_BOARD_ID ? 'board/items' : `boards/${boardId}/items`
+      const r = stickerRef(db, path)
+      const handler = stickerOnValue(r, (snap) => {
+        const data = (snap.val() ?? {}) as Record<string, { type: string; stickerKey?: string }>
+        keysByBoard[boardId] = new Set(
+          Object.values(data)
+            .filter((i) => i.type === 'board-sticker' && i.stickerKey)
+            .map((i) => i.stickerKey!)
+        )
+        recalc()
+      })
+      unsubs.push(() => stickerOff(r, 'value', handler))
+    }
+
+    return () => unsubs.forEach((u) => u())
+  }, [extraBoardIds.join(',')])
 
   function showCycleToast(msg: string) {
     setCycleToast(msg)
@@ -236,6 +278,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     activeDebts,
     paidDebts,
   } = useFinance(uid, partnerUid ?? '')
+
+  const ownedPackCount = STICKER_PACKS.filter((p) =>
+    p.stickers.every((s) => (ownedPacks as Record<string, boolean>)[s.key] === true)
+  ).length
+  const totalPackCount = STICKER_PACKS.length
   const { plants, seeds, coins, maxPlants } = useGarden(uid, partnerUid ?? '')
   const { achievements, unlock, claim, categoryBonus, newlyUnlocked, clearNewlyUnlocked } =
     useAchievements({
@@ -250,10 +297,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
       debts: [...activeDebts, ...paidDebts],
       transactions,
       datingDate: specialDates?.datingDate,
-      moviesLoaded, // <-- adiciona aqui
+      moviesLoaded,
+      ownedPackCount,
+      totalPackCount,
+      uniqueStickersOnBoard,
     })
-  const { extraBoards } = useBoards(uid)
-  const extraBoardIds = extraBoards.map((b: BoardMeta) => b.id)
   const { letterCount, specialCount } = useLetterCounts(extraBoardIds)
   // destrava conquistas retroativas de cartas já existentes
   useEffect(() => {
@@ -2469,6 +2517,9 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             datingDate: specialDates?.datingDate,
             letterCount,
             specialCount,
+            ownedPackCount,
+            totalPackCount,
+            uniqueStickersOnBoard,
           }}
           onClaimCategoryBonus={async (_cat) => {
             // checkAndPayCategoryBonus já é chamado automaticamente no subscribe,
