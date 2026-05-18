@@ -8,6 +8,7 @@ import {
   Trash2,
   Hand,
   Plus,
+  Sticker,
 } from 'lucide-react'
 import { BoardItemType } from '../types/board'
 
@@ -54,6 +55,13 @@ const TOOLS: Tool[] = [
     label: 'Cartinha',
     bg: 'rgba(245,200,180,0.42)',
     border: 'rgba(220,160,130,0.6)',
+  },
+  {
+    type: 'board-sticker',
+    icon: <Sticker size={18} strokeWidth={1.8} />,
+    label: 'Sticker',
+    bg: 'rgba(210,185,245,0.42)',
+    border: 'rgba(170,140,230,0.6)',
   },
 ]
 

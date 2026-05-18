@@ -10,6 +10,9 @@ import { useStreak } from '../hooks/useStreak'
 import useMovies from '../hooks/useMovies'
 import { useFinance } from '../hooks/useFinance'
 import { useGarden } from '../hooks/useGarden'
+import BoardSticker from '../components/BoardSticker'
+import type { BoardStickerItem } from '../types/board'
+import StickerPickerModal from '../components/StickerPickerModal'
 import {
   House,
   ShoppingBag,
@@ -191,6 +194,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showFinance, setShowFinance] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
   const [showCustomLetter, setShowCustomLetter] = useState(false)
+  const [stickerPickerPos, setStickerPickerPos] = useState<{ x: number; y: number } | null>(null)
   const [openCustomLetterViewer, setOpenCustomLetterViewer] = useState<CustomLetterData | null>(
     null
   )
@@ -415,6 +419,9 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         }
         setItems((prev) => [...prev, item])
         saveItem(item)
+        setSelectedTool(null)
+      } else if (selectedTool === 'board-sticker') {
+        setStickerPickerPos({ x, y })
         setSelectedTool(null)
       }
     },
@@ -825,6 +832,22 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   onUpdate={handleUpdate as never}
                   onDelete={handleDeletePin}
                   onFocus={handleFocus}
+                />
+              )
+            }
+            if (item.type === 'board-sticker') {
+              return (
+                <BoardSticker
+                  key={item.id}
+                  item={item as BoardStickerItem}
+                  editMode={editMode}
+                  zIndex={z}
+                  onUpdate={handleUpdate as never}
+                  onDelete={handleDelete}
+                  onBringForward={handleBringForward}
+                  onSendBackward={handleSendBackward}
+                  onFocus={handleFocus}
+                  {...withContext(item)}
                 />
               )
             }
@@ -2453,6 +2476,32 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             // checkAndPayCategoryBonus já é chamado automaticamente no subscribe,
             // mas se quiser forçar manualmente pode chamar aqui — não precisa fazer nada extra
           }}
+        />
+      )}
+      {stickerPickerPos && (
+        <StickerPickerModal
+          uid={uid}
+          onSelect={(stickerKey) => {
+            const item: BoardStickerItem = {
+              id: makeId(),
+              type: 'board-sticker',
+              x: stickerPickerPos.x,
+              y: stickerPickerPos.y,
+              width: 100,
+              height: 100,
+              zOrder: nextZOrder(),
+              createdBy: uid,
+              updatedBy: uid,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              stickerKey,
+              rotation: 0,
+            }
+            setItems((prev) => [...prev, item as unknown as AnyBoardItem])
+            saveItem(item as unknown as AnyBoardItem)
+            setStickerPickerPos(null)
+          }}
+          onClose={() => setStickerPickerPos(null)}
         />
       )}
     </>

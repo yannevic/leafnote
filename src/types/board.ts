@@ -8,6 +8,7 @@ export type BoardItemType =
   | 'custom-letter'
   | 'countdown-pin'
   | 'cycle-pin'
+  | 'board-sticker'
 
 export type PostItColor = 'yellow' | 'green' | 'pink' | 'blue' | 'lavender' | 'peach'
 export type LetterColor = 'rosa' | 'verde' | 'azul' | 'amarelo' | 'lilas'
@@ -81,6 +82,7 @@ export type AnyBoardItem =
   | CustomLetterBoardItem
   | CountdownPinItem
   | CyclePinItem
+  | BoardStickerItem
 
 export type SpecialLetterLayout = 'A' | 'B' | 'C'
 
@@ -177,4 +179,9 @@ export interface CustomLetterData {
   // itens
   photos: CustomLetterPhoto[]
   stickers: CustomLetterSticker[]
+}
+export interface BoardStickerItem extends BoardItem {
+  type: 'board-sticker'
+  stickerKey: string
+  rotation: number
 }
