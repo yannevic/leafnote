@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.13': [
+    "🐛 controles do sticker sumindo antes de alcançar o botão de rotação",
+    "🐛 corrige unlock indevido de flores e tooltip cortado no modal de conquistas e novas conquistas de sticker",
+  ],
+
   '3.0.12': [
     "🐛 jardim — corrige tela branca ao confirmar troca de sementes",
     "🐛 conquistas — dica de flores faltantes usa histórico de plantadas em vez do inventário",
