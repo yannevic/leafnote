@@ -420,9 +420,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         setItems((prev) => [...prev, item])
         saveItem(item)
         setSelectedTool(null)
-      } else if (selectedTool === 'board-sticker') {
-        setStickerPickerPos({ x, y })
-        setSelectedTool(null)
       }
     },
     [editMode, selectedTool, uid, displayName, otherName, items, unlock]
@@ -1764,6 +1761,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           onToggleEdit={() => setEditMode((v) => !v)}
           onOpenTrash={() => setTrashOpen(true)}
           trashCount={trashedItems.length}
+          onOpenStickerPicker={() => setStickerPickerPos({ x: 300, y: 200 })}
         />
         <StreakCounter />
         {showCalendar && (
@@ -2481,6 +2479,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
       {stickerPickerPos && (
         <StickerPickerModal
           uid={uid}
+          onOpenShop={(packId) => {
+            setStickerPickerPos(null)
+            setShopInitialItem(packId)
+            setShowShop(true)
+          }}
           onSelect={(stickerKey) => {
             const item: BoardStickerItem = {
               id: makeId(),

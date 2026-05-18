@@ -90,6 +90,7 @@ interface Props {
   onToggleEdit: () => void
   onOpenTrash: () => void
   trashCount: number
+  onOpenStickerPicker: () => void
 }
 
 export default function Toolbar({
@@ -99,6 +100,7 @@ export default function Toolbar({
   onToggleEdit,
   onOpenTrash,
   trashCount,
+  onOpenStickerPicker,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ x: 20, y: -1 })
@@ -155,6 +157,11 @@ export default function Toolbar({
 
   const handleChildClick = (e: React.MouseEvent, tool: BoardItemType) => {
     e.stopPropagation()
+    if (tool === 'board-sticker') {
+      onOpenStickerPicker()
+      setOpen(false)
+      return
+    }
     onSelect(tool)
     setOpen(false)
   }

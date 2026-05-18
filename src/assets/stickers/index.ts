@@ -15,7 +15,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'axolot',
     label: 'Axolotl',
-    price: 80,
+    price: 55,
     preview: 'axolot/1.png',
     stickers: Array.from({ length: 21 }, (_, i) => ({
       key: `axolot-${i + 1}`,
@@ -25,7 +25,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'birthday',
     label: 'Aniversário',
-    price: 60,
+    price: 35,
     preview: 'birthday/birthday-cake.png',
     stickers: [
       'badge',
@@ -57,7 +57,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'boy',
     label: 'Menino Anime',
-    price: 70,
+    price: 45,
     preview: 'boy/happy.png',
     stickers: [
       'angry',
@@ -85,7 +85,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'bw-couple',
     label: 'Casal P&B',
-    price: 90,
+    price: 65,
     preview: 'bw-couple/1.png',
     stickers: Array.from({ length: 20 }, (_, i) => ({
       key: `bw-couple-${i + 1}`,
@@ -95,7 +95,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'cats-dogs-birth',
     label: 'Pets Festeiros',
-    price: 70,
+    price: 45,
     preview: 'cats-dogs-birth/cat.png',
     stickers: [
       'black-cat',
@@ -123,7 +123,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'christmas',
     label: 'Natal',
-    price: 60,
+    price: 35,
     preview: 'christmas/snowman.png',
     stickers: [
       'angry',
@@ -156,7 +156,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'cute-girl',
     label: 'Menina Fofa',
-    price: 70,
+    price: 45,
     preview: 'cute-girl/proud.png',
     stickers: [
       'angry',
@@ -184,7 +184,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'girl',
     label: 'Garota Anime',
-    price: 70,
+    price: 45,
     preview: 'girl/happy.png',
     stickers: [
       'angry',
@@ -212,7 +212,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'relax-pack',
     label: 'Relax',
-    price: 60,
+    price: 35,
     preview: 'relax-pack/heart.png',
     stickers: [
       'backpack',
@@ -240,7 +240,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'valentines',
     label: 'Valentines',
-    price: 80,
+    price: 55,
     preview: 'valentines/love.png',
     stickers: [
       'bee',
@@ -268,7 +268,7 @@ export const STICKER_PACKS: StickerPack[] = [
   {
     id: 'valentines-1',
     label: 'Valentines II',
-    price: 80,
+    price: 55,
     preview: 'valentines-1/love.png',
     stickers: [
       'call',

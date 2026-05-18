@@ -1,2 +1,4 @@
-🐛 jardim — corrige tela branca ao confirmar troca de sementes
-🐛 conquistas — dica de flores faltantes usa histórico de plantadas em vez do inventário
+🐛 jardim — corrige tela branca ao confirmar troca de sementes |
+🐛 conquistas — dica de flores faltantes usa histórico de plantadas em vez do inventário |
+🎨 stickers no mural — painel flutuante glass com packs, cadeado e atalho pra loja |
+💰 stickers — preços dos packs rebalanceados (35–65 moedas) |
