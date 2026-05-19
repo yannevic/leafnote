@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.17': [
+    "✨ substitui imagens do mood widget por Poros",
+    "🐛 arrastar o botão do mood não abre o painel acidentalmente",
+  ],
+
   '3.0.16': [
     "🐛 controles do sticker sumindo antes de alcançar o botão de rotação",
     "🐛 corrige unlock indevido de flores e tooltip cortado no modal de conquistas e novas conquistas de sticker",
