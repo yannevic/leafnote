@@ -20,7 +20,7 @@ const MOODS: { id: string; label: string }[] = [
   { id: 'língua de fora', label: 'bobinho' },
   { id: 'te observando', label: 'mlk neutro' },
   { id: 'piscando', label: 'piscadela' },
-  { id: 'convicto', label: 'confiante' },
+  { id: 'convicto', label: 'safadeza hehe' },
   { id: 'rindo', label: 'risadinha' },
   { id: 'sorrindo', label: 'sorrisinho' },
   { id: 'suado', label: 'cansadinho' },
