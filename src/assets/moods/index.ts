@@ -1,47 +1,41 @@
-import apaixonada from './apaixonada.png'
-import apreensiva from './apreensiva.png'
-import assustada from './assustada.png'
-import boba from './boba.png'
-import brava from './brava.png'
-import cansada from './cansada.png'
-import concentrada from './concentrada.png'
-import doente from './doente.png'
-import encantada from './encantada.png'
-import feliz from './feliz.png'
-import idc from './idc.png'
-import incredula from './incredula.png'
-import irada from './irada.png'
-import ohNo from './oh-no.png'
-import ok from './ok.png'
-import pensativa from './pensativa.png'
-import safada from './safada.png'
-import semGraca from './sem-graca.png'
-import sono from './sono.png'
-import timida from './timida.png'
-import triste from './triste.png'
+import amor from './Figurinha_de_Poro_Amor.webp'
+import beijinho from './Figurinha_de_Poro_Beijinho.webp'
+import bravo from './Figurinha_de_Poro_Bravo.webp'
+import chocado from './Figurinha_de_Poro_Chocado.webp'
+import chorando from './Figurinha_de_Poro_Chorando.webp'
+import coco from './Figurinha_de_Poro_Coco.webp'
+import confuso from './Figurinha_de_Poro_Confuso.webp'
+import corado from './Figurinha_de_Poro_Corado.webp'
+import dorminhoco from './Figurinha_de_Poro_Dorminhoco.webp'
+import legal from './Figurinha_de_Poro_Legal.webp'
+import lingua from './Figurinha_de_Poro_Lingua.webp'
+import olhando from './Figurinha_de_Poro_Olhando.webp'
+import piscando from './Figurinha_de_Poro_Piscando.webp'
+import pretensioso from './Figurinha_de_Poro_Pretensioso.webp'
+import rindo from './Figurinha_de_Poro_Rindo.webp'
+import sorrindo from './Figurinha_de_Poro_Sorrindo.webp'
+import suado from './Figurinha_de_Poro_Suado.webp'
+import triste from './Figurinha_de_Poro_Triste.webp'
 
 const moodImages: Record<string, string> = {
-  apaixonada,
-  apreensiva,
-  assustada,
-  boba,
-  brava,
-  cansada,
-  concentrada,
-  doente,
-  encantada,
-  feliz,
-  idc,
-  incredula,
-  irada,
-  'oh-no': ohNo,
-  ok,
-  pensativa,
-  safada,
-  'sem-graca': semGraca,
-  sono,
-  timida,
-  triste,
+  apaixonado: amor,
+  beijinho: beijinho,
+  bravo: bravo,
+  chocado: chocado,
+  chorando: chorando,
+  cocô: coco,
+  confuso: confuso,
+  corado: corado,
+  'com sono': dorminhoco,
+  estiloso: legal,
+  'língua de fora': lingua,
+  'te observando': olhando,
+  piscando: piscando,
+  convicto: pretensioso,
+  rindo: rindo,
+  sorrindo: sorrindo,
+  suado: suado,
+  triste: triste,
 }
 
 export default moodImages

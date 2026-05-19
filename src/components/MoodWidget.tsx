@@ -7,30 +7,27 @@ import moodSound from '../assets/sounds/mood.mp3'
 import { SmilePlus } from 'lucide-react'
 
 const MOODS: { id: string; label: string }[] = [
-  { id: 'apaixonada', label: 'Apaixonado' },
-  { id: 'apreensiva', label: 'Apreensivo' },
-  { id: 'assustada', label: 'Assustado' },
-  { id: 'boba', label: 'Bobo' },
-  { id: 'brava', label: 'Bravo' },
-  { id: 'cansada', label: 'Cansado' },
-  { id: 'concentrada', label: 'Concentrado' },
-  { id: 'doente', label: 'Doente' },
-  { id: 'encantada', label: 'Encantado' },
-  { id: 'feliz', label: 'Feliz' },
-  { id: 'idc', label: 'Idc' },
-  { id: 'incredula', label: 'Incrédulo' },
-  { id: 'irada', label: 'Irado' },
-  { id: 'oh-no', label: 'Oh no' },
-  { id: 'ok', label: 'Ok' },
-  { id: 'pensativa', label: 'Pensativo' },
-  { id: 'safada', label: 'Safado' },
-  { id: 'sem-graca', label: 'Sem graça' },
-  { id: 'sono', label: 'Com sono' },
-  { id: 'timida', label: 'Tímido' },
-  { id: 'triste', label: 'Triste' },
+  { id: 'apaixonado', label: 'apaixonado' },
+  { id: 'beijinho', label: 'beijinho' },
+  { id: 'bravo', label: 'irado' },
+  { id: 'chocado', label: 'embasbacado' },
+  { id: 'chorando', label: 'chorinho' },
+  { id: 'cocô', label: 'caquinha' },
+  { id: 'confuso', label: 'confuso' },
+  { id: 'corado', label: 'fofinho' },
+  { id: 'com sono', label: 'soninho' },
+  { id: 'estiloso', label: 'estiloso' },
+  { id: 'língua de fora', label: 'bobinho' },
+  { id: 'te observando', label: 'mlk neutro' },
+  { id: 'piscando', label: 'piscadela' },
+  { id: 'convicto', label: 'confiante' },
+  { id: 'rindo', label: 'risadinha' },
+  { id: 'sorrindo', label: 'sorrisinho' },
+  { id: 'suado', label: 'cansadinho' },
+  { id: 'triste', label: 'tristonho' },
 ]
 
-const COLS = 7
+const COLS = 6
 const IMG_SIZE = 48
 const TODAY = new Date().toISOString().slice(0, 10)
 
@@ -93,9 +90,11 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
     await set(ref(db, `/mood/${uid}/${TODAY}`), entry)
     setExpanded(false)
   }
+  const didDragRef = useRef(false)
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      didDragRef.current = false
       dragRef.current = {
         dragging: true,
         sx: e.clientX,
@@ -107,7 +106,10 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
       const onMove = (ev: MouseEvent) => {
         const d = dragRef.current
         if (!d.dragging) return
-        setPos({ x: d.px + ev.clientX - d.sx, y: d.py + ev.clientY - d.sy })
+        const dx = ev.clientX - d.sx
+        const dy = ev.clientY - d.sy
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) didDragRef.current = true
+        setPos({ x: d.px + dx, y: d.py + dy })
       }
       const onUp = () => {
         dragRef.current.dragging = false
@@ -172,7 +174,9 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
 
       <div
         onMouseDown={onMouseDown}
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => {
+          if (!didDragRef.current) setExpanded((v) => !v)
+        }}
         style={{
           width: 42,
           height: 42,
