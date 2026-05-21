@@ -1,1 +1,1 @@
-✨ substitui imagens do mood widget por Poros | 🐛 arrastar o botão do mood não abre o painel acidentalmente | 
+🎮 implementa 21 e UNO em tempo real |

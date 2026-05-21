@@ -94,6 +94,9 @@ import type { CyclePinItem as CyclePinItemType } from '../types/board'
 import { subscribeAllCycles, computeCycleState } from '../lib/cycle'
 import type { CycleData } from '../lib/cycle'
 import { useAchievements } from '../hooks/useAchievements'
+import GameLobbyTab from '../components/Games/GameLobbyTab'
+import GameModal from '../components/Games/GameModal'
+import type { GameMode } from '../lib/games'
 import AchievementsModal from '../components/AchievementsModal'
 import AchievementToast from '../components/AchievementToast'
 import { subscribeFlowerHistory } from '../lib/achievements'
@@ -176,7 +179,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showMovies, setShowMovies] = useState(false)
   const [showGarden, setShowGarden] = useState(false)
   const [showWidgets, setShowWidgets] = useState(false)
-  const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette'>('dice')
+  const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette' | 'jogos'>('dice')
+  const [activeGame, setActiveGame] = useState<{ mode: GameMode } | null>(null)
   const [sharedDice, setSharedDice] = useState(false)
   const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
   const [timerDismissed, setTimerDismissed] = useState(false)
@@ -1514,6 +1518,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                     { id: 'dice', label: 'dados' },
                     { id: 'timer', label: 'timer' },
                     { id: 'roulette', label: 'roleta' },
+                    { id: 'jogos', label: 'jogos' },
                   ] as const
                 ).map((w) => (
                   <button
@@ -1573,6 +1578,19 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                 )}
                 {activeWidget === 'timer' && <Timer state={timerState} onChange={setTimerState} />}
                 {activeWidget === 'roulette' && <Roulette />}
+                {activeWidget === 'jogos' && (
+                  <GameLobbyTab
+                    uid={uid}
+                    partnerUid={partnerUid ?? ''}
+                    myName={displayName}
+                    partnerName={otherName}
+                    roomId={activeBoardId}
+                    onStartGame={(mode) => {
+                      setActiveGame({ mode })
+                      setShowWidgets(false)
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -2336,6 +2354,19 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             saveItem(item as unknown as AnyBoardItem)
             setShowCustomLetter(false)
           }}
+        />
+      )}
+
+      {activeGame && (
+        <GameModal
+          mode={activeGame.mode}
+          uid={uid}
+          partnerUid={partnerUid ?? ''}
+          myNick={displayName}
+          partnerNick={otherName}
+          myCoins={coins}
+          roomId={activeBoardId}
+          onClose={() => setActiveGame(null)}
         />
       )}
 
