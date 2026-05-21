@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.19': [
+    "🎮 implementa 21 e UNO em tempo real",
+  ],
+
   '3.0.18': [
     "✨ substitui imagens do mood widget por Poros",
     "🐛 arrastar o botão do mood não abre o painel acidentalmente",
