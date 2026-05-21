@@ -96,7 +96,8 @@ import type { CycleData } from '../lib/cycle'
 import { useAchievements } from '../hooks/useAchievements'
 import GameLobbyTab from '../components/Games/GameLobbyTab'
 import GameModal from '../components/Games/GameModal'
-import type { GameMode } from '../lib/games'
+import { subscribeLobby } from '../lib/games'
+import type { GameMode, GameLobby } from '../lib/games'
 import AchievementsModal from '../components/AchievementsModal'
 import AchievementToast from '../components/AchievementToast'
 import { subscribeFlowerHistory } from '../lib/achievements'
@@ -181,6 +182,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showWidgets, setShowWidgets] = useState(false)
   const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette' | 'jogos'>('dice')
   const [activeGame, setActiveGame] = useState<{ mode: GameMode } | null>(null)
+
   const [sharedDice, setSharedDice] = useState(false)
   const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
   const [timerDismissed, setTimerDismissed] = useState(false)
@@ -214,6 +216,18 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [cyclePicker, setCyclePicker] = useState<{ key: string; data: CycleData }[] | null>(null)
   const { extraBoards } = useBoards(uid)
   const extraBoardIds = extraBoards.map((b: BoardMeta) => b.id)
+
+  // reconecta partida em andamento ao montar / ao abrir aba jogos
+  // reconecta partida em andamento ao montar / ao abrir aba jogos
+  useEffect(() => {
+    if (!activeBoardId) return
+    const unsub = subscribeLobby(activeBoardId, (lobby: GameLobby | null) => {
+      if (!activeGame && lobby?.state === 'starting' && lobby.mode) {
+        setActiveGame({ mode: lobby.mode as GameMode })
+      }
+    })
+    return unsub
+  }, [activeBoardId, activeGame])
 
   useEffect(() => {
     const unsub = subscribeAllCycles(setAllCycles)
