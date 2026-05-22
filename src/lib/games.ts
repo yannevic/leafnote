@@ -484,6 +484,6 @@ export function resetLobby(roomId: string): Promise<void> {
 
 export function subscribeLobby(roomId: string, cb: (lobby: GameLobby | null) => void): () => void {
   const r = ref(db, `${LOBBY_PATH}/${roomId}`)
-  onValue(r, (snap) => cb(snap.exists() ? (snap.val() as GameLobby) : null))
-  return () => off(r)
+  const handler = onValue(r, (snap) => cb(snap.exists() ? (snap.val() as GameLobby) : null))
+  return () => off(r, 'value', handler)
 }

@@ -49,11 +49,10 @@ export default function GameLobbyTab({
   }, [bothReady, mode, lobby?.state])
 
   function handleSelectMode(m: GameMode) {
-    // reset ready ao trocar modo
-    setLobbyMode(roomId, m)
-    setReady(roomId, uid, false)
-    setReady(roomId, partnerUid, false)
-    setLobbyState(roomId, 'waiting')
+    resetLobby(roomId).then(() => {
+      setLobbyMode(roomId, m)
+      setLobbyState(roomId, 'waiting')
+    })
   }
 
   function handleToggleReady() {

@@ -1,1 +1,1 @@
-🎮 implementa 21 e UNO em tempo real | 
+🐛 corrige lobby de jogos e scroll no modal de sementes | 

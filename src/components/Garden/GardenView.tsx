@@ -639,7 +639,20 @@ export default function GardenView({
             >
               escolha uma semente para plantar
             </h3>
-            <div className="flex flex-col gap-2 mb-4">
+            <style>{`
+              .seed-list::-webkit-scrollbar { width: 4px; }
+              .seed-list::-webkit-scrollbar-track { background: transparent; }
+              .seed-list::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+              .seed-list::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+            `}</style>
+            <div
+              className="seed-list flex flex-col gap-2 mb-4"
+              style={{
+                maxHeight: 260,
+                overflowY: 'auto',
+                paddingRight: 4,
+              }}
+            >
               {seeds.map((s) => {
                 const info = FLOWERS[s.flowerType]
 
