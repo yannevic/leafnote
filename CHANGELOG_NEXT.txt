@@ -1,1 +1,1 @@
-🐛 corrige topCard.value undefined e reverse com 2 jogadores no UNO | 
+✨ adiciona botão de reiniciar partida com confirmação no UNO | 

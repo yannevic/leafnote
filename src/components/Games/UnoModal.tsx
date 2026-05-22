@@ -173,6 +173,8 @@ export const UnoModal: React.FC<UnoModalProps> = ({
   // carta que precisa de escolha de cor (wild/draw4)
   const [pendingCard, setPendingCard] = useState<string | null>(null)
 
+  const [confirmReset, setConfirmReset] = useState(false)
+
   const state = room?.state ?? 'idle'
   const isIdle = state === 'idle'
   const isFinished = state === 'finished'
@@ -239,6 +241,87 @@ export const UnoModal: React.FC<UnoModalProps> = ({
         {/* Seletor de cor overlay */}
         {pendingCard && <ColorPicker onPick={handleColorPick} />}
 
+        {confirmReset && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 20,
+              background: 'rgba(26,42,26,0.6)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 20,
+              gap: 12,
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "'Baloo 2', sans-serif",
+                fontWeight: 800,
+                fontSize: 15,
+                color: 'white',
+                marginBottom: 4,
+                textAlign: 'center',
+              }}
+            >
+              reiniciar a partida?
+            </p>
+            <p
+              style={{
+                fontFamily: "'Baloo 2', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.6)',
+                marginBottom: 8,
+                textAlign: 'center',
+              }}
+            >
+              as mãos atuais serão descartadas
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setConfirmReset(false)}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: 10,
+                  border: '1.5px solid rgba(255,255,255,0.25)',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontFamily: "'Baloo 2', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  setConfirmReset(false)
+                  await startGame()
+                }}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: 'linear-gradient(135deg,#7FB87F,#4A7A4A)',
+                  color: 'white',
+                  fontFamily: "'Baloo 2', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(74,122,74,0.3)',
+                }}
+              >
+                reiniciar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div
           style={{
@@ -277,19 +360,42 @@ export const UnoModal: React.FC<UnoModalProps> = ({
               </span>
             )}
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#4A7A4A',
-              display: 'flex',
-              padding: 4,
-            }}
-          >
-            <X size={18} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isPlaying && (
+              <button
+                onClick={() => setConfirmReset(true)}
+                style={{
+                  background: 'rgba(232,96,122,0.1)',
+                  border: '1.5px solid rgba(232,96,122,0.25)',
+                  borderRadius: 8,
+                  padding: '3px 10px',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: '#e8607a',
+                  cursor: 'pointer',
+                  fontFamily: "'Baloo 2', sans-serif",
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                }}
+              >
+                <RefreshCw size={11} strokeWidth={2.5} /> reiniciar
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#4A7A4A',
+                display: 'flex',
+                padding: 4,
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Corpo */}
