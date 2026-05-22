@@ -602,11 +602,7 @@ export const UnoModal: React.FC<UnoModalProps> = ({
                     return (
                       <div
                         key={card.id}
-                        onClick={() => {
-                          if (!isMyTurn) return
-                          if (!topCard) return
-                          handlePlayCard(card)
-                        }}
+                        onClick={() => handlePlayCard(card)}
                         style={{
                           cursor: playable ? 'pointer' : 'default',
                           opacity: isMyTurn && !playable ? 0.45 : 1,

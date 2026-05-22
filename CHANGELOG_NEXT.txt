@@ -1,1 +1,1 @@
-✨ adiciona botão de reiniciar partida com confirmação no UNO | 
+🐛 corrige validação de cartas e fechamento do GameModal no UNO | 

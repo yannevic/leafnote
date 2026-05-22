@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import type { GameMode } from '../../lib/games'
+import { resetLobby, type GameMode } from '../../lib/games'
 import { BlackjackModal } from './BlackjackModal'
 import { UnoModal } from './UnoModal'
 
@@ -25,6 +25,7 @@ export default function GameModal({
   onClose,
 }: Props) {
   function handleClose() {
+    resetLobby(roomId)
     onClose()
   }
 
