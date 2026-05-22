@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.22': [
+    "🐛 corrige cartas wild e draw4 sempre abrem color picker no UNO",
+  ],
+
   '3.0.21': [
     "🐛 corrige lobby de jogos e scroll no modal de sementes",
   ],
