@@ -333,7 +333,12 @@ export async function unoPlayCard(
 
   const activeColor: UnoColor =
     chosenColor ?? (card.color !== 'wild' ? (card.color as UnoColor) : room.currentColor)
-  const topCard = { color: activeColor, type: card.type, value: card.value }
+
+  const topCard = {
+    color: activeColor,
+    type: card.type,
+    ...(card.value !== undefined && { value: card.value }),
+  }
 
   // vitória
   if (hand.length === 0) {
@@ -348,11 +353,19 @@ export async function unoPlayCard(
     return
   }
 
-  let nextState = `turn_${partnerUid}`
   let partnerHand = [...(room.hands[partnerUid] ?? [])]
 
+  // skip e reverse com 2 jogadores = fica na vez
   if (card.type === 'skip' || card.type === 'reverse') {
-    nextState = `turn_${uid}`
+    await update(ref(db, unoPath(roomId)), {
+      state: `turn_${uid}`,
+      deck,
+      discard,
+      topCard,
+      currentColor: activeColor,
+      [`hands/${uid}`]: hand,
+    })
+    return
   }
 
   if (card.type === 'draw2') {
@@ -385,8 +398,9 @@ export async function unoPlayCard(
     return
   }
 
+  // carta normal — passa a vez
   await update(ref(db, unoPath(roomId)), {
-    state: nextState,
+    state: `turn_${partnerUid}`,
     deck,
     discard,
     topCard,

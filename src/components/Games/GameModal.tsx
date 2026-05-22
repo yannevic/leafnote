@@ -1,5 +1,4 @@
 import { X } from 'lucide-react'
-import { resetLobby } from '../../lib/games'
 import type { GameMode } from '../../lib/games'
 import { BlackjackModal } from './BlackjackModal'
 import { UnoModal } from './UnoModal'
