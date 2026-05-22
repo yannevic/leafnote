@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.23': [
+    "✨ adiciona botão de reiniciar partida com confirmação no UNO",
+  ],
+
   '3.0.22': [
     "🐛 corrige cartas wild e draw4 sempre abrem color picker no UNO",
   ],
