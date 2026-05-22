@@ -1,1 +1,1 @@
-🐛 corrige lobby de jogos e scroll no modal de sementes | 
+🐛 corrige cartas wild e draw4 sempre abrem color picker no UNO | 

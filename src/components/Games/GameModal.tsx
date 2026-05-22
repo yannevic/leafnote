@@ -26,7 +26,6 @@ export default function GameModal({
   onClose,
 }: Props) {
   function handleClose() {
-    resetLobby(roomId)
     onClose()
   }
 

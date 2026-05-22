@@ -188,12 +188,13 @@ export const UnoModal: React.FC<UnoModalProps> = ({
   function handlePlayCard(card: UnoCardType) {
     if (!isMyTurn) return
     if (!topCard) return
-    if (!isPlayable(card, topCard, currentColor)) return
 
     if (card.type === 'wild' || card.type === 'draw4') {
       setPendingCard(card.id)
       return
     }
+
+    if (!isPlayable(card, topCard, currentColor)) return
     playCard(card.id)
   }
 
@@ -216,7 +217,6 @@ export const UnoModal: React.FC<UnoModalProps> = ({
         background: 'rgba(26,42,26,0.55)',
         backdropFilter: 'blur(6px)',
       }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Modal */}
       <div
@@ -496,7 +496,11 @@ export const UnoModal: React.FC<UnoModalProps> = ({
                     return (
                       <div
                         key={card.id}
-                        onClick={() => playable && handlePlayCard(card)}
+                        onClick={() => {
+                          if (!isMyTurn) return
+                          if (!topCard) return
+                          handlePlayCard(card)
+                        }}
                         style={{
                           cursor: playable ? 'pointer' : 'default',
                           opacity: isMyTurn && !playable ? 0.45 : 1,
