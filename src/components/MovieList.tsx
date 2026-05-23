@@ -491,7 +491,6 @@ function WatchedCard({
         background: T.card,
         border: T.borderVal,
         borderRadius: 12,
-        overflow: 'hidden',
         marginBottom: 6,
       }}
     >
@@ -595,15 +594,17 @@ function WatchedCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Calendar size={12} color={T.textLabel} strokeWidth={2} />
             {editingDate ? (
-              <DatePicker
-                value={dateVal}
-                max={new Date().toISOString().split('T')[0]}
-                onChange={(v) => {
-                  setDateVal(v)
-                  onChangeDate(movie.id, v)
-                  setEditingDate(false)
-                }}
-              />
+              <div style={{ position: 'relative', zIndex: 9999 }}>
+                <DatePicker
+                  value={dateVal}
+                  max={new Date().toISOString().split('T')[0]}
+                  onChange={(v) => {
+                    setDateVal(v)
+                    onChangeDate(movie.id, v)
+                    setEditingDate(false)
+                  }}
+                />
+              </div>
             ) : (
               <span
                 style={{
@@ -1777,7 +1778,16 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
         )}
 
         {/* Lista */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 14px' }}>
+        <style>{`
+          .movie-list-scroll::-webkit-scrollbar { width: 4px; }
+          .movie-list-scroll::-webkit-scrollbar-track { background: transparent; }
+          .movie-list-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+          .movie-list-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+        `}</style>
+        <div
+          className="movie-list-scroll"
+          style={{ flex: 1, overflowY: 'auto', padding: '0 12px 14px' }}
+        >
           {tab === 'watched' &&
             (watched.length === 0 ? (
               <div
