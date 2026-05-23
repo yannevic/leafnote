@@ -51,6 +51,7 @@ export default function GardenView({
     loading,
     coins,
     water,
+    plant,
     alreadyWatered,
     partnerWatered,
     canPlant,
@@ -106,9 +107,6 @@ export default function GardenView({
     setPlantingSeed(null)
     setShowSeedModal(false)
   }
-
-  // plant vem do hook mas não estava desestruturado — adicionamos aqui
-  const { plant } = useGarden(uid, partnerUid)
 
   const [confirmSellSeed, setConfirmSellSeed] = useState<SeedData | null>(null)
 
