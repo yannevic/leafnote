@@ -1,1 +1,1 @@
-🐛 corrige validação de cartas e fechamento do GameModal no UNO | 
+🐛 corrige validação de cartas e fechamento do GameModal no UNO |

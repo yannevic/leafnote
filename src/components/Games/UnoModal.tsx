@@ -611,6 +611,7 @@ export const UnoModal: React.FC<UnoModalProps> = ({
                           outline: playable ? '2.5px solid rgba(127,184,127,0.7)' : 'none',
                           outlineOffset: 3,
                           borderRadius: 14,
+                          pointerEvents: playable ? 'auto' : 'none',
                         }}
                       >
                         <UnoCard color={card.color} type={card.type} value={card.value} />
