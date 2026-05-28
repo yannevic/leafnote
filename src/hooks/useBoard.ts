@@ -3,12 +3,14 @@ import { ref, onValue, set, remove, off } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { AnyBoardItem } from '../types/board'
 import { boardItemsPath, DEFAULT_BOARD_ID } from '../lib/boards'
+import { useCoupleId } from '../contexts/CoupleContext'
 
 export function useBoard(
   _items: AnyBoardItem[],
   setItems: React.Dispatch<React.SetStateAction<AnyBoardItem[]>>,
   boardId: string
 ) {
+  const { coupleId } = useCoupleId()
   const loaded = useRef(false)
   const localIds = useRef<Set<string>>(new Set())
   const deletedIds = useRef<Set<string>>(new Set())
@@ -18,7 +20,7 @@ export function useBoard(
     localIds.current = new Set()
     deletedIds.current = new Set()
 
-    const path = boardItemsPath(boardId)
+    const path = boardItemsPath(boardId, coupleId!)
     const boardRef = ref(db, path)
 
     const unsubscribe = onValue(boardRef, (snapshot) => {
@@ -41,7 +43,7 @@ export function useBoard(
   const saveItem = useCallback(
     (item: AnyBoardItem) => {
       localIds.current.add(item.id)
-      const path = boardItemsPath(boardId)
+      const path = boardItemsPath(boardId, coupleId!)
       const itemRef = ref(db, `${path}/${item.id}`)
       const clean = JSON.parse(JSON.stringify(item)) as AnyBoardItem
       set(itemRef, clean).catch((err: unknown) => {
@@ -60,7 +62,7 @@ export function useBoard(
   const deleteItem = useCallback(
     (id: string) => {
       deletedIds.current.add(id)
-      const path = boardItemsPath(boardId)
+      const path = boardItemsPath(boardId, coupleId!)
       const itemRef = ref(db, `${path}/${id}`)
       remove(itemRef).catch((err: unknown) => {
         const msg =
@@ -92,6 +94,7 @@ export function useBoard(
 
 // ── Contador de cartas em todos os boards ──────────────────────────────────
 export function useLetterCounts(extraBoardIds: string[]) {
+  const { coupleId } = useCoupleId()
   const [letterCount, setLetterCount] = useState(0)
   const [specialCount, setSpecialCount] = useState(0)
 
@@ -113,7 +116,7 @@ export function useLetterCounts(extraBoardIds: string[]) {
 
     for (const boardId of allBoardIds) {
       counts[boardId] = { letters: 0, specials: 0 }
-      const r = ref(db, boardItemsPath(boardId))
+      const r = ref(db, boardItemsPath(boardId, coupleId!))
       const handler = onValue(r, (snap) => {
         const data = snap.val() as Record<string, AnyBoardItem> | null
         let letters = 0

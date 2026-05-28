@@ -4,6 +4,7 @@ import { BlackjackModal } from './BlackjackModal'
 import { UnoModal } from './UnoModal'
 
 interface Props {
+  coupleId: string
   mode: GameMode
   uid: string
   partnerUid: string
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function GameModal({
+  coupleId,
   mode,
   uid: _uid,
   partnerUid,
@@ -25,7 +27,7 @@ export default function GameModal({
   onClose,
 }: Props) {
   function handleClose() {
-    resetLobby(roomId)
+    resetLobby(coupleId, roomId)
     onClose()
   }
 
@@ -91,6 +93,7 @@ export default function GameModal({
           />
         ) : (
           <UnoModal
+            coupleId={coupleId}
             myNick={myNick}
             partnerNick={partnerNick}
             partnerUid={partnerUid}

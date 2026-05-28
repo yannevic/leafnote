@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Dices, Swords } from 'lucide-react'
 import { useSharedDice } from '../hooks/useSharedDice'
+import { useCoupleId } from '../contexts/CoupleContext'
 
 interface DieFace {
   dots: { cx: number; cy: number }[]
@@ -118,6 +119,7 @@ interface DiceProps {
 }
 
 export default function Dice({ uid, displayName, partnerName, shared = false }: DiceProps) {
+  const { coupleId } = useCoupleId()
   const [localValues, setLocalValues] = useState<number[]>([1, 1])
   const [localRolling, setLocalRolling] = useState(false)
   const [localDiceCount, setLocalDiceCount] = useState(2)
@@ -129,7 +131,7 @@ export default function Dice({ uid, displayName, partnerName, shared = false }: 
     rollTogether,
     rollVersus,
     setMode,
-  } = useSharedDice(uid, displayName)
+  } = useSharedDice(coupleId ?? '', uid, displayName)
 
   const diceMode = remote?.mode ?? 'together'
 

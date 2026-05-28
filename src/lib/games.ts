@@ -69,8 +69,8 @@ export interface UnoRoom {
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
 
-const bjPath = (roomId: string) => `games/blackjack/${roomId}`
-const unoPath = (roomId: string) => `games/uno/${roomId}`
+const bjPath = (coupleId: string, roomId: string) => `couples/${coupleId}/games/blackjack/${roomId}`
+const unoPath = (coupleId: string, roomId: string) => `couples/${coupleId}/games/uno/${roomId}`
 
 // ─── Deck — Baralho comum ─────────────────────────────────────────────────────
 
@@ -158,6 +158,7 @@ function shuffle<T>(arr: T[]): T[] {
 // ─── Firebase — Blackjack ─────────────────────────────────────────────────────
 
 export async function createBlackjackRoom(
+  coupleId: string,
   roomId: string,
   hostUid: string,
   partnerUid: string
@@ -180,11 +181,11 @@ export async function createBlackjackRoom(
     result: null,
   }
 
-  await set(ref(db, bjPath(roomId)), room)
+  await set(ref(db, bjPath(coupleId, roomId)), room)
 }
 
-export async function blackjackHit(roomId: string, uid: string): Promise<void> {
-  const snap = await get(ref(db, bjPath(roomId)))
+export async function blackjackHit(coupleId: string, roomId: string, uid: string): Promise<void> {
+  const snap = await get(ref(db, bjPath(coupleId, roomId)))
   if (!snap.exists()) return
 
   const room = snap.val() as BlackjackRoom
@@ -198,23 +199,28 @@ export async function blackjackHit(roomId: string, uid: string): Promise<void> {
   const score = handScore(hand)
   const action: BlackjackAction | null = score > 21 ? 'bust' : null
 
-  await update(ref(db, bjPath(roomId)), {
+  await update(ref(db, bjPath(coupleId, roomId)), {
     deck,
     [`players/${uid}/hand`]: hand,
     [`players/${uid}/action`]: action,
   })
 }
 
-export async function blackjackStand(roomId: string, uid: string): Promise<void> {
-  await update(ref(db, `${bjPath(roomId)}/players/${uid}`), { action: 'stand' })
+export async function blackjackStand(coupleId: string, roomId: string, uid: string): Promise<void> {
+  await update(ref(db, `${bjPath(coupleId, roomId)}/players/${uid}`), { action: 'stand' })
 }
 
-export async function blackjackSetBet(roomId: string, uid: string, bet: number): Promise<void> {
-  await update(ref(db, `${bjPath(roomId)}/players/${uid}`), { bet })
+export async function blackjackSetBet(
+  coupleId: string,
+  roomId: string,
+  uid: string,
+  bet: number
+): Promise<void> {
+  await update(ref(db, `${bjPath(coupleId, roomId)}/players/${uid}`), { bet })
 }
 
-export async function resolveBlackjack(roomId: string): Promise<void> {
-  const snap = await get(ref(db, bjPath(roomId)))
+export async function resolveBlackjack(coupleId: string, roomId: string): Promise<void> {
+  const snap = await get(ref(db, bjPath(coupleId, roomId)))
   if (!snap.exists()) return
 
   const room = snap.val() as BlackjackRoom
@@ -249,7 +255,7 @@ export async function resolveBlackjack(roomId: string): Promise<void> {
 
   const result: BlackjackResult = { dealerScore: dScore, players: playerResults }
 
-  await update(ref(db, bjPath(roomId)), {
+  await update(ref(db, bjPath(coupleId, roomId)), {
     state: 'result',
     deck,
     'dealer/hand': dHand,
@@ -257,19 +263,20 @@ export async function resolveBlackjack(roomId: string): Promise<void> {
   })
 }
 
-export async function resetBlackjack(roomId: string): Promise<void> {
-  await update(ref(db, bjPath(roomId)), { state: 'idle', result: null })
+export async function resetBlackjack(coupleId: string, roomId: string): Promise<void> {
+  await update(ref(db, bjPath(coupleId, roomId)), { state: 'idle', result: null })
 }
 
-export async function deleteBlackjackRoom(roomId: string): Promise<void> {
-  await remove(ref(db, bjPath(roomId)))
+export async function deleteBlackjackRoom(coupleId: string, roomId: string): Promise<void> {
+  await remove(ref(db, bjPath(coupleId, roomId)))
 }
 
 export function subscribeBlackjack(
+  coupleId: string,
   roomId: string,
   callback: (room: BlackjackRoom | null) => void
 ): () => void {
-  const r = ref(db, bjPath(roomId))
+  const r = ref(db, bjPath(coupleId, roomId))
   const handler = onValue(r, (snap) => {
     callback(snap.exists() ? (snap.val() as BlackjackRoom) : null)
   })
@@ -279,6 +286,7 @@ export function subscribeBlackjack(
 // ─── Firebase — UNO ───────────────────────────────────────────────────────────
 
 export async function createUnoRoom(
+  coupleId: string,
   roomId: string,
   hostUid: string,
   partnerUid: string
@@ -307,17 +315,18 @@ export async function createUnoRoom(
     winner: null,
   }
 
-  await set(ref(db, unoPath(roomId)), room)
+  await set(ref(db, unoPath(coupleId, roomId)), room)
 }
 
 export async function unoPlayCard(
+  coupleId: string,
   roomId: string,
   uid: string,
   partnerUid: string,
   cardId: string,
   chosenColor?: UnoColor
 ): Promise<void> {
-  const snap = await get(ref(db, unoPath(roomId)))
+  const snap = await get(ref(db, unoPath(coupleId, roomId)))
   if (!snap.exists()) return
 
   const room = snap.val() as UnoRoom
@@ -342,7 +351,7 @@ export async function unoPlayCard(
 
   // vitória
   if (hand.length === 0) {
-    await update(ref(db, unoPath(roomId)), {
+    await update(ref(db, unoPath(coupleId, roomId)), {
       state: 'finished',
       winner: uid,
       discard,
@@ -357,7 +366,7 @@ export async function unoPlayCard(
 
   // skip e reverse com 2 jogadores = fica na vez
   if (card.type === 'skip' || card.type === 'reverse') {
-    await update(ref(db, unoPath(roomId)), {
+    await update(ref(db, unoPath(coupleId, roomId)), {
       state: `turn_${uid}`,
       deck,
       discard,
@@ -371,7 +380,7 @@ export async function unoPlayCard(
   if (card.type === 'draw2') {
     const drawn = drawFromDeck(deck, discard, 2)
     partnerHand = [...partnerHand, ...drawn.cards]
-    await update(ref(db, unoPath(roomId)), {
+    await update(ref(db, unoPath(coupleId, roomId)), {
       state: `turn_${uid}`,
       deck: drawn.deck,
       discard: drawn.discard,
@@ -386,7 +395,7 @@ export async function unoPlayCard(
   if (card.type === 'draw4') {
     const drawn = drawFromDeck(deck, discard, 4)
     partnerHand = [...partnerHand, ...drawn.cards]
-    await update(ref(db, unoPath(roomId)), {
+    await update(ref(db, unoPath(coupleId, roomId)), {
       state: `turn_${uid}`,
       deck: drawn.deck,
       discard: drawn.discard,
@@ -399,7 +408,7 @@ export async function unoPlayCard(
   }
 
   // carta normal — passa a vez
-  await update(ref(db, unoPath(roomId)), {
+  await update(ref(db, unoPath(coupleId, roomId)), {
     state: `turn_${partnerUid}`,
     deck,
     discard,
@@ -409,8 +418,13 @@ export async function unoPlayCard(
   })
 }
 
-export async function unoDrawCard(roomId: string, uid: string, partnerUid: string): Promise<void> {
-  const snap = await get(ref(db, unoPath(roomId)))
+export async function unoDrawCard(
+  coupleId: string,
+  roomId: string,
+  uid: string,
+  partnerUid: string
+): Promise<void> {
+  const snap = await get(ref(db, unoPath(coupleId, roomId)))
   if (!snap.exists()) return
 
   const room = snap.val() as UnoRoom
@@ -419,7 +433,7 @@ export async function unoDrawCard(roomId: string, uid: string, partnerUid: strin
 
   hand.push(...drawn.cards)
 
-  await update(ref(db, unoPath(roomId)), {
+  await update(ref(db, unoPath(coupleId, roomId)), {
     state: `turn_${partnerUid}`,
     deck: drawn.deck,
     discard: drawn.discard,
@@ -427,12 +441,16 @@ export async function unoDrawCard(roomId: string, uid: string, partnerUid: strin
   })
 }
 
-export async function deleteUnoRoom(roomId: string): Promise<void> {
-  await remove(ref(db, unoPath(roomId)))
+export async function deleteUnoRoom(coupleId: string, roomId: string): Promise<void> {
+  await remove(ref(db, unoPath(coupleId, roomId)))
 }
 
-export function subscribeUno(roomId: string, callback: (room: UnoRoom | null) => void): () => void {
-  const r = ref(db, unoPath(roomId))
+export function subscribeUno(
+  coupleId: string,
+  roomId: string,
+  callback: (room: UnoRoom | null) => void
+): () => void {
+  const r = ref(db, unoPath(coupleId, roomId))
   const handler = onValue(r, (snap) => {
     callback(snap.exists() ? (snap.val() as UnoRoom) : null)
   })
@@ -474,30 +492,43 @@ export interface GameLobby {
   state: LobbyState
 }
 
-const LOBBY_PATH = 'games/lobby'
+const lobbyPath = (coupleId: string) => `couples/${coupleId}/games/lobby`
 
-export function setLobbyMode(roomId: string, mode: GameMode | null): Promise<void> {
-  return set(ref(db, `${LOBBY_PATH}/${roomId}/mode`), mode)
+export function setLobbyMode(
+  coupleId: string,
+  roomId: string,
+  mode: GameMode | null
+): Promise<void> {
+  return set(ref(db, `${lobbyPath(coupleId)}/${roomId}/mode`), mode)
 }
 
-export function setReady(roomId: string, uid: string, value: boolean): Promise<void> {
-  return set(ref(db, `${LOBBY_PATH}/${roomId}/ready/${uid}`), value)
+export function setReady(
+  coupleId: string,
+  roomId: string,
+  uid: string,
+  value: boolean
+): Promise<void> {
+  return set(ref(db, `${lobbyPath(coupleId)}/${roomId}/ready/${uid}`), value)
 }
 
-export function setLobbyState(roomId: string, state: LobbyState): Promise<void> {
-  return set(ref(db, `${LOBBY_PATH}/${roomId}/state`), state)
+export function setLobbyState(coupleId: string, roomId: string, state: LobbyState): Promise<void> {
+  return set(ref(db, `${lobbyPath(coupleId)}/${roomId}/state`), state)
 }
 
-export function resetLobby(roomId: string): Promise<void> {
-  return set(ref(db, `${LOBBY_PATH}/${roomId}`), {
+export function resetLobby(coupleId: string, roomId: string): Promise<void> {
+  return set(ref(db, `${lobbyPath(coupleId)}/${roomId}`), {
     mode: null,
     ready: {},
     state: 'idle',
   })
 }
 
-export function subscribeLobby(roomId: string, cb: (lobby: GameLobby | null) => void): () => void {
-  const r = ref(db, `${LOBBY_PATH}/${roomId}`)
+export function subscribeLobby(
+  coupleId: string,
+  roomId: string,
+  cb: (lobby: GameLobby | null) => void
+): () => void {
+  const r = ref(db, `${lobbyPath(coupleId)}/${roomId}`)
   const handler = onValue(r, (snap) => cb(snap.exists() ? (snap.val() as GameLobby) : null))
   return () => off(r, 'value', handler)
 }

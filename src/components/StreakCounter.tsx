@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStreak } from '../hooks/useStreak'
 import { formatMilestoneDays } from '../lib/streak'
+import { useCoupleId } from '../contexts/CoupleContext'
 import {
   Bird,
   Lock,
@@ -46,6 +47,7 @@ function getNextMilestone(days: number) {
 const BAR_GRADIENT = 'linear-gradient(90deg, #e8607a, #fda4b4)'
 
 export default function StreakCounter({ uid, nick }: { uid: string; nick: string }) {
+  const { coupleId } = useCoupleId()
   const {
     streak,
     loading,
@@ -63,7 +65,7 @@ export default function StreakCounter({ uid, nick }: { uid: string; nick: string
     requestSorteo,
     confirmSorteo,
     panicSorteo,
-  } = useStreak(uid, nick)
+  } = useStreak(coupleId ?? '', uid, nick)
 
   const [showPanel, setShowPanel] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)

@@ -5,6 +5,7 @@ import { useCycle } from '../hooks/useCycle'
 import { computeCycleState } from '../lib/cycle'
 
 interface Props {
+  coupleId: string
   item: CyclePinItemType
   zIndex: number
   onUpdate: (id: string, data: Partial<CyclePinItemType>) => void
@@ -43,9 +44,16 @@ const STATE_CONFIG = {
   none: null,
 } as const
 
-export default function CyclePinItem({ item, zIndex, onUpdate, onDelete, onFocus }: Props) {
+export default function CyclePinItem({
+  coupleId,
+  item,
+  zIndex,
+  onUpdate,
+  onDelete,
+  onFocus,
+}: Props) {
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
-  const { currentCycle, allCycles } = useCycle()
+  const { currentCycle, allCycles } = useCycle(coupleId)
   const cycleData = item.cycleKey ? allCycles[item.cycleKey] : null
   const resolvedCycle = cycleData
     ? { ...computeCycleState(cycleData), key: item.cycleKey!, data: cycleData }

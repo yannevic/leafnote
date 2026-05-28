@@ -22,12 +22,12 @@ export interface UseCycleReturn {
   loading: boolean
 }
 
-export function useCycle(): UseCycleReturn {
+export function useCycle(coupleId: string): UseCycleReturn {
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = subscribeAllCycles((data) => {
+    const unsub = subscribeAllCycles(coupleId, (data) => {
       setAllCycles(data)
       setLoading(false)
     })

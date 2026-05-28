@@ -28,12 +28,12 @@ export const FIXED_DATES: Record<string, string> = {
   valentines: '12-06',
 }
 
-export function saveSpecialDates(dates: SpecialDates) {
-  return set(ref(db, 'specialDates'), dates)
+export function saveSpecialDates(coupleId: string, dates: SpecialDates) {
+  return set(ref(db, `couples/${coupleId}/specialDates`), dates)
 }
 
-export function subscribeSpecialDates(cb: (dates: SpecialDates) => void) {
-  const r = ref(db, 'specialDates')
+export function subscribeSpecialDates(coupleId: string, cb: (dates: SpecialDates) => void) {
+  const r = ref(db, `couples/${coupleId}/specialDates`)
   onValue(r, (snap) => {
     const val = snap.val() as SpecialDates | null
     cb(val ?? EMPTY_SPECIAL_DATES)

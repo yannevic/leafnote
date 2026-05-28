@@ -6,10 +6,10 @@ export interface StreakData {
   resetAt?: string // última vez que brigaram
 }
 
-const STREAK_PATH = 'streak'
+const streakPath = (coupleId: string) => `couples/${coupleId}/streak`
 
-export function subscribeStreak(callback: (data: StreakData | null) => void) {
-  const streakRef = ref(db, STREAK_PATH)
+export function subscribeStreak(coupleId: string, callback: (data: StreakData | null) => void) {
+  const streakRef = ref(db, streakPath(coupleId))
   onValue(streakRef, (snap) => {
     const val = snap.val() as StreakData | null
     callback(val)
@@ -17,20 +17,20 @@ export function subscribeStreak(callback: (data: StreakData | null) => void) {
   return () => off(streakRef, 'value')
 }
 
-export async function setStreakStart(startDate: string): Promise<void> {
-  const streakRef = ref(db, STREAK_PATH)
+export async function setStreakStart(coupleId: string, startDate: string): Promise<void> {
+  const streakRef = ref(db, streakPath(coupleId))
   const snap = await get(streakRef)
   const current = snap.val() as StreakData | null
   await set(streakRef, { ...current, startDate })
 }
 
-export async function resetStreak(): Promise<void> {
+export async function resetStreak(coupleId: string): Promise<void> {
   const now = new Date().toISOString()
-  await set(ref(db, STREAK_PATH), {
+  await set(ref(db, streakPath(coupleId)), {
     startDate: now,
     resetAt: now,
   })
-  await set(ref(db, 'garden/specialSeedGiven'), false)
+  await set(ref(db, `couples/${coupleId}/garden/specialSeedGiven`), false)
 }
 
 export function calcDays(startDate: string): number {
@@ -50,37 +50,44 @@ export function calcDays(startDate: string): number {
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
 }
 
-const SPECIAL_SEED_GIVEN_PATH = 'garden/specialSeedGiven'
+const specialSeedPath = (coupleId: string) => `couples/${coupleId}/garden/specialSeedGiven`
 
-export async function checkSpecialSeedReward(days: number): Promise<boolean> {
+export async function checkSpecialSeedReward(coupleId: string, days: number): Promise<boolean> {
   if (days < 30) return false
-  const snap = await get(ref(db, SPECIAL_SEED_GIVEN_PATH))
+  const snap = await get(ref(db, specialSeedPath(coupleId)))
   if (snap.val() === true) return false
   return true
 }
 
-export async function claimSpecialSeedReward(): Promise<void> {
-  await set(ref(db, SPECIAL_SEED_GIVEN_PATH), true)
+export async function claimSpecialSeedReward(coupleId: string): Promise<void> {
+  await set(ref(db, specialSeedPath(coupleId)), true)
 }
 
 export interface MilestoneChecks {
   [key: number]: boolean // ex: { 7: true, 14: true }
 }
 
-const MILESTONE_CHECKS_PATH = 'streak/milestoneChecks'
+const milestonePath = (coupleId: string) => `couples/${coupleId}/streak/milestoneChecks`
 
-export function subscribeMilestoneChecks(callback: (data: MilestoneChecks) => void) {
-  const r = ref(db, MILESTONE_CHECKS_PATH)
+export function subscribeMilestoneChecks(
+  coupleId: string,
+  callback: (data: MilestoneChecks) => void
+) {
+  const r = ref(db, milestonePath(coupleId))
   onValue(r, (snap) => callback((snap.val() as MilestoneChecks) ?? {}))
   return () => off(r, 'value')
 }
 
-export async function toggleMilestoneCheck(day: number, value: boolean): Promise<void> {
-  await set(ref(db, `${MILESTONE_CHECKS_PATH}/${day}`), value)
+export async function toggleMilestoneCheck(
+  coupleId: string,
+  day: number,
+  value: boolean
+): Promise<void> {
+  await set(ref(db, `${milestonePath(coupleId)}/${day}`), value)
 }
 
-export async function resetMilestoneChecks(): Promise<void> {
-  await set(ref(db, MILESTONE_CHECKS_PATH), null)
+export async function resetMilestoneChecks(coupleId: string): Promise<void> {
+  await set(ref(db, milestonePath(coupleId)), null)
 }
 
 export function formatMilestoneDays(days: number): string {
@@ -117,10 +124,13 @@ export interface WeeklyPending {
   requestedByNick: string
 }
 
-const WEEKLY_PATH = 'streak/weeklyChallenge'
-const WEEKLY_PENDING_PATH = 'streak/weeklyPending'
-export async function confirmWeeklySorteo(days: number): Promise<WeeklyChallenge> {
-  const snap = await get(ref(db, WEEKLY_PATH))
+const weeklyPath = (coupleId: string) => `couples/${coupleId}/streak/weeklyChallenge`
+const weeklyPendingPath = (coupleId: string) => `couples/${coupleId}/streak/weeklyPending`
+export async function confirmWeeklySorteo(
+  coupleId: string,
+  days: number
+): Promise<WeeklyChallenge> {
+  const snap = await get(ref(db, weeklyPath(coupleId)))
   const current = snap.val() as WeeklyChallenge | null
   const prev = current?.challengeIndex ?? -1
   const next = drawChallenge(prev)
@@ -129,23 +139,29 @@ export async function confirmWeeklySorteo(days: number): Promise<WeeklyChallenge
     weekKey: String(getCurrentStreakWeek(days)),
     previousIndex: prev,
   }
-  await set(ref(db, WEEKLY_PATH), challenge)
-  await set(ref(db, WEEKLY_PENDING_PATH), null)
+  await set(ref(db, weeklyPath(coupleId)), challenge)
+  await set(ref(db, weeklyPendingPath(coupleId)), null)
   return challenge
 }
 
-export async function panicWeeklySorteo(days: number): Promise<WeeklyChallenge> {
-  return confirmWeeklySorteo(days)
+export async function panicWeeklySorteo(coupleId: string, days: number): Promise<WeeklyChallenge> {
+  return confirmWeeklySorteo(coupleId, days)
 }
 
-export function subscribeWeeklyChallenge(callback: (data: WeeklyChallenge | null) => void) {
-  const r = ref(db, WEEKLY_PATH)
+export function subscribeWeeklyChallenge(
+  coupleId: string,
+  callback: (data: WeeklyChallenge | null) => void
+) {
+  const r = ref(db, weeklyPath(coupleId))
   onValue(r, (snap) => callback((snap.val() as WeeklyChallenge) ?? null))
   return () => off(r, 'value')
 }
 
-export function subscribeWeeklyPending(callback: (data: WeeklyPending | null) => void) {
-  const r = ref(db, WEEKLY_PENDING_PATH)
+export function subscribeWeeklyPending(
+  coupleId: string,
+  callback: (data: WeeklyPending | null) => void
+) {
+  const r = ref(db, weeklyPendingPath(coupleId))
   onValue(r, (snap) => callback((snap.val() as WeeklyPending) ?? null))
   return () => off(r, 'value')
 }
@@ -155,8 +171,12 @@ function drawChallenge(previousIndex: number): number {
   return available[Math.floor(Math.random() * available.length)]
 }
 
-export async function requestWeeklySorteo(uid: string, nick: string): Promise<void> {
-  await set(ref(db, WEEKLY_PENDING_PATH), { requestedBy: uid, requestedByNick: nick })
+export async function requestWeeklySorteo(
+  coupleId: string,
+  uid: string,
+  nick: string
+): Promise<void> {
+  await set(ref(db, weeklyPendingPath(coupleId)), { requestedBy: uid, requestedByNick: nick })
 }
 export function getCurrentStreakWeek(days: number): number {
   // retorna o marco atual: 7, 14, 21, 30, 37, 44...

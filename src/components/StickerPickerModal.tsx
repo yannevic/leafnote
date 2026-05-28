@@ -3,6 +3,8 @@ import { X, Lock, ShoppingBag, ChevronDown, ChevronRight } from 'lucide-react'
 import { STICKER_PACKS } from '../assets/stickers/index'
 import { subscribeOwnedStickers, type OwnedStickers } from '../lib/stickers'
 
+import { useCoupleId } from '../contexts/CoupleContext'
+
 interface Props {
   uid: string
   onSelect: (stickerKey: string) => void
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function StickerPickerModal({ uid, onSelect, onClose, onOpenShop }: Props) {
+  const { coupleId } = useCoupleId()
   const [ownedStickers, setOwnedStickers] = useState<OwnedStickers>({})
   const [expandedPack, setExpandedPack] = useState<string | null>(null)
   const [pos, setPos] = useState({ x: 80, y: 80 })
@@ -22,8 +25,9 @@ export default function StickerPickerModal({ uid, onSelect, onClose, onOpenShop 
   }, [])
 
   useEffect(() => {
-    return subscribeOwnedStickers(uid, setOwnedStickers)
-  }, [uid])
+    if (!coupleId) return
+    return subscribeOwnedStickers(coupleId, uid, setOwnedStickers)
+  }, [coupleId, uid])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

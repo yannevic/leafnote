@@ -22,9 +22,6 @@ export const THEME_COLORS: Record<
   especial: { bg: '#f0fff8', accent: '#40a880', text: '#205040', border: '#90d8c0' },
 }
 
-const CALENDAR_PATH = 'calendar'
-const THEME_PATH = 'settings/calendarTheme'
-
 export const DAY_NAMES = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 export const MONTH_NAMES = [
   'Janeiro',
@@ -48,10 +45,11 @@ export function toDateKey(year: number, month: number, day: number): string {
 }
 
 export function subscribeCalendarDay(
+  coupleId: string,
   dateKey: string,
   callback: (entries: CalendarEvent[]) => void
 ) {
-  const path = `${CALENDAR_PATH}/${dateKey}/entries`
+  const path = `couples/${coupleId}/calendar/${dateKey}/entries`
   const r = ref(db, path)
   onValue(r, (snap) => {
     const val = snap.val() as Record<string, Omit<CalendarEvent, 'id'>> | null
@@ -69,42 +67,49 @@ export function subscribeCalendarDay(
 }
 
 export async function addCalendarEvent(
+  coupleId: string,
   dateKey: string,
   event: Omit<CalendarEvent, 'id'>
 ): Promise<void> {
-  const path = `${CALENDAR_PATH}/${dateKey}/entries`
+  const path = `couples/${coupleId}/calendar/${dateKey}/entries`
   await push(ref(db, path), event)
 }
 
 export async function addCalendarEventReturningId(
+  coupleId: string,
   dateKey: string,
   event: Omit<CalendarEvent, 'id'>
 ): Promise<string | null> {
-  const path = `${CALENDAR_PATH}/${dateKey}/entries`
+  const path = `couples/${coupleId}/calendar/${dateKey}/entries`
   const result = await push(ref(db, path), event)
   return result.key
 }
 
 export async function moveCalendarEvent(
+  coupleId: string,
   oldDateKey: string,
   oldEventId: string,
   newDateKey: string,
   event: Omit<CalendarEvent, 'id'>
 ): Promise<string | null> {
-  await remove(ref(db, `${CALENDAR_PATH}/${oldDateKey}/entries/${oldEventId}`))
-  const result = await push(ref(db, `${CALENDAR_PATH}/${newDateKey}/entries`), event)
+  await remove(ref(db, `couples/${coupleId}/calendar/${oldDateKey}/entries/${oldEventId}`))
+  const result = await push(ref(db, `couples/${coupleId}/calendar/${newDateKey}/entries`), event)
   return result.key
 }
 
-export async function removeCalendarEvent(dateKey: string, eventId: string): Promise<void> {
-  await remove(ref(db, `${CALENDAR_PATH}/${dateKey}/entries/${eventId}`))
+export async function removeCalendarEvent(
+  coupleId: string,
+  dateKey: string,
+  eventId: string
+): Promise<void> {
+  await remove(ref(db, `couples/${coupleId}/calendar/${dateKey}/entries/${eventId}`))
 }
 
-export async function getCalendarTheme(): Promise<CalendarTheme> {
-  const snap = await get(ref(db, THEME_PATH))
+export async function getCalendarTheme(coupleId: string): Promise<CalendarTheme> {
+  const snap = await get(ref(db, `couples/${coupleId}/settings/calendarTheme`))
   return (snap.val() as CalendarTheme) ?? 'rosa'
 }
 
-export async function setCalendarTheme(theme: CalendarTheme): Promise<void> {
-  await set(ref(db, THEME_PATH), theme)
+export async function setCalendarTheme(coupleId: string, theme: CalendarTheme): Promise<void> {
+  await set(ref(db, `couples/${coupleId}/settings/calendarTheme`), theme)
 }

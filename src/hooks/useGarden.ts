@@ -29,7 +29,7 @@ import {
 } from '../lib/garden'
 import { recordFlowerHistory } from '../lib/achievements'
 
-export function useGarden(uid: string, partnerUid: string) {
+export function useGarden(coupleId: string, uid: string, partnerUid: string) {
   const [plants, setPlants] = useState<PlantData[]>([])
   const [seeds, setSeeds] = useState<SeedData[]>([])
   const [stageEvents, setStageEvents] = useState<StageEvent[]>([])
@@ -41,7 +41,7 @@ export function useGarden(uid: string, partnerUid: string) {
   const [maxPlants, setMaxPlants] = useState(BASE_MAX_PLANTS)
 
   useEffect(() => {
-    const unsubPlants = subscribePlants((data) => {
+    const unsubPlants = subscribePlants(coupleId, (data: PlantData[]) => {
       const today = new Date().toLocaleDateString('en-CA')
       data.forEach((plant) => {
         if (
@@ -49,17 +49,17 @@ export function useGarden(uid: string, partnerUid: string) {
           Object.keys(plant.water).length > 0 &&
           (plant as PlantData & { waterDate?: string }).waterDate !== today
         ) {
-          resetPlantWater(plant.id)
+          resetPlantWater(coupleId, plant.id)
         }
       })
       setPlants(data)
       setLoading(false)
     })
-    const unsubSeeds = subscribeSeeds(setSeeds)
-    const unsubEvents = subscribeStageEvents(setStageEvents)
-    const unsubPanic = subscribePanicMode(setPanicModeState)
-    const unsubWelcome = subscribeWelcomeSeedGiven(setWelcomeGiven)
-    checkWiltAll()
+    const unsubSeeds = subscribeSeeds(coupleId, setSeeds)
+    const unsubEvents = subscribeStageEvents(coupleId, setStageEvents)
+    const unsubPanic = subscribePanicMode(coupleId, setPanicModeState)
+    const unsubWelcome = subscribeWelcomeSeedGiven(coupleId, setWelcomeGiven)
+    checkWiltAll(coupleId)
     return () => {
       unsubPlants()
       unsubSeeds()
@@ -71,7 +71,7 @@ export function useGarden(uid: string, partnerUid: string) {
 
   // Subscribe nos welcomeRolls
   useEffect(() => {
-    const r = ref(db, 'garden/welcomeRolls')
+    const r = ref(db, `couples/${coupleId}/garden/welcomeRolls`)
     const handler = onValue(r, (snap) => {
       setWelcomeRolls((snap.val() as Record<string, number>) ?? {})
     })
@@ -79,23 +79,23 @@ export function useGarden(uid: string, partnerUid: string) {
   }, [])
 
   useEffect(() => {
-    const unsub = subscribeCoins(setCoins)
+    const unsub = subscribeCoins(coupleId, setCoins)
     return unsub
   }, [])
 
   useEffect(() => {
-    const unsub = subscribeMaxPlants(setMaxPlants)
+    const unsub = subscribeMaxPlants(coupleId, setMaxPlants)
     return unsub
   }, [])
 
   const water = async (plantId: string) => {
-    await waterPlant(plantId, uid, partnerUid, panicMode)
+    await waterPlant(coupleId, plantId, uid, partnerUid, panicMode)
   }
   const plant = async (seedId: string, flowerType: FlowerType) => {
-    await plantSeed(seedId, flowerType)
+    await plantSeed(coupleId, seedId, flowerType)
   }
   const addNewSeed = async (flowerType: FlowerType) => {
-    await addSeed(flowerType)
+    await addSeed(coupleId, flowerType)
   }
 
   const alreadyWatered = (plantId: string) => {
@@ -122,17 +122,17 @@ export function useGarden(uid: string, partnerUid: string) {
     eventId: string,
     roll: number
   ): Promise<{ done: boolean; flowerType: FlowerType | null }> => {
-    return saveEventRoll(eventId, uid, roll, partnerUid, panicMode)
+    return saveEventRoll(coupleId, eventId, uid, roll, partnerUid, panicMode)
   }
 
   const rollForWelcome = async (
     roll: number
   ): Promise<{ done: boolean; flowerType: FlowerType | null }> => {
-    return saveWelcomeRoll(uid, roll, partnerUid, panicMode)
+    return saveWelcomeRoll(coupleId, uid, roll, partnerUid, panicMode)
   }
 
   const togglePanic = async () => {
-    await setPanicMode(!panicMode)
+    await setPanicMode(coupleId, !panicMode)
   }
 
   const partnerRolledEvent = (eventId: string) => {
@@ -146,20 +146,20 @@ export function useGarden(uid: string, partnerUid: string) {
   const iAlreadyRolledWelcome = welcomeRolls[uid] != null
 
   const handleSellSeed = async (seedId: string, flowerType: FlowerType): Promise<number> => {
-    return sellSeed(seedId, flowerType)
+    return sellSeed(coupleId, seedId, flowerType)
   }
 
   const handleSellFlower = async (plantId: string, flowerType: FlowerType): Promise<number> => {
-    await recordFlowerHistory(flowerType)
-    return sellFlower(plantId, flowerType)
+    await recordFlowerHistory(coupleId, flowerType)
+    return sellFlower(coupleId, plantId, flowerType)
   }
 
   const handleRemovePlant = async (plantId: string): Promise<void> => {
-    await remove(ref(db, `garden/plants/${plantId}`))
+    await remove(ref(db, `couples/${coupleId}/garden/plants/${plantId}`))
   }
 
   const handleBuySlot = async (): Promise<{ success: boolean; cost: number }> => {
-    return buySlot(maxPlants, coins)
+    return buySlot(coupleId, maxPlants, coins)
   }
 
   return {

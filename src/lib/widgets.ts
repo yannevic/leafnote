@@ -30,29 +30,35 @@ export interface SharedTimerState {
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
 
-const DICE_PATH = 'widgets/dice'
-const TIMER_PATH = 'widgets/timer'
+const dicePath = (coupleId: string) => `couples/${coupleId}/widgets/dice`
+const timerPath = (coupleId: string) => `couples/${coupleId}/widgets/timer`
 
 // ─── Dice ─────────────────────────────────────────────────────────────────────
 
-export function saveDiceState(state: SharedDiceState): Promise<void> {
-  return set(ref(db, DICE_PATH), state)
+export function saveDiceState(coupleId: string, state: SharedDiceState): Promise<void> {
+  return set(ref(db, dicePath(coupleId)), state)
 }
 
-export function subscribeDice(cb: (state: SharedDiceState | null) => void): () => void {
-  const r = ref(db, DICE_PATH)
+export function subscribeDice(
+  coupleId: string,
+  cb: (state: SharedDiceState | null) => void
+): () => void {
+  const r = ref(db, dicePath(coupleId))
   onValue(r, (snap) => cb(snap.exists() ? (snap.val() as SharedDiceState) : null))
   return () => off(r)
 }
 
 // ─── Timer ────────────────────────────────────────────────────────────────────
 
-export function saveTimerState(state: SharedTimerState): Promise<void> {
-  return set(ref(db, TIMER_PATH), state)
+export function saveTimerState(coupleId: string, state: SharedTimerState): Promise<void> {
+  return set(ref(db, timerPath(coupleId)), state)
 }
 
-export function subscribeTimer(cb: (state: SharedTimerState | null) => void): () => void {
-  const r = ref(db, TIMER_PATH)
+export function subscribeTimer(
+  coupleId: string,
+  cb: (state: SharedTimerState | null) => void
+): () => void {
+  const r = ref(db, timerPath(coupleId))
   onValue(r, (snap) => cb(snap.exists() ? (snap.val() as SharedTimerState) : null))
   return () => off(r)
 }
@@ -97,14 +103,17 @@ export interface ActivityEntry {
   createdAt: number
 }
 
-export function pushActivityLog(nick: string, message: string): void {
+export function pushActivityLog(coupleId: string, nick: string, message: string): void {
   const id = Math.random().toString(36).slice(2) + Date.now().toString(36)
   const entry: ActivityEntry = { id, nick, message, createdAt: Date.now() }
-  set(ref(db, `/widgets/log/${id}`), entry)
+  set(ref(db, `couples/${coupleId}/widgets/log/${id}`), entry)
 }
 
-export function subscribeActivityLog(cb: (entries: ActivityEntry[]) => void): () => void {
-  const r = ref(db, '/widgets/log')
+export function subscribeActivityLog(
+  coupleId: string,
+  cb: (entries: ActivityEntry[]) => void
+): () => void {
+  const r = ref(db, `couples/${coupleId}/widgets/log`)
   // pega só os últimos 20, ordenados por createdAt
   const q = query(r, orderByChild('createdAt'), limitToLast(20))
   const unsub = onValue(q, (snap) => {

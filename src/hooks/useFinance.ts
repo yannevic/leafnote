@@ -19,7 +19,7 @@ import {
   GoalDeposit,
 } from '../lib/finance'
 
-export function useFinance(uid: string, partnerUid: string) {
+export function useFinance(coupleId: string, uid: string, partnerUid: string) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
   const [debts, setDebts] = useState<Debt[]>([])
@@ -32,15 +32,15 @@ export function useFinance(uid: string, partnerUid: string) {
       if (loadedCount >= 3) setLoading(false)
     }
 
-    const unsubT = subscribeTransactions((list) => {
+    const unsubT = subscribeTransactions(coupleId, (list) => {
       setTransactions(list)
       tryDone()
     })
-    const unsubG = subscribeGoals((list) => {
+    const unsubG = subscribeGoals(coupleId, (list) => {
       setGoals(list)
       tryDone()
     })
-    const unsubD = subscribeDebts((list) => {
+    const unsubD = subscribeDebts(coupleId, (list) => {
       setDebts(list)
       tryDone()
     })
@@ -54,12 +54,12 @@ export function useFinance(uid: string, partnerUid: string) {
 
   // ─── Transactions ────────────────────────────────────────
 
-  const createTransaction = (data: Omit<Transaction, 'id'>) => addTransaction(data)
+  const createTransaction = (data: Omit<Transaction, 'id'>) => addTransaction(coupleId, data)
 
   const editTransaction = (id: string, data: Partial<Omit<Transaction, 'id'>>) =>
-    updateTransaction(id, data)
+    updateTransaction(coupleId, id, data)
 
-  const removeTransaction = (id: string) => deleteTransaction(id)
+  const removeTransaction = (id: string) => deleteTransaction(coupleId, id)
 
   // ─── Resumo do mês atual ─────────────────────────────────
 
@@ -82,14 +82,14 @@ export function useFinance(uid: string, partnerUid: string) {
   const activeGoals = goals.filter((g) => !g.archived)
   const archivedGoals = goals.filter((g) => g.archived)
 
-  const createGoal = (data: Omit<Goal, 'id' | 'current' | 'deposits'>) => addGoal(data)
+  const createGoal = (data: Omit<Goal, 'id' | 'current' | 'deposits'>) => addGoal(coupleId, data)
 
-  const editGoal = (id: string, data: Partial<Omit<Goal, 'id'>>) => updateGoal(id, data)
+  const editGoal = (id: string, data: Partial<Omit<Goal, 'id'>>) => updateGoal(coupleId, id, data)
 
   const deposit = (goalId: string, currentTotal: number, dep: Omit<GoalDeposit, 'id'>) =>
-    depositToGoal(goalId, currentTotal, dep)
+    depositToGoal(coupleId, goalId, currentTotal, dep)
 
-  const archive = (id: string) => archiveGoal(id)
+  const archive = (id: string) => archiveGoal(coupleId, id)
 
   // ─── Debts ───────────────────────────────────────────────
 
@@ -99,9 +99,9 @@ export function useFinance(uid: string, partnerUid: string) {
   const iOwe = activeDebts.filter((d) => d.fromUid === uid)
   const theyOwe = activeDebts.filter((d) => d.fromUid === partnerUid)
 
-  const createDebt = (data: Omit<Debt, 'id'>) => addDebt(data)
-  const payDebt = (id: string) => markDebtPaid(id)
-  const removeDebt = (id: string) => deleteDebt(id)
+  const createDebt = (data: Omit<Debt, 'id'>) => addDebt(coupleId, data)
+  const payDebt = (id: string) => markDebtPaid(coupleId, id)
+  const removeDebt = (id: string) => deleteDebt(coupleId, id)
 
   return {
     loading,

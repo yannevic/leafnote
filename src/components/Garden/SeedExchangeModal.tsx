@@ -35,7 +35,10 @@ function RarityBadge({ rarity }: { rarity: FlowerRarity }) {
   return <TbPlant2 size={16} color={RARITY_COLOR[rarity]} style={{ flexShrink: 0 }} />
 }
 
+import { useCoupleId } from '../../contexts/CoupleContext'
+
 export default function SeedExchangeModal({ seeds, onClose }: Props) {
+  const { coupleId } = useCoupleId()
   const [selected, setSelected] = useState<string[]>([])
   const [chosenReward, setChosenReward] = useState<FlowerType | null>(null)
   const [confirmed, setConfirmed] = useState(false)
@@ -73,9 +76,9 @@ export default function SeedExchangeModal({ seeds, onClose }: Props) {
   }
 
   const handleConfirm = async () => {
-    if (!chosenReward || selected.length !== requiredCount) return
+    if (!chosenReward || selected.length !== requiredCount || !coupleId) return
     setLoading(true)
-    await exchangeSeeds(selected, chosenReward)
+    await exchangeSeeds(coupleId, selected, chosenReward)
     setLoading(false)
     setConfirmed(true)
   }

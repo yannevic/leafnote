@@ -12,9 +12,14 @@ import ChangelogModal from './components/ChangelogModal'
 import { useNotificationCenter } from './hooks/useNotificationCenter'
 import { subscribeCoins } from './lib/garden'
 import HouseCalibrate from './HouseCalibrate'
+import { CoupleProvider, useCoupleId } from './contexts/CoupleContext'
+import CoupleSetup from './components/CoupleSetup'
+import WaitingPartner from './components/WaitingPartner'
+import { Loader2 } from 'lucide-react'
 
-function AppInner({ user }: { user: User }) {
+function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
+    coupleId,
     user.uid
   )
   const { partnerUid, myPresence, partnerPresence } = usePresence(user.uid, user.displayName ?? '')
@@ -28,6 +33,7 @@ function AppInner({ user }: { user: User }) {
   const { notifications, dismiss } = useNotificationCenter({
     uid: user.uid,
     partnerUid,
+    coupleId,
     myNick,
     partnerNick,
     extraBoardNames,
@@ -38,9 +44,9 @@ function AppInner({ user }: { user: User }) {
   const [coins, setCoins] = useState(0)
 
   useEffect(() => {
-    const unsub = subscribeCoins(setCoins)
+    const unsub = subscribeCoins(coupleId, setCoins)
     return unsub
-  }, [])
+  }, [coupleId])
 
   return (
     <div className="fixed inset-0 flex flex-col">
@@ -101,7 +107,7 @@ function App() {
           onRemoveBoard={() => {}}
         />
         <div className="flex-1 flex items-center justify-center">
-          <span className="text-3xl animate-spin">🌸</span>
+          <Loader2 size={32} className="animate-spin" color="#7fb87f" />
         </div>
       </div>
     )
@@ -129,7 +135,42 @@ function App() {
     )
   }
 
-  return <AppInner user={user} />
+  return (
+    <CoupleProvider user={user}>
+      <AppGate user={user} />
+    </CoupleProvider>
+  )
+}
+
+function AppGate({ user }: { user: User }) {
+  const { coupleId, loadingCoupleId, waitingPartner, inviteCode } = useCoupleId()
+
+  if (loadingCoupleId) {
+    return (
+      <div className="fixed inset-0 flex flex-col" style={{ background: '#fdf6f0' }}>
+        <TitleBar
+          extraBoards={[]}
+          activeBoardId="default"
+          onSwitchBoard={() => {}}
+          onAddBoard={() => {}}
+          onRemoveBoard={() => {}}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 size={32} className="animate-spin" color="#7fb87f" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!coupleId) {
+    return <CoupleSetup user={user} />
+  }
+
+  if (waitingPartner) {
+    return <WaitingPartner inviteCode={inviteCode ?? ''} />
+  }
+
+  return <AppInner user={user} coupleId={coupleId} />
 }
 
 export default App

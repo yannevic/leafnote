@@ -115,6 +115,7 @@ const DEFAULT_CONFIG: HouseConfig = {
 }
 
 interface HouseModalProps {
+  coupleId: string
   myUid: string
   partnerUid?: string
   myName?: string
@@ -220,6 +221,7 @@ function ChestSprite({
 // ─────────────────────────────────────────────
 
 export default function HouseModal({
+  coupleId,
   myUid,
   partnerUid,
   myName,
@@ -268,7 +270,7 @@ export default function HouseModal({
   }
 
   useEffect(() => {
-    const r = ref(db, 'house/config')
+    const r = ref(db, `couples/${coupleId}/house/config`)
     return onValue(r, (snap) => {
       if (snap.exists()) {
         const data = snap.val() as HouseConfig
@@ -289,7 +291,7 @@ export default function HouseModal({
   }, [])
 
   useEffect(() => {
-    const unsub = subscribeHouseInventory(setHouseOwned)
+    const unsub = subscribeHouseInventory(coupleId, setHouseOwned)
     return unsub
   }, [])
   useEffect(() => {
@@ -302,7 +304,7 @@ export default function HouseModal({
     return unsub
   }, [partnerUid])
   useEffect(() => {
-    const unsub = subscribeGifts(setGifts)
+    const unsub = subscribeGifts(coupleId, setGifts)
     return unsub
   }, [])
 
@@ -341,7 +343,7 @@ export default function HouseModal({
   }
 
   const handleSave = async () => {
-    await set(ref(db, 'house/config'), {
+    await set(ref(db, `couples/${coupleId}/house/config`), {
       ...config,
       characterPosition: characterPos,
       characterPinned,
@@ -1564,7 +1566,7 @@ export default function HouseModal({
                   )}
                   <button
                     onClick={async () => {
-                      await openGift(activeGift, myUid)
+                      await openGift(coupleId, activeGift, myUid)
                       setGiftPhase('reveal')
                     }}
                     style={{

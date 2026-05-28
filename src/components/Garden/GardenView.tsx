@@ -14,6 +14,7 @@ import {
 import GardenGuideModal from './GardenGuideModal'
 import SeedExchangeModal from './SeedExchangeModal'
 import { useGarden } from '../../hooks/useGarden'
+import { useCoupleId } from '../../contexts/CoupleContext'
 import { FLOWERS, SeedData, SEED_SELL_VALUE, FlowerType } from '../../lib/garden'
 import SlotUpgradeModal from './SlotUpgradeModal'
 import Plant from './Plant'
@@ -45,6 +46,7 @@ export default function GardenView({
   onClose,
   onUnlockAchievement,
 }: GardenViewProps) {
+  const { coupleId } = useCoupleId()
   const {
     plants,
     seeds,
@@ -69,7 +71,7 @@ export default function GardenView({
     removePlant,
     maxPlants,
     buySlot,
-  } = useGarden(uid, partnerUid)
+  } = useGarden(coupleId ?? '', uid, partnerUid)
 
   const [page, setPage] = useState(0)
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)

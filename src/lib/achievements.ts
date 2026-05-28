@@ -577,8 +577,11 @@ export interface AchievementsState {
   categoryBonus: Partial<Record<AchievementCategory, boolean>>
 }
 
-export function subscribeAchievements(callback: (state: AchievementsState) => void): () => void {
-  const r = ref(db, 'achievements')
+export function subscribeAchievements(
+  coupleId: string,
+  callback: (state: AchievementsState) => void
+): () => void {
+  const r = ref(db, `couples/${coupleId}/achievements`)
   const handler = onValue(r, (snap) => {
     const raw = (snap.val() ?? {}) as Record<string, unknown>
     // separa categoryBonus do resto
@@ -595,8 +598,12 @@ export function subscribeAchievements(callback: (state: AchievementsState) => vo
   return () => off(r, 'value', handler)
 }
 
-export async function unlockAchievement(id: string, uid: string): Promise<boolean> {
-  const r = ref(db, `achievements/${id}`)
+export async function unlockAchievement(
+  id: string,
+  uid: string,
+  coupleId: string
+): Promise<boolean> {
+  const r = ref(db, `couples/${coupleId}/achievements/${id}`)
   const snap = await get(r)
   if (snap.exists()) return false // já desbloqueada
   // NÃO paga moedas aqui — o usuário resgata manualmente pelo botão
@@ -608,8 +615,12 @@ export async function unlockAchievement(id: string, uid: string): Promise<boolea
   return true
 }
 
-export async function unlockAchievementBackfill(id: string, uid: string): Promise<boolean> {
-  const r = ref(db, `achievements/${id}`)
+export async function unlockAchievementBackfill(
+  id: string,
+  uid: string,
+  coupleId: string
+): Promise<boolean> {
+  const r = ref(db, `couples/${coupleId}/achievements/${id}`)
   const snap = await get(r)
   if (snap.exists()) return false
   // bootstrap retroativo — rewardClaimed: false para o usuário poder resgatar
@@ -626,8 +637,8 @@ export async function unlockAchievementBackfill(id: string, uid: string): Promis
  * Paga as moedas e marca rewardClaimed: true.
  * Retorna false se já foi resgatada.
  */
-export async function claimAchievementReward(id: string): Promise<boolean> {
-  const r = ref(db, `achievements/${id}`)
+export async function claimAchievementReward(id: string, coupleId: string): Promise<boolean> {
+  const r = ref(db, `couples/${coupleId}/achievements/${id}`)
   const snap = await get(r)
   if (!snap.exists()) return false
   const record = snap.val() as AchievementRecord
@@ -635,19 +646,19 @@ export async function claimAchievementReward(id: string): Promise<boolean> {
 
   const def = getAchievementDef(id)
   if (def && def.recompensa > 0) {
-    await addCoins(def.recompensa)
+    await addCoins(coupleId, def.recompensa)
   }
   await update(r, { rewardClaimed: true })
   return true
 }
 
-export async function isBootstrapped(): Promise<boolean> {
-  const snap = await get(ref(db, 'achievements/bootstrapped'))
+export async function isBootstrapped(coupleId: string): Promise<boolean> {
+  const snap = await get(ref(db, `couples/${coupleId}/achievements/bootstrapped`))
   return snap.val() === true
 }
 
-export async function markBootstrapped(): Promise<void> {
-  await set(ref(db, 'achievements/bootstrapped'), true)
+export async function markBootstrapped(coupleId: string): Promise<void> {
+  await set(ref(db, `couples/${coupleId}/achievements/bootstrapped`), true)
 }
 
 // ═══════════════════════════════════════
@@ -656,12 +667,13 @@ export async function markBootstrapped(): Promise<void> {
 
 export async function checkAndPayCategoryBonus(
   categoria: AchievementCategory,
-  records: AchievementsMap
+  records: AchievementsMap,
+  coupleId: string
 ): Promise<void> {
   const bonus = CATEGORY_BONUS[categoria]
   if (!bonus) return
 
-  const bonusKey = `achievements/categoryBonus/${categoria}`
+  const bonusKey = `couples/${coupleId}/achievements/categoryBonus/${categoria}`
   const alreadyPaid = await get(ref(db, bonusKey))
   if (alreadyPaid.exists()) return
 
@@ -670,7 +682,7 @@ export async function checkAndPayCategoryBonus(
   if (!allUnlocked) return
 
   await set(ref(db, bonusKey), true)
-  await addCoins(bonus)
+  await addCoins(coupleId, bonus)
 }
 
 // ═══════════════════════════════════════
@@ -682,12 +694,15 @@ export async function checkAndPayCategoryBonus(
  * Chamado toda vez que uma semente é plantada.
  * garden/flowerHistory/{flowerType}: true
  */
-export async function recordFlowerHistory(flowerType: string): Promise<void> {
-  await set(ref(db, `garden/flowerHistory/${flowerType}`), true)
+export async function recordFlowerHistory(flowerType: string, coupleId: string): Promise<void> {
+  await set(ref(db, `couples/${coupleId}/garden/flowerHistory/${flowerType}`), true)
 }
 
-export function subscribeFlowerHistory(callback: (types: string[]) => void): () => void {
-  const r = ref(db, 'garden/flowerHistory')
+export function subscribeFlowerHistory(
+  coupleId: string,
+  callback: (types: string[]) => void
+): () => void {
+  const r = ref(db, `couples/${coupleId}/garden/flowerHistory`)
   const handler = onValue(r, (snap) => {
     const val = (snap.val() ?? {}) as Record<string, boolean>
     callback(Object.keys(val).filter((k) => val[k]))
@@ -700,6 +715,7 @@ export function subscribeFlowerHistory(callback: (types: string[]) => void): () 
 // ═══════════════════════════════════════
 interface BootstrapParams {
   uid: string
+  coupleId: string
   plants: { flowerType: string }[]
   seeds: { flowerType: string }[]
   flowerHistory: string[]
@@ -723,7 +739,7 @@ interface BootstrapParams {
 }
 
 export async function runBootstrap(params: BootstrapParams): Promise<void> {
-  const already = await isBootstrapped()
+  const already = await isBootstrapped(params.coupleId)
   if (already) return
 
   const {
@@ -741,7 +757,7 @@ export async function runBootstrap(params: BootstrapParams): Promise<void> {
     flowersByRarity,
   } = params
 
-  const unlock = (id: string) => unlockAchievementBackfill(id, uid)
+  const unlock = (id: string) => unlockAchievementBackfill(id, uid, params.coupleId)
 
   // Histórico: combina plantas atuais + sementes + histórico permanente
   // por:
@@ -850,5 +866,5 @@ export async function runBootstrap(params: BootstrapParams): Promise<void> {
   if (params.uniqueStickersOnBoard >= 25) await unlock('sticker_unique_25')
   if (params.uniqueStickersOnBoard >= 50) await unlock('sticker_unique_50')
 
-  await markBootstrapped()
+  await markBootstrapped(params.coupleId)
 }

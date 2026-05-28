@@ -84,8 +84,8 @@ export interface Gift {
   position: { x: number; y: number }
 }
 
-export function subscribeGifts(callback: (gifts: Gift[]) => void): () => void {
-  const r = ref(db, 'house/gifts')
+export function subscribeGifts(coupleId: string, callback: (gifts: Gift[]) => void): () => void {
+  const r = ref(db, `couples/${coupleId}/house/gifts`)
   const handler = onValue(r, (snap) => {
     const val = snap.val() as Record<string, Gift> | null
     const gifts = val
@@ -99,6 +99,7 @@ export function subscribeGifts(callback: (gifts: Gift[]) => void): () => void {
 }
 
 export async function sendGift(
+  coupleId: string,
   fromUid: string,
   fromName: string,
   toUid: string,
@@ -110,7 +111,7 @@ export async function sendGift(
   if (unavailable) return { success: false, reason: 'unavailable_today' }
 
   const totalCost = items.reduce((sum, i) => sum + getDiscountedCost(i), 0)
-  const coins = await getCoins()
+  const coins = await getCoins(coupleId)
   if (coins < totalCost) return { success: false, reason: 'insufficient_funds' }
 
   const giftId = `gift_${Date.now()}_${Math.random().toString(36).slice(2)}`
@@ -120,8 +121,8 @@ export async function sendGift(
   }
 
   const updates: Record<string, unknown> = {
-    'garden/coins': coins - totalCost,
-    [`house/gifts/${giftId}`]: {
+    [`couples/${coupleId}/garden/coins`]: coins - totalCost,
+    [`couples/${coupleId}/house/gifts/${giftId}`]: {
       id: giftId,
       items: items.map((i) => ({
         itemId: i.id,
@@ -142,9 +143,9 @@ export async function sendGift(
   return { success: true, finalCost: totalCost }
 }
 
-export async function openGift(gift: Gift, toUid: string): Promise<void> {
+export async function openGift(coupleId: string, gift: Gift, toUid: string): Promise<void> {
   const updates: Record<string, unknown> = {
-    [`house/gifts/${gift.id}/opened`]: true,
+    [`couples/${coupleId}/house/gifts/${gift.id}/opened`]: true,
   }
 
   for (const giftItem of gift.items) {
@@ -155,7 +156,7 @@ export async function openGift(gift: Gift, toUid: string): Promise<void> {
       giftItem.itemCategory === 'furniture' ||
       giftItem.itemCategory === 'room'
     const path = isHouse
-      ? `house/inventory/${giftItem.itemId}`
+      ? `couples/${coupleId}/house/inventory/${giftItem.itemId}`
       : `users/${toUid}/inventory/${giftItem.itemId}`
     updates[path] = true
   }
@@ -182,8 +183,11 @@ function isHouseCategory(category: ShopCategory): boolean {
 // SUBSCRIBE — inventário da casinha
 // ─────────────────────────────────────────────
 
-export function subscribeHouseInventory(callback: (owned: Set<string>) => void): () => void {
-  const r = ref(db, 'house/inventory')
+export function subscribeHouseInventory(
+  coupleId: string,
+  callback: (owned: Set<string>) => void
+): () => void {
+  const r = ref(db, `couples/${coupleId}/house/inventory`)
   const handler = onValue(r, (snap) => {
     const val = snap.val() as Record<string, boolean> | null
     const owned = new Set<string>(val ? Object.keys(val).filter((k) => val[k] === true) : [])
@@ -241,7 +245,7 @@ export function subscribePartnerInventory(
 //  mas o casal usa o app junto então race condition é improvável)
 // ─────────────────────────────────────────────
 
-export async function buyItem(uid: string, item: ShopItem): Promise<BuyResult> {
+export async function buyItem(coupleId: string, uid: string, item: ShopItem): Promise<BuyResult> {
   // 1. Verifica disponibilidade (dias especiais)
   if (!isAvailableToday(item)) {
     return { success: false, reason: 'unavailable_today' }
@@ -251,7 +255,7 @@ export async function buyItem(uid: string, item: ShopItem): Promise<BuyResult> {
 
   // 2. Verifica se já possui
   const inventoryPath = isHouseCategory(item.category)
-    ? `house/inventory/${item.id}`
+    ? `couples/${coupleId}/house/inventory/${item.id}`
     : `users/${uid}/inventory/${item.id}`
 
   const ownedSnap = await get(ref(db, inventoryPath))
@@ -261,14 +265,14 @@ export async function buyItem(uid: string, item: ShopItem): Promise<BuyResult> {
   }
 
   // 3. Verifica saldo
-  const coins = await getCoins()
+  const coins = await getCoins(coupleId)
   if (coins < finalCost) {
     return { success: false, reason: 'insufficient_funds' }
   }
 
   // 4. Debita coins + salva inventário (multi-path update)
   const updates: Record<string, unknown> = {
-    'garden/coins': coins - finalCost,
+    [`couples/${coupleId}/garden/coins`]: coins - finalCost,
     [inventoryPath]: true,
   }
   await update(ref(db), updates)
@@ -386,7 +390,7 @@ export interface UseShopReturn {
   loading: boolean
 }
 
-export function useShop(uid: string): UseShopReturn {
+export function useShop(coupleId: string, uid: string): UseShopReturn {
   const [coins, setCoins] = useState(0)
   const [houseOwned, setHouseOwned] = useState<Set<string>>(new Set(DEFAULT_HOUSE_UNLOCKED))
   const [characterOwned, setCharacterOwned] = useState<Set<string>>(() => {
@@ -405,12 +409,12 @@ export function useShop(uid: string): UseShopReturn {
     // Inicializa inventário default na primeira vez
     initDefaultInventory(uid).catch(console.error)
 
-    const unsubCoins = subscribeCoins((c) => {
+    const unsubCoins = subscribeCoins(coupleId, (c: number) => {
       setCoins(c)
       setLoading(false)
     })
 
-    const unsubHouse = subscribeHouseInventory(setHouseOwned)
+    const unsubHouse = subscribeHouseInventory(coupleId, setHouseOwned)
 
     const unsubChar = subscribeCharacterInventory(uid, setCharacterOwned)
     const unsubWishlist = subscribeWishlist(uid, setWishlist)
@@ -430,7 +434,7 @@ export function useShop(uid: string): UseShopReturn {
     toRemove.forEach((id) => toggleWishlistItem(uid, id))
   }, [characterOwned, houseOwned, wishlist, uid])
 
-  const buy = useCallback((item: ShopItem) => buyItem(uid, item), [uid])
+  const buy = useCallback((item: ShopItem) => buyItem(coupleId, uid, item), [coupleId, uid])
 
   const isOwned = useCallback(
     (itemId: string, category: ShopCategory): boolean => {
@@ -468,8 +472,8 @@ export async function getUnlockedCharacterIds(uid: string): Promise<Set<string>>
  * Retorna os itens da casinha que estão desbloqueados (snapshot único).
  * Uso: HouseModal na inicialização.
  */
-export async function getUnlockedHouseIds(): Promise<Set<string>> {
-  const snap = await get(ref(db, 'house/inventory'))
+export async function getUnlockedHouseIds(coupleId: string): Promise<Set<string>> {
+  const snap = await get(ref(db, `couples/${coupleId}/house/inventory`))
   const val = snap.val() as Record<string, boolean> | null
   const owned = new Set<string>(val ? Object.keys(val).filter((k) => val[k] === true) : [])
   return owned

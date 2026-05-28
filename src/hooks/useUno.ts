@@ -14,6 +14,7 @@ import {
 // ─── Tipos exportados ─────────────────────────────────────────────────────────
 
 export interface UseUnoOptions {
+  coupleId: string
   roomId: string
   partnerUid: string
 }
@@ -37,7 +38,7 @@ export interface UseUnoReturn {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useUno({ roomId, partnerUid }: UseUnoOptions): UseUnoReturn {
+export function useUno({ coupleId, roomId, partnerUid }: UseUnoOptions): UseUnoReturn {
   const [user] = useAuthState(auth)
   const myUid = user?.uid ?? null
 
@@ -49,7 +50,7 @@ export function useUno({ roomId, partnerUid }: UseUnoOptions): UseUnoReturn {
   // ── Subscribe ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!roomId) return
-    const unsub = subscribeUno(roomId, (data) => setRoom(data))
+    const unsub = subscribeUno(roomId, coupleId, (data: UnoRoom | null) => setRoom(data))
     return unsub
   }, [roomId])
 
@@ -71,7 +72,7 @@ export function useUno({ roomId, partnerUid }: UseUnoOptions): UseUnoReturn {
     startingRef.current = true
     setLoading(true)
     try {
-      await createUnoRoom(roomId, myUid, partnerUid)
+      await createUnoRoom(roomId, myUid, partnerUid, coupleId)
     } finally {
       setLoading(false)
       startingRef.current = false
@@ -81,18 +82,18 @@ export function useUno({ roomId, partnerUid }: UseUnoOptions): UseUnoReturn {
   const playCard = useCallback(
     async (cardId: string, chosenColor?: UnoColor) => {
       if (!myUid || !isMyTurn) return
-      await unoPlayCard(roomId, myUid, partnerUid, cardId, chosenColor)
+      await unoPlayCard(roomId, myUid!, partnerUid, cardId, chosenColor!)
     },
     [myUid, isMyTurn, roomId, partnerUid]
   )
 
   const drawCard = useCallback(async () => {
     if (!myUid || !isMyTurn) return
-    await unoDrawCard(roomId, myUid, partnerUid)
+    await unoDrawCard(roomId, myUid, partnerUid, coupleId)
   }, [myUid, isMyTurn, roomId, partnerUid])
 
   const leaveGame = useCallback(async () => {
-    if (isHost) await deleteUnoRoom(roomId)
+    if (isHost) await deleteUnoRoom(coupleId, roomId)
   }, [isHost, roomId])
 
   return {

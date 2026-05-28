@@ -11,6 +11,7 @@ import {
 } from '../lib/cycle'
 import { useCycle } from '../hooks/useCycle'
 import DatePicker from './DatePicker'
+import { useCoupleId } from '../contexts/CoupleContext'
 
 interface Props {
   myUid: string
@@ -18,8 +19,10 @@ interface Props {
 }
 
 export default function CycleModal({ myUid, onClose }: Props) {
-  const { currentCycle, allCycles } = useCycle()
-
+  const { coupleId } = useCoupleId()
+  const { currentCycle, allCycles } = useCycle(coupleId ?? '')
+  if (!coupleId) return null
+  const cid = coupleId
   const [predictedDate, setPredictedDate] = useState('')
   const [tpmDays, setTpmDays] = useState(7)
   const [duration, setDuration] = useState(7)
@@ -45,8 +48,8 @@ export default function CycleModal({ myUid, onClose }: Props) {
   }, [currentCycle, initialized])
 
   useEffect(() => {
-    predictNextCycle(myUid).then(setNextPrediction)
-  }, [allCycles, myUid])
+    predictNextCycle(cid, myUid).then(setNextPrediction)
+  }, [allCycles, coupleId, myUid])
 
   const isActive = currentCycle?.data.status === 'active'
   const isEnded = currentCycle?.data.status === 'ended'
@@ -63,21 +66,21 @@ export default function CycleModal({ myUid, onClose }: Props) {
       tpmDays,
       status: 'predicted',
     }
-    await saveCycle(data)
+    await saveCycle(cid, data)
     setSaving(false)
   }
 
   async function handleConfirmStarted() {
     if (!currentCycle || !confirmedDate) return
     setSaving(true)
-    await confirmCycleStarted(currentCycle.key, confirmedDate, duration)
+    await confirmCycleStarted(cid, currentCycle.key, confirmedDate, duration)
     setSaving(false)
   }
 
   async function handleEndCycle() {
     if (!currentCycle) return
     setSaving(true)
-    await endCycle(currentCycle.key, actualEndDate || undefined)
+    await endCycle(cid, currentCycle.key, actualEndDate || undefined)
     setSaving(false)
   }
 
@@ -100,7 +103,7 @@ export default function CycleModal({ myUid, onClose }: Props) {
       }),
       ...(editData.status && { status: editData.status }),
     }
-    await saveCycle(updated)
+    await saveCycle(cid, updated)
     setEditingKey(null)
     setEditData({})
     setSaving(false)
@@ -461,7 +464,7 @@ export default function CycleModal({ myUid, onClose }: Props) {
                           </span>
                           <button
                             onClick={async () => {
-                              await deleteCycle(key)
+                              await deleteCycle(cid, key)
                               setConfirmDelete(null)
                             }}
                             style={{

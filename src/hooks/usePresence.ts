@@ -9,6 +9,8 @@ export function usePresence(uid: string, displayName: string) {
   useEffect(() => {
     if (!uid || !displayName) return
     publishPresence(uid, displayName)
+    const interval = setInterval(() => publishPresence(uid, displayName), 30000)
+    return () => clearInterval(interval)
   }, [uid, displayName])
 
   useEffect(() => {

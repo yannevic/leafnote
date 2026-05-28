@@ -114,8 +114,11 @@ export function getCategoryLabel(t: Transaction): string {
 
 // ─── Firebase — Transactions ──────────────────────────────
 
-export function subscribeTransactions(callback: (list: Transaction[]) => void): () => void {
-  const r = ref(db, 'finance/transactions')
+export function subscribeTransactions(
+  coupleId: string,
+  callback: (list: Transaction[]) => void
+): () => void {
+  const r = ref(db, `couples/${coupleId}/finance/transactions`)
   const handler = onValue(r, (snap) => {
     const val = snap.val() ?? {}
     const list: Transaction[] = Object.entries(val).map(([id, data]) => ({
@@ -128,27 +131,31 @@ export function subscribeTransactions(callback: (list: Transaction[]) => void): 
   return () => off(r, 'value', handler)
 }
 
-export async function addTransaction(data: Omit<Transaction, 'id'>): Promise<void> {
-  const r = ref(db, 'finance/transactions')
+export async function addTransaction(
+  coupleId: string,
+  data: Omit<Transaction, 'id'>
+): Promise<void> {
+  const r = ref(db, `couples/${coupleId}/finance/transactions`)
   const newRef = push(r)
   await set(newRef, data)
 }
 
 export async function updateTransaction(
+  coupleId: string,
   id: string,
   data: Partial<Omit<Transaction, 'id'>>
 ): Promise<void> {
-  await update(ref(db, `finance/transactions/${id}`), data)
+  await update(ref(db, `couples/${coupleId}/finance/transactions/${id}`), data)
 }
 
-export async function deleteTransaction(id: string): Promise<void> {
-  await remove(ref(db, `finance/transactions/${id}`))
+export async function deleteTransaction(coupleId: string, id: string): Promise<void> {
+  await remove(ref(db, `couples/${coupleId}/finance/transactions/${id}`))
 }
 
 // ─── Firebase — Goals ─────────────────────────────────────
 
-export function subscribeGoals(callback: (list: Goal[]) => void): () => void {
-  const r = ref(db, 'finance/goals')
+export function subscribeGoals(coupleId: string, callback: (list: Goal[]) => void): () => void {
+  const r = ref(db, `couples/${coupleId}/finance/goals`)
   const handler = onValue(r, (snap) => {
     const val = snap.val() ?? {}
     const list: Goal[] = Object.entries(val).map(([id, data]) => ({
@@ -161,36 +168,43 @@ export function subscribeGoals(callback: (list: Goal[]) => void): () => void {
   return () => off(r, 'value', handler)
 }
 
-export async function addGoal(data: Omit<Goal, 'id' | 'current' | 'deposits'>): Promise<void> {
-  const r = ref(db, 'finance/goals')
+export async function addGoal(
+  coupleId: string,
+  data: Omit<Goal, 'id' | 'current' | 'deposits'>
+): Promise<void> {
+  const r = ref(db, `couples/${coupleId}/finance/goals`)
   const newRef = push(r)
   await set(newRef, { ...data, current: 0 })
 }
 
-export async function updateGoal(id: string, data: Partial<Omit<Goal, 'id'>>): Promise<void> {
-  await update(ref(db, `finance/goals/${id}`), data)
+export async function updateGoal(
+  coupleId: string,
+  id: string,
+  data: Partial<Omit<Goal, 'id'>>
+): Promise<void> {
+  await update(ref(db, `couples/${coupleId}/finance/goals/${id}`), data)
 }
 
 export async function depositToGoal(
+  coupleId: string,
   goalId: string,
   currentTotal: number,
   deposit: Omit<GoalDeposit, 'id'>
 ): Promise<void> {
-  const depRef = push(ref(db, `finance/goals/${goalId}/deposits`))
+  const depRef = push(ref(db, `couples/${coupleId}/finance/goals/${goalId}/deposits`))
   await set(depRef, deposit)
-  await update(ref(db, `finance/goals/${goalId}`), {
+  await update(ref(db, `couples/${coupleId}/finance/goals/${goalId}`), {
     current: currentTotal + deposit.amount,
   })
 }
 
-export async function archiveGoal(id: string): Promise<void> {
-  await update(ref(db, `finance/goals/${id}`), { archived: true })
+export async function archiveGoal(coupleId: string, id: string): Promise<void> {
+  await update(ref(db, `couples/${coupleId}/finance/goals/${id}`), { archived: true })
 }
 
 // ─── Firebase — Debts ─────────────────────────────────────
-
-export function subscribeDebts(callback: (list: Debt[]) => void): () => void {
-  const r = ref(db, 'finance/debts')
+export function subscribeDebts(coupleId: string, callback: (list: Debt[]) => void): () => void {
+  const r = ref(db, `couples/${coupleId}/finance/debts`)
   const handler = onValue(r, (snap) => {
     const val = snap.val() ?? {}
     const list: Debt[] = Object.entries(val).map(([id, data]) => ({
@@ -203,19 +217,19 @@ export function subscribeDebts(callback: (list: Debt[]) => void): () => void {
   return () => off(r, 'value', handler)
 }
 
-export async function addDebt(data: Omit<Debt, 'id'>): Promise<void> {
-  const r = ref(db, 'finance/debts')
+export async function addDebt(coupleId: string, data: Omit<Debt, 'id'>): Promise<void> {
+  const r = ref(db, `couples/${coupleId}/finance/debts`)
   const newRef = push(r)
   await set(newRef, data)
 }
 
-export async function markDebtPaid(id: string): Promise<void> {
-  await update(ref(db, `finance/debts/${id}`), {
+export async function markDebtPaid(coupleId: string, id: string): Promise<void> {
+  await update(ref(db, `couples/${coupleId}/finance/debts/${id}`), {
     paid: true,
     paidDate: new Date().toISOString(),
   })
 }
 
-export async function deleteDebt(id: string): Promise<void> {
-  await remove(ref(db, `finance/debts/${id}`))
+export async function deleteDebt(coupleId: string, id: string): Promise<void> {
+  await remove(ref(db, `couples/${coupleId}/finance/debts/${id}`))
 }

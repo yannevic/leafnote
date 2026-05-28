@@ -80,6 +80,7 @@ import { Mail } from 'lucide-react'
 import { useSpecialDates } from '../hooks/useSpecialDates'
 import GardenView from '../components/Garden/GardenView'
 import { DEFAULT_BOARD_ID, moveItemToBoard, moveItemsByTypeToBoard, BoardMeta } from '../lib/boards'
+import { useCoupleId } from '../contexts/CoupleContext'
 import { useBoards } from '../hooks/useBoards'
 import { CARD_MODELS } from '../assets/letters/index'
 import type { CountdownPinItem } from '../types/board'
@@ -154,6 +155,9 @@ const SPECIAL_LAYOUT_TEXT_AREA = {
 
 export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [user] = useAuthState(auth)
+  const { coupleId } = useCoupleId()
+  if (!coupleId) return null
+  const cid = coupleId
   const [items, setItems] = useState<AnyBoardItem[]>([])
   const [trashedItems, setTrashedItems] = useState<AnyBoardItem[]>([])
   const [trashOpen, setTrashOpen] = useState(false)
@@ -171,7 +175,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
   const { myPresence, partnerPresence, partnerUid } = usePresence(uid, displayName)
-  useNotifications(uid, partnerUid, partnerPresence?.displayName ?? '')
+  useNotifications(uid, partnerUid, partnerPresence?.displayName ?? '', cid)
   const otherName = partnerPresence?.displayName ?? '...'
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
@@ -214,14 +218,14 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [ownedPacks, setOwnedPacks] = useState<Record<string, boolean>>({})
   const [uniqueStickersOnBoard, setUniqueStickersOnBoard] = useState(0)
   const [cyclePicker, setCyclePicker] = useState<{ key: string; data: CycleData }[] | null>(null)
-  const { extraBoards } = useBoards(uid)
+  const { extraBoards } = useBoards(cid, uid)
   const extraBoardIds = extraBoards.map((b: BoardMeta) => b.id)
 
   // reconecta partida em andamento ao montar / ao abrir aba jogos
   // reconecta partida em andamento ao montar / ao abrir aba jogos
   useEffect(() => {
     if (!activeBoardId) return
-    const unsub = subscribeLobby(activeBoardId, (lobby: GameLobby | null) => {
+    const unsub = subscribeLobby(cid, activeBoardId, (lobby: GameLobby | null) => {
       if (!activeGame && lobby?.state === 'starting' && lobby.mode) {
         setActiveGame({ mode: lobby.mode as GameMode })
       }
@@ -230,16 +234,16 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   }, [activeBoardId, activeGame])
 
   useEffect(() => {
-    const unsub = subscribeAllCycles(setAllCycles)
+    const unsub = subscribeAllCycles(cid, setAllCycles)
     return unsub
   }, [])
 
   useEffect(() => {
-    const unsub = subscribeFlowerHistory(setFlowerHistory)
+    const unsub = subscribeFlowerHistory(cid, setFlowerHistory)
     return unsub
   }, [])
   useEffect(() => {
-    const r = stickerRef(db, 'customLetterStickers/shared/owned')
+    const r = stickerRef(db, `couples/${cid}/customLetterStickers/shared/owned`)
     const handler = stickerOnValue(r, (snap) => {
       setOwnedPacks((snap.val() ?? {}) as Record<string, boolean>)
     })
@@ -258,7 +262,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
 
     for (const boardId of allBoardIds) {
       keysByBoard[boardId] = new Set()
-      const path = boardId === DEFAULT_BOARD_ID ? 'board/items' : `boards/${boardId}/items`
+      const path =
+        boardId === DEFAULT_BOARD_ID
+          ? `couples/${cid}/board/items`
+          : `couples/${cid}/boards/${boardId}/items`
       const r = stickerRef(db, path)
       const handler = stickerOnValue(r, (snap) => {
         const data = (snap.val() ?? {}) as Record<string, { type: string; stickerKey?: string }>
@@ -287,21 +294,21 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     savePreset,
     deletePreset,
   } = useCharacter(uid)
-  const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
-  const { days } = useStreak(uid, displayName)
-  const { movies, moviesLoaded } = useMovies(uid, displayName)
+  const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates(cid)
+  const { days } = useStreak(cid, uid, displayName)
+  const { movies, moviesLoaded } = useMovies(cid, uid, displayName)
   const {
     transactions,
     activeGoals: goals,
     activeDebts,
     paidDebts,
-  } = useFinance(uid, partnerUid ?? '')
+  } = useFinance(cid, uid, partnerUid ?? '')
 
   const ownedPackCount = STICKER_PACKS.filter((p) =>
     p.stickers.every((s) => (ownedPacks as Record<string, boolean>)[s.key] === true)
   ).length
   const totalPackCount = STICKER_PACKS.length
-  const { plants, seeds, coins, maxPlants } = useGarden(uid, partnerUid ?? '')
+  const { plants, seeds, coins, maxPlants } = useGarden(cid, uid, partnerUid ?? '')
   const { achievements, unlock, claim, categoryBonus, newlyUnlocked, clearNewlyUnlocked } =
     useAchievements({
       uid,
@@ -361,7 +368,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
       setContextMenu(null)
       setItems((prev) => prev.filter((i) => i.id !== item.id))
       markMoving(item.id)
-      await moveItemToBoard(item, activeBoardId, toBoardId)
+      await moveItemToBoard(item, activeBoardId, toBoardId, cid)
     },
     [activeBoardId, markMoving]
   )
@@ -371,7 +378,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
       setContextMenu(null)
       setItems((prev) => {
         const toMove = prev.filter((i) => i.type === type)
-        moveItemsByTypeToBoard(toMove, type, activeBoardId, toBoardId)
+        moveItemsByTypeToBoard(toMove, type, activeBoardId, toBoardId, cid)
         return prev.filter((i) => i.type !== type)
       })
     },
@@ -889,7 +896,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             if (item.type === 'cycle-pin') {
               return (
                 <CyclePinItem
-                  key={item.id}
+                  coupleId={coupleId}
                   item={item as CyclePinItemType}
                   zIndex={z}
                   onUpdate={handleUpdate as never}
@@ -924,7 +931,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   zIndex={z}
                   onOpen={(id: string) => handleUpdate(id, { opened: true })}
                   onOpenViewer={(i: CustomLetterBoardItem) => {
-                    const r = dbRef(db, `customLetters/${i.letterId}`)
+                    const r = dbRef(db, `couples/${cid}/customLetters/${i.letterId}`)
                     onValue(
                       r,
                       (snap) => {
@@ -967,7 +974,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           </div>
         )}
         <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
-        <MoodWidget uid={uid} partnerUid={partnerUid} />
+        <MoodWidget coupleId={cid} uid={uid} partnerUid={partnerUid} />
         {cycleToast && (
           <div
             style={{
@@ -1594,6 +1601,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                 {activeWidget === 'roulette' && <Roulette />}
                 {activeWidget === 'jogos' && (
                   <GameLobbyTab
+                    coupleId={coupleId}
                     uid={uid}
                     partnerUid={partnerUid ?? ''}
                     myName={displayName}
@@ -1636,6 +1644,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         )}
         {showHouse && (
           <HouseModal
+            coupleId={cid}
             myUid={uid}
             partnerUid={partnerUid}
             myName={displayName}
@@ -2373,6 +2382,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
 
       {activeGame && (
         <GameModal
+          coupleId={cid}
           mode={activeGame.mode}
           uid={uid}
           partnerUid={partnerUid ?? ''}
@@ -2522,6 +2532,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
 
       {showFinance && (
         <FinanceModal
+          coupleId={cid}
           uid={uid}
           partnerUid={partnerUid ?? ''}
           myNick={displayName}

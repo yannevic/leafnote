@@ -29,6 +29,7 @@ export interface AppNotification {
 interface Props {
   uid: string
   partnerUid: string
+  coupleId: string
   myNick: string
   partnerNick: string
   extraBoardNames: Record<string, string>
@@ -36,6 +37,7 @@ interface Props {
 export function useNotificationCenter({
   uid,
   partnerUid,
+  coupleId,
   myNick,
   partnerNick,
   extraBoardNames,
@@ -62,7 +64,7 @@ export function useNotificationCenter({
     const today = new Date().toLocaleDateString('en-CA')
 
     boardIds.forEach((boardId) => {
-      const r = ref(db, boardItemsPath(boardId))
+      const r = ref(db, boardItemsPath(coupleId, boardId))
       const handler = onValue(r, (snap) => {
         const data = (snap.val() ?? {}) as Record<string, AnyBoardItem>
 
@@ -135,7 +137,7 @@ export function useNotificationCenter({
   // Plantas
   useEffect(() => {
     if (!uid) return
-    const r = ref(db, 'garden/plants')
+    const r = ref(db, `couples/${coupleId}/garden/plants`)
     const handler = onValue(r, (snap) => {
       const data = (snap.val() ?? {}) as Record<string, PlantData>
       const today = new Date().toLocaleDateString('en-CA')
@@ -268,12 +270,12 @@ export function useNotificationCenter({
       const val = (snap.val() ?? {}) as Record<string, boolean>
       seenIds = new Set(Object.keys(val).filter((k) => val[k]))
 
-      cleanupDates = subscribeSpecialDates((dates) => {
+      cleanupDates = subscribeSpecialDates(coupleId, (dates: SpecialDates | null) => {
         latestDates = dates ?? ({} as unknown as SpecialDates)
         run(latestDates, latestCalendar)
       })
 
-      const calRef = dbRef(db, 'calendar')
+      const calRef = dbRef(db, `couples/${coupleId}/calendar`)
       const calHandler = dbOnValue(calRef, (snap) => {
         latestCalendar = (snap.val() ?? {}) as typeof latestCalendar
         run(latestDates ?? ({} as unknown as SpecialDates), latestCalendar)
@@ -291,6 +293,7 @@ export function useNotificationCenter({
   // adiciona antes de: const visible = notifications.filter(...)
   useEffect(() => {
     const unsub = subscribeWeeklyPending(
+      coupleId,
       (pending: { requestedBy: string; requestedByNick: string } | null) => {
         if (!pending || pending.requestedBy === uid) {
           setNotifications((prev) => prev.filter((n) => n.type !== 'weekly-sorteo'))

@@ -89,17 +89,18 @@ export function computeCycleState(cycle: CycleData | null): {
   }
 }
 
-export async function saveCycle(data: CycleData): Promise<void> {
+export async function saveCycle(coupleId: string, data: CycleData): Promise<void> {
   const key = cycleKey(data.predictedDate)
-  await set(ref(db, `cycle/${key}`), data)
+  await set(ref(db, `couples/${coupleId}/cycle/${key}`), data)
 }
 
 export async function confirmCycleStarted(
+  coupleId: string,
   key: string,
   confirmedDate: string,
   duration: number
 ): Promise<void> {
-  const snap = await get(ref(db, `cycle/${key}`))
+  const snap = await get(ref(db, `couples/${coupleId}/cycle/${key}`))
   if (!snap.exists()) return
   const current = snap.val() as CycleData
   const updated: CycleData = {
@@ -109,11 +110,15 @@ export async function confirmCycleStarted(
     endDate: addDays(confirmedDate, duration - 1),
     status: 'active',
   }
-  await set(ref(db, `cycle/${key}`), updated)
+  await set(ref(db, `couples/${coupleId}/cycle/${key}`), updated)
 }
 
-export async function endCycle(key: string, actualEndDate?: string): Promise<void> {
-  const snap = await get(ref(db, `cycle/${key}`))
+export async function endCycle(
+  coupleId: string,
+  key: string,
+  actualEndDate?: string
+): Promise<void> {
+  const snap = await get(ref(db, `couples/${coupleId}/cycle/${key}`))
   if (!snap.exists()) return
   const current = snap.val() as CycleData
   const updated: CycleData = {
@@ -121,11 +126,11 @@ export async function endCycle(key: string, actualEndDate?: string): Promise<voi
     status: 'ended',
     ...(actualEndDate && { actualEndDate }),
   }
-  await set(ref(db, `cycle/${key}`), updated)
+  await set(ref(db, `couples/${coupleId}/cycle/${key}`), updated)
 }
 
-export async function predictNextCycle(_uid: string): Promise<string | null> {
-  const snap = await get(ref(db, 'cycle'))
+export async function predictNextCycle(_uid: string, coupleId: string): Promise<string | null> {
+  const snap = await get(ref(db, `couples/${coupleId}/cycle`))
   if (!snap.exists()) return null
 
   const cycles = snap.val() as Record<string, CycleData>
@@ -148,10 +153,11 @@ export async function predictNextCycle(_uid: string): Promise<string | null> {
 }
 
 export function subscribeCycle(
+  coupleId: string,
   key: string,
   callback: (data: CycleData | null) => void
 ): () => void {
-  const r = ref(db, `cycle/${key}`)
+  const r = ref(db, `couples/${coupleId}/cycle/${key}`)
   onValue(r, (snap) => {
     callback(snap.exists() ? (snap.val() as CycleData) : null)
   })
@@ -159,18 +165,19 @@ export function subscribeCycle(
 }
 
 export function subscribeAllCycles(
+  coupleId: string,
   callback: (data: Record<string, CycleData>) => void
 ): () => void {
-  const r = ref(db, 'cycle')
+  const r = ref(db, `couples/${coupleId}/cycle`)
   onValue(r, (snap) => {
     callback(snap.exists() ? (snap.val() as Record<string, CycleData>) : {})
   })
   return () => off(r)
 }
 
-export async function deleteCycle(key: string): Promise<void> {
+export async function deleteCycle(coupleId: string, key: string): Promise<void> {
   const { remove } = await import('firebase/database')
-  await remove(ref(db, `cycle/${key}`))
+  await remove(ref(db, `couples/${coupleId}/cycle/${key}`))
 }
 
 export { addDays, diffDays, todayStr }

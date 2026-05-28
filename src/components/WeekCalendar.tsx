@@ -32,6 +32,8 @@ interface Props {
   onPinCycleToBoard: () => void
 }
 
+import { useCoupleId } from '../contexts/CoupleContext'
+
 export default function WeekCalendar({
   displayName,
   myUid,
@@ -44,6 +46,9 @@ export default function WeekCalendar({
   onOpenCycleModal,
   onPinCycleToBoard,
 }: Props) {
+  const { coupleId } = useCoupleId()
+  const cid = coupleId ?? ''
+
   const {
     theme,
     dayEntries,
@@ -56,7 +61,7 @@ export default function WeekCalendar({
     goToPrevMonth,
     goToNextMonth,
     goToDate,
-  } = useCalendar(displayName)
+  } = useCalendar(cid, displayName)
 
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null)
   const [showThemePicker, setShowThemePicker] = useState(false)
@@ -69,15 +74,17 @@ export default function WeekCalendar({
 
   const [specialDates, setSpecialDates] = useState<SpecialDates | null>(null)
   useEffect(() => {
-    const unsub = subscribeSpecialDates(setSpecialDates)
+    if (!cid) return
+    const unsub = subscribeSpecialDates(cid, setSpecialDates)
     return unsub
-  }, [])
+  }, [cid])
 
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
   useEffect(() => {
-    const unsub = subscribeAllCycles(setAllCycles)
+    if (!cid) return
+    const unsub = subscribeAllCycles(cid, setAllCycles)
     return unsub
-  }, [])
+  }, [cid])
 
   const t = theme ? THEME_COLORS[theme] : null
 

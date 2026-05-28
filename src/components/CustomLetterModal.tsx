@@ -21,6 +21,7 @@ import { db } from '../lib/firebase'
 import type { CustomLetterData, CustomLetterPhoto, CustomLetterSticker } from '../types/board'
 import DatePicker from './DatePicker'
 import { getAvailableDates, formatMmdd } from '../lib/specialDates'
+import { useCoupleId } from '../contexts/CoupleContext'
 import type { SpecialDates } from '../lib/specialDates'
 
 function makeId() {
@@ -167,9 +168,11 @@ export default function CustomLetterModal({
     stickers,
   ])
 
+  const { coupleId } = useCoupleId()
   useEffect(() => {
-    return subscribeOwnedStickers(myUid, setOwnedStickers)
-  }, [myUid])
+    if (!coupleId) return
+    return subscribeOwnedStickers(coupleId, myUid, setOwnedStickers)
+  }, [coupleId, myUid])
 
   const handleAddSticker = (stickerKey: string) => {
     setStickers((prev) => [
@@ -259,6 +262,7 @@ export default function CustomLetterModal({
   // ── enviar ──
   const handleSend = async () => {
     if (!content.trim()) return
+    if (!coupleId) return
     setSending(true)
     try {
       const data: CustomLetterData = {
@@ -289,7 +293,7 @@ export default function CustomLetterModal({
         photos,
         stickers,
       }
-      const r = dbRef(db, `customLetters/${data.id}`)
+      const r = dbRef(db, `couples/${coupleId}/customLetters/${data.id}`)
       await set(r, data)
       onSent?.(
         data.id,

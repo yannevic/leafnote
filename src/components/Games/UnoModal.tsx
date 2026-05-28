@@ -7,6 +7,7 @@ import type { UnoColor, UnoType, UnoCard as UnoCardType } from '../../lib/games'
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface UnoModalProps {
+  coupleId: string
   onClose: () => void
   roomId: string
   partnerUid: string
@@ -148,6 +149,7 @@ function ColorPicker({ onPick }: { onPick: (c: Exclude<UnoColor, 'wild'>) => voi
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export const UnoModal: React.FC<UnoModalProps> = ({
+  coupleId,
   onClose,
   roomId,
   partnerUid,
@@ -168,7 +170,7 @@ export const UnoModal: React.FC<UnoModalProps> = ({
     playCard,
     drawCard,
     leaveGame,
-  } = useUno({ roomId, partnerUid })
+  } = useUno({ coupleId, roomId, partnerUid })
 
   // carta que precisa de escolha de cor (wild/draw4)
   const [pendingCard, setPendingCard] = useState<string | null>(null)

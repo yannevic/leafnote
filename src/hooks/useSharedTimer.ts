@@ -8,7 +8,7 @@ import {
   makeDefaultTimer,
 } from '../lib/widgets'
 
-export function useSharedTimer(nick: string) {
+export function useSharedTimer(coupleId: string, nick: string) {
   const [remote, setRemote] = useState<SharedTimerState | null>(null)
   const [localElapsed, setLocalElapsed] = useState(0)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -16,7 +16,7 @@ export function useSharedTimer(nick: string) {
 
   // Assina Firebase
   useEffect(() => {
-    const unsub = subscribeTimer((state) => {
+    const unsub = subscribeTimer(coupleId, (state: SharedTimerState | null) => {
       remoteRef.current = state
       setRemote(state)
       setLocalElapsed(state ? computeElapsed(state) : 0)
@@ -58,7 +58,7 @@ export function useSharedTimer(nick: string) {
       elapsed: wasFinished ? 0 : isPaused ? base.elapsed : base.elapsed,
       startedBy: nick,
     }
-    saveTimerState(next)
+    saveTimerState(coupleId, next)
   }, [nick])
 
   const pause = useCallback(() => {
@@ -71,7 +71,7 @@ export function useSharedTimer(nick: string) {
       pausedAt: Date.now(),
       elapsed,
     }
-    saveTimerState(next)
+    saveTimerState(coupleId, next)
     setLocalElapsed(elapsed)
   }, [])
 
@@ -85,7 +85,7 @@ export function useSharedTimer(nick: string) {
       elapsed: 0,
     }
     remoteRef.current = next
-    saveTimerState(next)
+    saveTimerState(coupleId, next)
     setLocalElapsed(0)
   }, [])
 
@@ -100,7 +100,7 @@ export function useSharedTimer(nick: string) {
       elapsed: 0,
     }
     remoteRef.current = next
-    saveTimerState(next)
+    saveTimerState(coupleId, next)
     setLocalElapsed(0)
   }, [])
 
@@ -115,7 +115,7 @@ export function useSharedTimer(nick: string) {
       elapsed: 0,
     }
     remoteRef.current = next
-    saveTimerState(next)
+    saveTimerState(coupleId, next)
     setLocalElapsed(0)
   }, [])
 
@@ -135,7 +135,7 @@ export function useSharedTimer(nick: string) {
         pausedAt: Date.now(),
       }
       remoteRef.current = next
-      saveTimerState(next)
+      saveTimerState(coupleId, next)
     }
   }, [finished])
 

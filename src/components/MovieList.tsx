@@ -19,6 +19,7 @@ import {
   LayoutList,
 } from 'lucide-react'
 import useMovies from '../hooks/useMovies'
+import { useCoupleId } from '../contexts/CoupleContext'
 import { Movie, MovieStatus, addMovie, subscribeTrashedMovies } from '../lib/movies'
 import { useEffect, useRef, useState } from 'react'
 import type React from 'react'
@@ -1058,6 +1059,8 @@ interface Props {
 }
 
 export default function MovieList({ uid, partnerUid, displayName, partnerName, onClose }: Props) {
+  const { coupleId } = useCoupleId()
+  if (!coupleId) return null
   const {
     movies,
     addNewMovie,
@@ -1069,7 +1072,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
     restoreMovieById,
     deleteMovieForever,
     reorderWishlistMovies,
-  } = useMovies(uid, displayName)
+  } = useMovies(coupleId, uid, displayName)
   const [tab, setTab] = useState<TabType>('watched')
   const [filter, setFilter] = useState<FilterType>('todos')
   const [sort, setSort] = useState<SortType>('data')
@@ -1085,7 +1088,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
   const [trashed, setTrashed] = useState<Movie[]>([])
 
   useEffect(() => {
-    return subscribeTrashedMovies(setTrashed)
+    return subscribeTrashedMovies(coupleId, setTrashed)
   }, [])
 
   const dragItem = useRef<number | null>(null)
@@ -1749,7 +1752,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                           watchCount: isWatched ? maxCount + 1 : 0,
                           ...(isWishlist ? { wishlistOrder: wishlistCount } : {}),
                         }
-                        await addMovie(newMovie)
+                        await addMovie(coupleId, newMovie)
                         setAdding(false)
                       } catch (err) {
                         console.error('Erro ao duplicar filme:', err)

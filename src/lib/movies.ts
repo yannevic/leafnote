@@ -32,56 +32,59 @@ export interface Movie {
   calendarEventDateKey?: string
 }
 
-const PATH = 'movies'
-
-export async function addMovie(movie: Omit<Movie, 'id'>): Promise<void> {
-  const result = await push(ref(db, PATH), movie)
+export async function addMovie(coupleId: string, movie: Omit<Movie, 'id'>): Promise<void> {
+  const result = await push(ref(db, `couples/${coupleId}/movies`), movie)
   if (!result.key) throw new Error('Firebase não gerou chave para o item')
 }
 
 export async function updateMovieField(
+  coupleId: string,
   movieId: string,
   field: string,
   value: unknown
 ): Promise<void> {
-  await set(ref(db, `${PATH}/${movieId}/${field}`), value)
+  await set(ref(db, `couples/${coupleId}/movies/${movieId}/${field}`), value)
 }
 
 export async function updateMovieRating(
+  coupleId: string,
   movieId: string,
   uid: string,
   rating: MovieRating
 ): Promise<void> {
-  await set(ref(db, `${PATH}/${movieId}/ratings/${uid}`), rating)
+  await set(ref(db, `couples/${coupleId}/movies/${movieId}/ratings/${uid}`), rating)
 }
 
-export async function deleteMovie(movieId: string): Promise<void> {
-  await remove(ref(db, `${PATH}/${movieId}`))
+export async function deleteMovie(coupleId: string, movieId: string): Promise<void> {
+  await remove(ref(db, `couples/${coupleId}/movies/${movieId}`))
 }
 
-export async function reorderWishlist(movies: Movie[]): Promise<void> {
+export async function reorderWishlist(coupleId: string, movies: Movie[]): Promise<void> {
   const updates: Promise<void>[] = movies.map((m, i) =>
-    set(ref(db, `${PATH}/${m.id}/wishlistOrder`), i)
+    set(ref(db, `couples/${coupleId}/movies/${m.id}/wishlistOrder`), i)
   )
   await Promise.all(updates)
 }
 
-export async function trashMovie(movieId: string): Promise<void> {
-  await set(ref(db, `${PATH}/${movieId}/trashedAt`), Date.now())
-  await set(ref(db, `${PATH}/${movieId}/trashed`), true)
+export async function trashMovie(coupleId: string, movieId: string): Promise<void> {
+  await set(ref(db, `couples/${coupleId}/movies/${movieId}/trashedAt`), Date.now())
+  await set(ref(db, `couples/${coupleId}/movies/${movieId}/trashed`), true)
 }
 
-export async function restoreMovie(movieId: string): Promise<void> {
-  await set(ref(db, `${PATH}/${movieId}/trashed`), false)
-  await set(ref(db, `${PATH}/${movieId}/trashedAt`), null)
+export async function restoreMovie(coupleId: string, movieId: string): Promise<void> {
+  await set(ref(db, `couples/${coupleId}/movies/${movieId}/trashed`), false)
+  await set(ref(db, `couples/${coupleId}/movies/${movieId}/trashedAt`), null)
 }
 
-export async function deleteMoviePermanently(movieId: string): Promise<void> {
-  await remove(ref(db, `${PATH}/${movieId}`))
+export async function deleteMoviePermanently(coupleId: string, movieId: string): Promise<void> {
+  await remove(ref(db, `couples/${coupleId}/movies/${movieId}`))
 }
 
-export function subscribeTrashedMovies(callback: (movies: Movie[]) => void): () => void {
-  const r = ref(db, PATH)
+export function subscribeTrashedMovies(
+  coupleId: string,
+  callback: (movies: Movie[]) => void
+): () => void {
+  const r = ref(db, `couples/${coupleId}/movies`)
   onValue(r, (snap) => {
     const val = snap.val() as Record<string, Omit<Movie, 'id'>> | null
     if (!val) return callback([])
@@ -95,8 +98,8 @@ export function subscribeTrashedMovies(callback: (movies: Movie[]) => void): () 
   return () => off(r, 'value')
 }
 
-export function subscribeMovies(callback: (movies: Movie[]) => void): () => void {
-  const r = ref(db, PATH)
+export function subscribeMovies(coupleId: string, callback: (movies: Movie[]) => void): () => void {
+  const r = ref(db, `couples/${coupleId}/movies`)
   onValue(r, (snap) => {
     const val = snap.val() as Record<string, Omit<Movie, 'id'>> | null
     if (!val) return callback([])

@@ -19,6 +19,7 @@ import {
   type BuyResult,
   type Gift,
 } from '../hooks/useShop'
+import { useCoupleId } from '../contexts/CoupleContext'
 import {
   HouseScene,
   FLOOR_GROUPS,
@@ -1377,8 +1378,15 @@ interface ShopModalProps {
 }
 
 export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: ShopModalProps) {
+  const { coupleId } = useCoupleId()
   console.log('ShopModal uid:', uid)
-  const { coins, characterOwned, wishlist, buy, isOwned, toggleWishlist } = useShop(uid)
+  const { coins, characterOwned, wishlist, buy, isOwned, toggleWishlist } = useShop(
+    coupleId ?? '',
+    uid
+  )
+  if (!coupleId) return null
+  const cid = coupleId
+
   const [partnerOwned, setPartnerOwned] = useState<Set<string>>(new Set())
   useEffect(() => {
     if (!partnerUid) return
@@ -1404,8 +1412,8 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
   } | null>(null)
 
   useEffect(() => {
-    return subscribeOwnedStickers(uid, setOwnedStickers)
-  }, [uid])
+    return subscribeOwnedStickers(cid, uid, setOwnedStickers)
+  }, [cid, uid])
 
   const handleBuyPack = (packId: string) => {
     const pack = STICKER_PACKS.find((p) => p.id === packId)
@@ -1429,10 +1437,10 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
 
     let result: { success: boolean; error?: string }
     if (stickerConfirm.type === 'pack' && stickerConfirm.packId) {
-      result = await buyPack(uid, stickerConfirm.packId, coins)
+      result = await buyPack(cid, uid, stickerConfirm.packId, coins)
       if (result.success) setFeedback({ msg: 'pack desbloqueado!' })
     } else if (stickerConfirm.type === 'sticker' && stickerConfirm.stickerKey) {
-      result = await buySticker(uid, stickerConfirm.stickerKey, coins)
+      result = await buySticker(cid, uid, stickerConfirm.stickerKey, coins)
       if (result.success) setFeedback({ msg: 'sticker desbloqueado!' })
     } else {
       result = { success: false }
@@ -1673,6 +1681,7 @@ export function ShopModal({ uid, initialItemId, partnerUid, myName, onClose }: S
 
       if (itemsToGift.length === 0) return
       const result = await sendGift(
+        cid,
         uid,
         myName ?? '',
         partnerUid,

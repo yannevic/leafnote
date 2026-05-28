@@ -32,6 +32,7 @@ const IMG_SIZE = 48
 const TODAY = new Date().toISOString().slice(0, 10)
 
 interface Props {
+  coupleId: string
   uid: string
   partnerUid: string
 }
@@ -41,7 +42,7 @@ interface MoodEntry {
   updatedAt: number
 }
 
-export default function MoodWidget({ uid, partnerUid }: Props) {
+export default function MoodWidget({ coupleId, uid, partnerUid }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [myMood, setMyMood] = useState<string | null>(null)
   const [partnerMood, setPartnerMood] = useState<string | null>(null)
@@ -59,7 +60,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
   }, [])
 
   useEffect(() => {
-    const r = ref(db, `/mood/${uid}/${TODAY}`)
+    const r = ref(db, `couples/${coupleId}/mood/${uid}/${TODAY}`)
     return onValue(r, (snap) => {
       const val = snap.val() as MoodEntry | null
       setMyMood(val?.mood ?? null)
@@ -67,7 +68,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
   }, [uid])
 
   useEffect(() => {
-    const r = ref(db, `/mood/${partnerUid}/${TODAY}`)
+    const r = ref(db, `couples/${coupleId}/mood/${partnerUid}/${TODAY}`)
     return onValue(r, (snap) => {
       const val = snap.val() as MoodEntry | null
       setPartnerMood(val?.mood ?? null)
@@ -87,7 +88,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
 
   const selectMood = async (id: string) => {
     const entry: MoodEntry = { mood: id, updatedAt: Date.now() }
-    await set(ref(db, `/mood/${uid}/${TODAY}`), entry)
+    await set(ref(db, `couples/${coupleId}/mood/${uid}/${TODAY}`), entry)
     setExpanded(false)
   }
   const didDragRef = useRef(false)

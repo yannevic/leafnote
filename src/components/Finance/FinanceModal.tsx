@@ -10,6 +10,7 @@ import { formatCurrency, PICKER_COLORS } from '../../lib/finance'
 import DatePicker from '../DatePicker'
 
 interface Props {
+  coupleId: string
   uid: string
   partnerUid: string
   myNick: string
@@ -25,10 +26,16 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'goals', label: 'metas', icon: <Target size={14} strokeWidth={2} /> },
   { id: 'debts', label: 'dívidas', icon: <HandCoins size={14} strokeWidth={2} /> },
 ]
-
-export default function FinanceModal({ uid, partnerUid, myNick, partnerNick, onClose }: Props) {
+export default function FinanceModal({
+  coupleId,
+  uid,
+  partnerUid,
+  myNick,
+  partnerNick,
+  onClose,
+}: Props) {
   const [tab, setTab] = useState<Tab>('overview')
-  const finance = useFinance(uid, partnerUid)
+  const finance = useFinance(coupleId, uid, partnerUid)
 
   return (
     <div

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { FLOWERS } from '../lib/garden'
+import { useCoupleId } from '../contexts/CoupleContext'
 import {
   subscribeAchievements,
   subscribeFlowerHistory,
@@ -104,17 +105,18 @@ export function useAchievements({
   const [newlyUnlocked, setNewlyUnlocked] = useState<string[]>([])
   const [flowerHistory, setFlowerHistory] = useState<string[]>([])
   const prevAchievementsRef = useRef<AchievementsMap>({})
+  const { coupleId } = useCoupleId()
   const bootstrapRanRef = useRef(false)
 
   // ── Subscribe ao histórico de flores ──
   useEffect(() => {
-    const unsub = subscribeFlowerHistory(setFlowerHistory)
+    const unsub = subscribeFlowerHistory(coupleId!, setFlowerHistory)
     return unsub
   }, [])
 
   // ── Subscribe ao Firebase (achievements + categoryBonus) ──
   useEffect(() => {
-    const unsub = subscribeAchievements((state) => {
+    const unsub = subscribeAchievements(coupleId!, (state) => {
       const { records, categoryBonus: cb } = state
       const prev = prevAchievementsRef.current
 
@@ -135,7 +137,7 @@ export function useAchievements({
         const defs = getByCategory(cat)
         const allUnlocked = defs.every((d) => records[d.id])
         if (allUnlocked) {
-          checkAndPayCategoryBonus(cat, records)
+          checkAndPayCategoryBonus(cat, records, coupleId!)
         }
       }
     })
@@ -182,6 +184,7 @@ export function useAchievements({
       ownedPackCount,
       totalPackCount,
       uniqueStickersOnBoard,
+      coupleId: coupleId!,
     })
   }, [
     uid,
@@ -220,6 +223,7 @@ export function useAchievements({
         ownedPackCount,
         totalPackCount,
         uniqueStickersOnBoard,
+        coupleId: coupleId!,
       })
     }, 5000)
     return () => clearTimeout(timer)
@@ -229,7 +233,7 @@ export function useAchievements({
   const unlock = useCallback(
     async (id: string) => {
       if (!uid || uid === 'anon') return
-      await unlockAchievement(id, uid)
+      await unlockAchievement(id, uid, coupleId!)
     },
     [uid]
   )
@@ -252,7 +256,7 @@ export function useAchievements({
 
   // ── Resgatar recompensa individual ──
   const claim = useCallback(async (id: string) => {
-    await claimAchievementReward(id)
+    await claimAchievementReward(id, coupleId!)
   }, [])
 
   const clearNewlyUnlocked = useCallback(() => setNewlyUnlocked([]), [])

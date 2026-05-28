@@ -33,7 +33,7 @@ function buildCurrentMilestones(days: number): number[] {
   return BASE_MILESTONES.map((d) => d + offset)
 }
 
-export function useStreak(uid?: string, nick?: string) {
+export function useStreak(coupleId: string, uid?: string, nick?: string) {
   const [streakData, setStreakData] = useState<StreakData | null>(null)
   const [loading, setLoading] = useState(true)
   const [milestoneChecks, setMilestoneChecks] = useState<MilestoneChecks>({})
@@ -41,7 +41,7 @@ export function useStreak(uid?: string, nick?: string) {
   const [weeklyPending, setWeeklyPending] = useState<WeeklyPending | null>(null)
 
   useEffect(() => {
-    const unsub = subscribeStreak((data) => {
+    const unsub = subscribeStreak(coupleId, (data: StreakData | null) => {
       setStreakData(data)
       setLoading(false)
     })
@@ -49,17 +49,17 @@ export function useStreak(uid?: string, nick?: string) {
   }, [])
 
   useEffect(() => {
-    const unsub = subscribeMilestoneChecks(setMilestoneChecks)
+    const unsub = subscribeMilestoneChecks(coupleId, setMilestoneChecks)
     return unsub
   }, [])
 
   useEffect(() => {
-    const unsub = subscribeWeeklyChallenge(setWeeklyChallenge)
+    const unsub = subscribeWeeklyChallenge(coupleId, setWeeklyChallenge)
     return unsub
   }, [])
 
   useEffect(() => {
-    const unsub = subscribeWeeklyPending(setWeeklyPending)
+    const unsub = subscribeWeeklyPending(coupleId, setWeeklyPending)
     return unsub
   }, [])
 
@@ -69,13 +69,13 @@ export function useStreak(uid?: string, nick?: string) {
   useEffect(() => {
     if (checkedRef.current || days < 30) return
     checkedRef.current = true
-    checkSpecialSeedReward(days).then(async (eligible) => {
+    checkSpecialSeedReward(coupleId, days).then(async (eligible) => {
       if (!eligible) return
       const { addSeed } = await import('../lib/garden')
-      await addSeed('especial')
-      await claimSpecialSeedReward()
+      await addSeed(coupleId, 'especial')
+      await claimSpecialSeedReward(coupleId)
       // sorteia a meta do mês automaticamente, sem precisar do parceiro
-      await panicWeeklySorteo(days)
+      await panicWeeklySorteo(coupleId, days)
     })
   }, [days])
 
@@ -84,11 +84,11 @@ export function useStreak(uid?: string, nick?: string) {
   const handleCheck = useCallback(
     async (day: number) => {
       const current = milestoneChecks[day] ?? false
-      await toggleMilestoneCheck(day, !current)
+      await toggleMilestoneCheck(coupleId, day, !current)
       const lastOfCycle = currentMilestones[currentMilestones.length - 1]
       if (day === lastOfCycle && !current) {
         setTimeout(async () => {
-          await resetMilestoneChecks()
+          await resetMilestoneChecks(coupleId)
         }, 800)
       }
     },
@@ -96,25 +96,25 @@ export function useStreak(uid?: string, nick?: string) {
   )
 
   const setStart = useCallback(async (iso: string) => {
-    await setStreakStart(iso)
+    await setStreakStart(coupleId, iso)
   }, [])
 
   const reset = useCallback(async () => {
-    await resetStreak()
-    await resetMilestoneChecks()
+    await resetStreak(coupleId)
+    await resetMilestoneChecks(coupleId)
   }, [])
 
   const requestSorteo = useCallback(async () => {
     if (!uid || !nick) return
-    await requestWeeklySorteo(uid, nick)
+    await requestWeeklySorteo(coupleId, uid, nick)
   }, [uid, nick])
 
   const confirmSorteo = useCallback(async () => {
-    await confirmWeeklySorteo(days)
+    await confirmWeeklySorteo(coupleId, days)
   }, [days])
 
   const panicSorteo = useCallback(async () => {
-    await panicWeeklySorteo(days)
+    await panicWeeklySorteo(coupleId, days)
   }, [days])
 
   const hasWeeklyThisWeek = isCurrentStreakWeek(weeklyChallenge, days)

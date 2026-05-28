@@ -11,6 +11,7 @@ import {
 } from '../../lib/games'
 
 interface Props {
+  coupleId: string
   uid: string
   partnerUid: string
   myName: string
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function GameLobbyTab({
+  coupleId,
   uid,
   partnerUid,
   myName,
@@ -30,10 +32,9 @@ export default function GameLobbyTab({
   const [lobby, setLobby] = useState<GameLobby | null>(null)
 
   useEffect(() => {
-    const unsub = subscribeLobby(roomId, setLobby)
+    const unsub = subscribeLobby(coupleId, roomId, setLobby)
     return unsub
-  }, [roomId])
-
+  }, [coupleId, roomId])
   const mode = lobby?.mode ?? null
   const myReady = lobby?.ready?.[uid] ?? false
   const partnerReady = lobby?.ready?.[partnerUid] ?? false
@@ -42,25 +43,25 @@ export default function GameLobbyTab({
   // quando os dois ficam prontos, inicia
   useEffect(() => {
     if (bothReady && mode && lobby?.state === 'waiting') {
-      setLobbyState(roomId, 'starting').then(() => {
+      setLobbyState(coupleId, roomId, 'starting').then(() => {
         onStartGame(mode)
       })
     }
   }, [bothReady, mode, lobby?.state])
 
   function handleSelectMode(m: GameMode) {
-    resetLobby(roomId).then(() => {
-      setLobbyMode(roomId, m)
-      setLobbyState(roomId, 'waiting')
+    resetLobby(coupleId, roomId).then(() => {
+      setLobbyMode(coupleId, roomId, m)
+      setLobbyState(coupleId, roomId, 'waiting')
     })
   }
 
   function handleToggleReady() {
-    setReady(roomId, uid, !myReady)
+    setReady(coupleId, roomId, uid, !myReady)
   }
 
   function handleCancel() {
-    resetLobby(roomId)
+    resetLobby(coupleId, roomId)
   }
 
   const MODES: { id: GameMode; label: string; desc: string; icon: React.ReactNode }[] = [

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../lib/firebase'
+import { useCoupleId } from '../contexts/CoupleContext'
 import {
   subscribeBlackjack,
   createBlackjackRoom,
@@ -47,6 +48,7 @@ export interface UseBlackjackReturn {
 export function useBlackjack({ roomId, partnerUid }: UseBlackjackOptions): UseBlackjackReturn {
   const [user] = useAuthState(auth)
   const myUid = user?.uid ?? null
+  const { coupleId } = useCoupleId()
 
   const [room, setRoom] = useState<BlackjackRoom | null>(null)
   const [loading, setLoading] = useState(false)
@@ -57,7 +59,7 @@ export function useBlackjack({ roomId, partnerUid }: UseBlackjackOptions): UseBl
   // ── Subscribe ao Firebase ──────────────────────────────────────────────────
   useEffect(() => {
     if (!roomId) return
-    const unsub = subscribeBlackjack(roomId, (data) => setRoom(data))
+    const unsub = subscribeBlackjack(coupleId!, roomId, (data) => setRoom(data))
     return unsub
   }, [roomId])
 
@@ -78,7 +80,7 @@ export function useBlackjack({ roomId, partnerUid }: UseBlackjackOptions): UseBl
 
     if (allActed && isHost && !resolvingRef.current) {
       resolvingRef.current = true
-      resolveBlackjack(roomId).finally(() => {
+      resolveBlackjack(coupleId!, roomId).finally(() => {
         resolvingRef.current = false
       })
     }
@@ -110,8 +112,8 @@ export function useBlackjack({ roomId, partnerUid }: UseBlackjackOptions): UseBl
       if (!myUid) return
       setLoading(true)
       try {
-        if (bet > 0) await blackjackSetBet(roomId, myUid, bet)
-        await createBlackjackRoom(roomId, myUid, partnerUid)
+        if (bet > 0) await blackjackSetBet(coupleId!, roomId, myUid, bet)
+        await createBlackjackRoom(coupleId!, roomId, myUid, partnerUid)
       } finally {
         setLoading(false)
       }
@@ -121,29 +123,29 @@ export function useBlackjack({ roomId, partnerUid }: UseBlackjackOptions): UseBl
 
   const hit = useCallback(async () => {
     if (!myUid || !isMyTurn) return
-    await blackjackHit(roomId, myUid)
+    await blackjackHit(coupleId!, roomId, myUid)
   }, [myUid, isMyTurn, roomId])
 
   const stand = useCallback(async () => {
     if (!myUid || !isMyTurn) return
-    await blackjackStand(roomId, myUid)
+    await blackjackStand(coupleId!, roomId, myUid)
   }, [myUid, isMyTurn, roomId])
 
   const setBet = useCallback(
     async (amount: number) => {
       if (!myUid) return
-      await blackjackSetBet(roomId, myUid, amount)
+      await blackjackSetBet(coupleId!, roomId, myUid, amount)
     },
     [myUid, roomId]
   )
 
   const playAgain = useCallback(async () => {
-    await resetBlackjack(roomId)
+    await resetBlackjack(coupleId!, roomId)
   }, [roomId])
 
   const leaveGame = useCallback(async () => {
     if (isHost) {
-      await deleteBlackjackRoom(roomId)
+      await deleteBlackjackRoom(coupleId!, roomId)
     }
   }, [isHost, roomId])
 

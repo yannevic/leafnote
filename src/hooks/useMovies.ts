@@ -15,12 +15,12 @@ import {
 } from '../lib/movies'
 import { addCalendarEventReturningId, moveCalendarEvent, toDateKey } from '../lib/calendar'
 
-export default function useMovies(uid: string, displayName: string) {
+export default function useMovies(coupleId: string, uid: string, displayName: string) {
   const [movies, setMovies] = useState<Movie[]>([])
   const [moviesLoaded, setMoviesLoaded] = useState(false)
 
   useEffect(() => {
-    return subscribeMovies((data) => {
+    return subscribeMovies(coupleId, (data) => {
       setMovies(data)
       setMoviesLoaded(true)
     })
@@ -51,7 +51,7 @@ export default function useMovies(uid: string, displayName: string) {
 
       let calendarEventId: string | null = null
       if (status === 'watched') {
-        calendarEventId = await addCalendarEventReturningId(dateKey, {
+        calendarEventId = await addCalendarEventReturningId(coupleId, dateKey, {
           text: `🎬 assistimos: ${title}`,
           time: null,
           createdBy: displayName,
@@ -72,7 +72,7 @@ export default function useMovies(uid: string, displayName: string) {
         ...(calendarEventId && { calendarEventId, calendarEventDateKey: dateKey }),
       }
 
-      await addMovie(movie)
+      await addMovie(coupleId, movie)
       return 'ok'
     },
     [displayName, movies]
@@ -80,35 +80,35 @@ export default function useMovies(uid: string, displayName: string) {
 
   const rateMovie = useCallback(
     async (movieId: string, rating: MovieRating) => {
-      await updateMovieRating(movieId, uid, rating)
+      await updateMovieRating(coupleId, movieId, uid, rating)
     },
     [uid]
   )
 
   const changeStatus = useCallback(
     async (movieId: string, status: MovieStatus, title: string) => {
-      await updateMovieField(movieId, 'status', status)
+      await updateMovieField(coupleId, movieId, 'status', status)
       if (status === 'watched') {
         const today = new Date().toISOString().split('T')[0]
-        await updateMovieField(movieId, 'watchedAt', today)
-        await updateMovieField(movieId, 'watchedAtMs', Date.now())
+        await updateMovieField(coupleId, movieId, 'watchedAt', today)
+        await updateMovieField(coupleId, movieId, 'watchedAtMs', Date.now())
         const found = movies.find((m) => m.id === movieId)
         const allWithTitle = movies.filter(
           (m) => m.title.toLowerCase() === (found?.title ?? '').toLowerCase()
         )
         const maxCount = Math.max(...allWithTitle.map((m) => m.watchCount ?? 0))
-        await updateMovieField(movieId, 'watchCount', maxCount + 1)
+        await updateMovieField(coupleId, movieId, 'watchCount', maxCount + 1)
 
         const [year, month, day] = today.split('-').map(Number)
         const dateKey = toDateKey(year, month - 1, day)
-        const eventId = await addCalendarEventReturningId(dateKey, {
+        const eventId = await addCalendarEventReturningId(coupleId, dateKey, {
           text: `🎬 assistimos: ${title}`,
           time: null,
           createdBy: displayName,
         })
         if (eventId) {
-          await updateMovieField(movieId, 'calendarEventId', eventId)
-          await updateMovieField(movieId, 'calendarEventDateKey', dateKey)
+          await updateMovieField(coupleId, movieId, 'calendarEventId', eventId)
+          await updateMovieField(coupleId, movieId, 'calendarEventDateKey', dateKey)
         }
       }
     },
@@ -117,7 +117,7 @@ export default function useMovies(uid: string, displayName: string) {
 
   const changeDate = useCallback(
     async (movieId: string, date: string) => {
-      await updateMovieField(movieId, 'watchedAt', date)
+      await updateMovieField(coupleId, movieId, 'watchedAt', date) // ← coupleId adicionado
       const found = movies.find((m) => m.id === movieId)
       if (!found) return
 
@@ -126,6 +126,7 @@ export default function useMovies(uid: string, displayName: string) {
 
       if (found.calendarEventId && found.calendarEventDateKey) {
         const newEventId = await moveCalendarEvent(
+          coupleId,
           found.calendarEventDateKey,
           found.calendarEventId,
           newDateKey,
@@ -136,45 +137,56 @@ export default function useMovies(uid: string, displayName: string) {
           }
         )
         if (newEventId) {
-          await updateMovieField(movieId, 'calendarEventId', newEventId)
-          await updateMovieField(movieId, 'calendarEventDateKey', newDateKey)
+          await updateMovieField(coupleId, movieId, 'calendarEventId', newEventId)
+          await updateMovieField(coupleId, movieId, 'calendarEventDateKey', newDateKey)
         }
       } else {
         // filme antigo sem referência — cria o evento na nova data
-        const newEventId = await addCalendarEventReturningId(newDateKey, {
+        const newEventId = await addCalendarEventReturningId(coupleId, newDateKey, {
           text: `🎬 assistimos: ${found.title}`,
           time: null,
           createdBy: displayName,
         })
         if (newEventId) {
-          await updateMovieField(movieId, 'calendarEventId', newEventId)
-          await updateMovieField(movieId, 'calendarEventDateKey', newDateKey)
+          await updateMovieField(coupleId, movieId, 'calendarEventId', newEventId)
+          await updateMovieField(coupleId, movieId, 'calendarEventDateKey', newDateKey)
         }
       }
     },
-    [displayName, movies]
+    [coupleId, displayName, movies] // ← deps array estava faltando
   )
 
   const saveProgress = useCallback(async (movieId: string, progress: MovieProgress) => {
-    await updateMovieField(movieId, 'progress', progress)
+    await updateMovieField(coupleId, movieId, 'progress', progress)
   }, [])
 
-  const removeMovie = useCallback(async (movieId: string) => {
-    await trashMovie(movieId)
-  }, [])
+  const removeMovie = useCallback(
+    async (movieId: string) => {
+      await trashMovie(coupleId, movieId)
+    },
+    [coupleId]
+  )
 
-  const restoreMovieById = useCallback(async (movieId: string) => {
-    await restoreMovie(movieId)
-  }, [])
+  const restoreMovieById = useCallback(
+    async (movieId: string) => {
+      await restoreMovie(coupleId, movieId)
+    },
+    [coupleId]
+  )
 
-  const deleteMovieForever = useCallback(async (movieId: string) => {
-    await deleteMoviePermanently(movieId)
-  }, [])
+  const deleteMovieForever = useCallback(
+    async (movieId: string) => {
+      await deleteMoviePermanently(coupleId, movieId)
+    },
+    [coupleId]
+  )
 
-  const reorderWishlistMovies = useCallback(async (ordered: Movie[]) => {
-    await reorderWishlist(ordered)
-  }, [])
-
+  const reorderWishlistMovies = useCallback(
+    async (ordered: Movie[]) => {
+      await reorderWishlist(coupleId, ordered)
+    },
+    [coupleId]
+  )
   return {
     movies,
     moviesLoaded,
