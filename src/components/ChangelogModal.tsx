@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.27': [
+    "🐛 corrige validação de cartas e fechamento do GameModal no UNO",
+    "🐛 corrige dupla instância de useGarden que causava sumiço de planta",
+    "🐛 corrige calendário cortado no card de filme assistido",
+  ],
+
   '3.0.26': [
     "🐛 corrige validação de cartas e fechamento do GameModal no UNO",
     "🐛 corrige dupla instância de useGarden que causava sumiço de planta",
