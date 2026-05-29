@@ -896,6 +896,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             if (item.type === 'cycle-pin') {
               return (
                 <CyclePinItem
+                  key={item.id}
                   coupleId={coupleId}
                   item={item as CyclePinItemType}
                   zIndex={z}

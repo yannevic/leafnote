@@ -150,7 +150,7 @@ export function useGarden(coupleId: string, uid: string, partnerUid: string) {
   }
 
   const handleSellFlower = async (plantId: string, flowerType: FlowerType): Promise<number> => {
-    await recordFlowerHistory(coupleId, flowerType)
+    await recordFlowerHistory(flowerType, coupleId)
     return sellFlower(coupleId, plantId, flowerType)
   }
 
