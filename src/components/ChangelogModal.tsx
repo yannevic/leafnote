@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.29': [
+    "🐛 corrige venda de flor e key do cycle-pin",
+  ],
+
   '3.0.28': [
     "🎉 sistema de casais self-service: crie um mural ou entre em um com código de convite",
     "🔑 código de convite de 6 caracteres exibido na tela de espera com botão de copiar",
