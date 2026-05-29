@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { unlockAchievement } from '../lib/achievements'
 import {
   Transaction,
   Goal,
@@ -100,7 +101,10 @@ export function useFinance(coupleId: string, uid: string, partnerUid: string) {
   const theyOwe = activeDebts.filter((d) => d.fromUid === partnerUid)
 
   const createDebt = (data: Omit<Debt, 'id'>) => addDebt(coupleId, data)
-  const payDebt = (id: string) => markDebtPaid(coupleId, id)
+  const payDebt = async (id: string) => {
+    await markDebtPaid(coupleId, id)
+    await unlockAchievement('first_debt', uid, coupleId)
+  }
   const removeDebt = (id: string) => deleteDebt(coupleId, id)
 
   return {

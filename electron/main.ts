@@ -30,9 +30,14 @@ function createWindow() {
   ipcMain.handle('get-version', () => app.getVersion())
 
   // ─── IPC do updater ───────────────────────────────────────────────
-  ipcMain.handle('check-for-updates', () => {
+  ipcMain.handle('check-for-updates', async () => {
     if (!app.isPackaged) return null
-    return autoUpdater.checkForUpdates()
+    try {
+      const result = await autoUpdater.checkForUpdates()
+      return { version: result?.updateInfo?.version ?? null }
+    } catch {
+      return null
+    }
   })
 
   ipcMain.handle('install-update', () => {
