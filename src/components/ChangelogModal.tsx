@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.30': [
+    "🐛 corrige conquista ao quitar dívida",
+  ],
+
   '3.0.29': [
     "🐛 corrige venda de flor e key do cycle-pin",
   ],
