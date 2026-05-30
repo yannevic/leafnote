@@ -1,1 +1,1 @@
-🐛 corrige conquista ao quitar dívida |
+🐛 corrige rega solo no modo pânico quando uid já regou antes de ativar |

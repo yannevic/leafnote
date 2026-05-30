@@ -187,7 +187,8 @@ export async function waterPlant(
 
   const today = new Date().toLocaleDateString('en-CA')
 
-  if (plant.water?.[uid] === true && plant.waterDate === today) return
+  const alreadyWateredToday = plant.water?.[uid] === true && plant.waterDate === today
+  if (alreadyWateredToday && !panicMode) return
 
   await update(plantRef, {
     [`water/${uid}`]: true,

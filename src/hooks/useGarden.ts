@@ -103,6 +103,7 @@ export function useGarden(coupleId: string, uid: string, partnerUid: string) {
     if (!p) return false
     const today = new Date().toLocaleDateString('en-CA')
     if (p.waterDate === today && !p.water?.[uid] && !p.water?.[partnerUid]) return true
+    if (panicMode) return false // no modo pânico, nunca bloqueia o botão
     return (p.water ?? {})[uid] === true
   }
 
