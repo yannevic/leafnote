@@ -1,1 +1,1 @@
-🐛 corrige rega solo no modo pânico quando uid já regou antes de ativar |
+🐛 corrige verificação de flores comuns no bootstrap |

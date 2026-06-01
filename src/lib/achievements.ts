@@ -761,7 +761,13 @@ export async function runBootstrap(params: BootstrapParams): Promise<void> {
 
   // Histórico: combina plantas atuais + sementes + histórico permanente
   // por:
-  const allFlowerIds = [...new Set([...flowerHistory])]
+  const allFlowerIds = [
+    ...new Set([
+      ...flowerHistory,
+      ...plants.map((p) => p.flowerType),
+      ...params.seeds.map((s) => s.flowerType),
+    ]),
+  ]
   const hasAll = (list: string[]) => list.length > 0 && list.every((f) => allFlowerIds.includes(f))
 
   // ── Jardim ──
