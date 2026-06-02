@@ -18,6 +18,7 @@ import {
   markDebtPaid,
   deleteDebt,
   GoalDeposit,
+  currentMonthBrasilia,
 } from '../lib/finance'
 
 export function useFinance(coupleId: string, uid: string, partnerUid: string) {
@@ -63,8 +64,7 @@ export function useFinance(coupleId: string, uid: string, partnerUid: string) {
   const removeTransaction = (id: string) => deleteTransaction(coupleId, id)
 
   // ─── Resumo do mês atual ─────────────────────────────────
-
-  const currentMonth = new Date().toISOString().slice(0, 7) // "YYYY-MM"
+  const currentMonth = currentMonthBrasilia()
 
   const monthTransactions = transactions.filter((t) => t.date.startsWith(currentMonth))
 

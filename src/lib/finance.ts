@@ -112,6 +112,21 @@ export function getCategoryLabel(t: Transaction): string {
   return t.category
 }
 
+export function nowBrasilia(): string {
+  return (
+    new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') +
+    '-03:00'
+  )
+}
+
+export function todayBrasilia(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+}
+
+export function currentMonthBrasilia(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).slice(0, 7)
+}
+
 // ─── Firebase — Transactions ──────────────────────────────
 
 export function subscribeTransactions(
@@ -226,7 +241,7 @@ export async function addDebt(coupleId: string, data: Omit<Debt, 'id'>): Promise
 export async function markDebtPaid(coupleId: string, id: string): Promise<void> {
   await update(ref(db, `couples/${coupleId}/finance/debts/${id}`), {
     paid: true,
-    paidDate: new Date().toISOString(),
+    paidDate: nowBrasilia(),
   })
 }
 

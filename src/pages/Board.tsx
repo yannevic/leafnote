@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useBoard } from '../hooks/useBoard'
 import { useLetterCounts } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
@@ -104,6 +104,7 @@ import AchievementToast from '../components/AchievementToast'
 import { subscribeFlowerHistory } from '../lib/achievements'
 import { ref as stickerRef, onValue as stickerOnValue, off as stickerOff } from 'firebase/database'
 import { STICKER_PACKS } from '../assets/stickers/index'
+import { useNotificationCenter } from '@/hooks/useNotificationCenter'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -151,6 +152,36 @@ const SPECIAL_LAYOUT_TEXT_AREA = {
   A: { top: '30%', bottom: '22%', left: '20%', right: '10%' },
   B: { top: '28%', bottom: '18%', left: '20%', right: '10%' },
   C: { top: '30%', bottom: '24%', left: '20%', right: '10%' },
+}
+
+function NotifBadge({ count, color = '#c87090' }: { count: number; color?: string }) {
+  if (count === 0) return null
+  return (
+    <span
+      style={{
+        position: 'absolute',
+        top: -4,
+        right: -4,
+        background: color,
+        color: '#fff',
+        fontSize: 8,
+        fontWeight: 800,
+        fontFamily: 'Baloo 2, sans-serif',
+        borderRadius: '50%',
+        width: 14,
+        height: 14,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        lineHeight: 1,
+        pointerEvents: 'none',
+        zIndex: 2,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+      }}
+    >
+      {count > 9 ? '9+' : count}
+    </span>
+  )
 }
 
 export default function Board({ activeBoardId }: { activeBoardId: string }) {
@@ -221,7 +252,28 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const { extraBoards } = useBoards(cid, uid)
   const extraBoardIds = extraBoards.map((b: BoardMeta) => b.id)
 
-  // reconecta partida em andamento ao montar / ao abrir aba jogos
+  const extraBoardNamesForNotif = useMemo(
+    () => Object.fromEntries(extraBoards.map((b: BoardMeta) => [b.id, b.name])),
+    [extraBoards]
+  )
+  const { notifications: boardNotifications } = useNotificationCenter({
+    uid,
+    partnerUid,
+    coupleId: cid,
+    myNick: displayName,
+    partnerNick: partnerPresence?.displayName ?? '',
+    extraBoardNames: extraBoardNamesForNotif,
+  })
+
+  const notifCountBySection = useMemo(() => {
+    const garden = boardNotifications.filter((n) => n.type === 'garden-water').length
+    const agenda = boardNotifications.filter((n) => n.type === 'calendar-event').length
+    const carta = boardNotifications.filter(
+      (n) => n.type === 'letter' || n.type === 'special-letter'
+    ).length
+    const total = boardNotifications.length
+    return { garden, agenda, carta, total }
+  }, [boardNotifications])
   // reconecta partida em andamento ao montar / ao abrir aba jogos
   useEffect(() => {
     if (!activeBoardId) return
@@ -1050,6 +1102,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               left: '50%',
             }}
           >
+            <NotifBadge count={notifCountBySection.garden} color="#7FB87F" />
             <Sprout size={20} strokeWidth={1.8} />
             <span
               style={{
@@ -1093,6 +1146,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               left: '50%',
             }}
           >
+            <NotifBadge count={notifCountBySection.agenda} color="#c87090" />
             <CalendarDays size={17} strokeWidth={1.8} />
             <span
               style={{
@@ -1136,6 +1190,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               left: '50%',
             }}
           >
+            <NotifBadge count={notifCountBySection.carta} color="#E8A0B0" />
             <Mail size={17} strokeWidth={1.8} />
             <span
               style={{
@@ -1457,6 +1512,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             }}
           >
             <Sparkles size={20} strokeWidth={1.8} />
+            <NotifBadge count={notifCountBySection.total} />
           </div>
         </div>
 
