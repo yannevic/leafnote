@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.33': [
+    "🐛 corrige horario para o de Brasilia",
+    "✨ notificações agora aparecem na roda de pages",
+  ],
+
   '3.0.32': [
     "🐛 corrige verificação de flores comuns no bootstrap",
   ],
