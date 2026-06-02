@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.32': [
+    "🐛 corrige verificação de flores comuns no bootstrap",
+  ],
+
   '3.0.31': [
     "🐛 corrige rega solo no modo pânico quando uid já regou antes de ativar",
   ],
