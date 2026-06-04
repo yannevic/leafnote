@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Sprout,
   X,
-  AlertTriangle,
   Leaf,
   ArrowLeftRight,
   HelpCircle,
@@ -61,7 +60,6 @@ export default function GardenView({
     rollForEvent,
     rollForWelcome,
     panicMode,
-    togglePanic,
     welcomePending,
     partnerRolledEvent,
     partnerRolledWelcome,
@@ -278,31 +276,6 @@ export default function GardenView({
                 }}
               >
                 <ArrowLeftRight size={13} color="rgba(122,48,64,0.6)" strokeWidth={2} />
-              </button>
-
-              <button
-                onClick={togglePanic}
-                title={
-                  panicMode ? 'modo pânico ativo — clique para desativar' : 'ativar modo pânico'
-                }
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  border: 'none',
-                  background: 'rgba(200,120,140,0.15)',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              >
-                <AlertTriangle
-                  size={13}
-                  strokeWidth={2}
-                  color={panicMode ? '#e8607a' : 'rgba(122,48,64,0.6)'}
-                />
               </button>
 
               {/* Moedas — último item */}
