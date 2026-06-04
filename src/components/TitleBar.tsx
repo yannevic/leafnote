@@ -7,6 +7,7 @@ import type { AppNotification } from '../hooks/useNotificationCenter'
 import { PiMoneyWavyLight } from 'react-icons/pi'
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
+import { AlertTriangle } from 'lucide-react'
 import type { UpdateStatus } from './UpdateNotifier'
 
 interface TitleBarProps {
@@ -22,6 +23,8 @@ interface TitleBarProps {
   notifications?: AppNotification[]
   onDismissNotification?: (id: string) => void
   coins?: number
+  panicMode?: boolean
+  onTogglePanic?: () => void
 }
 
 export default function TitleBar({
@@ -37,6 +40,8 @@ export default function TitleBar({
   notifications = [],
   onDismissNotification,
   coins = 0,
+  panicMode = false,
+  onTogglePanic,
 }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [version, setVersion] = useState('')
@@ -176,6 +181,32 @@ export default function TitleBar({
           } as React.CSSProperties
         }
       >
+        {onTogglePanic && (
+          <button
+            onClick={onTogglePanic}
+            title={panicMode ? 'modo pânico ativo — clique para desativar' : 'modo pânico'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              height: 22,
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'Baloo 2, sans-serif',
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '0 8px',
+              background: panicMode ? 'rgba(232,96,122,0.22)' : 'rgba(196,149,106,0.12)',
+              color: panicMode ? '#e8607a' : 'rgba(196,149,106,0.55)',
+              transition: 'all 0.15s',
+              marginRight: 2,
+            }}
+          >
+            <AlertTriangle size={11} strokeWidth={2} />
+            {panicMode ? 'pânico on' : 'pânico'}
+          </button>
+        )}
         <div
           style={{
             display: 'flex',

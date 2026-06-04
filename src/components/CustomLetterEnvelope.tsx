@@ -363,7 +363,7 @@ export default function CustomLetterEnvelope({
             fontWeight="700"
             opacity="0.85"
           >
-            {`Para: ${item.toName}`}
+            {`Para: ${item.toName}${(item as any).openedAt ? '  •  ' + new Date((item as any).openedAt).toLocaleDateString('pt-BR') : ''}`}
           </text>
         </svg>
 

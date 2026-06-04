@@ -982,7 +982,9 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   isOwner={item.createdBy === uid}
                   editMode={editMode}
                   zIndex={z}
-                  onOpen={(id: string) => handleUpdate(id, { opened: true })}
+                  onOpen={(id: string) =>
+                    handleUpdate(id, { opened: true, openedAt: new Date().toISOString() } as any)
+                  }
                   onOpenViewer={(i: CustomLetterBoardItem) => {
                     const r = dbRef(db, `couples/${cid}/customLetters/${i.letterId}`)
                     onValue(

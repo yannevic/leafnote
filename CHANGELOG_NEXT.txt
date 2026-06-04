@@ -1,1 +1,1 @@
-🐛 corrige horario para o de Brasilia | ✨ notificações agora aparecem na roda de pages |
+🚨 botão de modo pânico na barra superior | 📬 data de abertura na carta livre | 🔧 panicMode assinado no AppInner e passado pro TitleBar | 

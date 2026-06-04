@@ -10,6 +10,7 @@ import UpdateNotifier, { UpdateStatus } from './components/UpdateNotifier'
 import { useBoards } from './hooks/useBoards'
 import ChangelogModal from './components/ChangelogModal'
 import { useNotificationCenter } from './hooks/useNotificationCenter'
+import { subscribePanicMode, setPanicMode } from './lib/garden'
 import { subscribeCoins } from './lib/garden'
 import HouseCalibrate from './HouseCalibrate'
 import { CoupleProvider, useCoupleId } from './contexts/CoupleContext'
@@ -42,6 +43,14 @@ function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
   const [updateProgress, setUpdateProgress] = useState(0)
   const [coins, setCoins] = useState(0)
+  const [panicMode, setPanicModeState] = useState(false)
+
+  useEffect(() => {
+    const unsub = subscribePanicMode(coupleId, setPanicModeState)
+    return unsub
+  }, [coupleId])
+
+  const handleTogglePanic = () => setPanicMode(coupleId, !panicMode)
 
   useEffect(() => {
     const unsub = subscribeCoins(coupleId, setCoins)
@@ -69,6 +78,8 @@ function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
         notifications={notifications}
         onDismissNotification={dismiss}
         coins={coins}
+        panicMode={panicMode}
+        onTogglePanic={handleTogglePanic}
       />
       <div className="flex-1 overflow-hidden">
         <HashRouter>
