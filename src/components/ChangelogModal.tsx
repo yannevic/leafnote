@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.36': [
+    "🚨 botão de modo pânico na barra superior",
+    "📬 data de abertura na carta livre",
+    "🔧 panicMode assinado no AppInner e passado pro TitleBar",
+    "🔧 prêmio de 30 dias respeita modo pânico e repete a cada ciclo",
+  ],
+
   '3.0.35': [
     "🚨 botão de modo pânico na barra superior",
     "📬 data de abertura na carta livre",
