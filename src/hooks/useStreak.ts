@@ -33,7 +33,7 @@ function buildCurrentMilestones(days: number): number[] {
   return BASE_MILESTONES.map((d) => d + offset)
 }
 
-export function useStreak(coupleId: string, uid?: string, nick?: string) {
+export function useStreak(coupleId: string, uid?: string, nick?: string, panicMode?: boolean) {
   const [streakData, setStreakData] = useState<StreakData | null>(null)
   const [loading, setLoading] = useState(true)
   const [milestoneChecks, setMilestoneChecks] = useState<MilestoneChecks>({})
@@ -73,9 +73,12 @@ export function useStreak(coupleId: string, uid?: string, nick?: string) {
       if (!eligible) return
       const { addSeed } = await import('../lib/garden')
       await addSeed(coupleId, 'especial')
-      await claimSpecialSeedReward(coupleId)
-      // sorteia a meta do mês automaticamente, sem precisar do parceiro
-      await panicWeeklySorteo(coupleId, days)
+      await claimSpecialSeedReward(coupleId, days)
+      if (panicMode) {
+        await panicWeeklySorteo(coupleId, days)
+      } else {
+        await requestWeeklySorteo(coupleId, uid ?? '', nick ?? '')
+      }
     })
   }, [days])
 

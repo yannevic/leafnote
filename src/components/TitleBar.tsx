@@ -204,7 +204,6 @@ export default function TitleBar({
             }}
           >
             <AlertTriangle size={11} strokeWidth={2} />
-            {panicMode ? 'pânico on' : 'pânico'}
           </button>
         )}
         <div

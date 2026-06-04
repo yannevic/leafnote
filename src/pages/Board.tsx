@@ -73,6 +73,7 @@ import CustomLetterEnvelope from '../components/CustomLetterEnvelope'
 import type { CustomLetterBoardItem } from '../types/board'
 import { ref as dbRef, onValue } from 'firebase/database'
 import { db } from '../lib/firebase'
+import { subscribePanicMode } from '../lib/garden'
 import type { CustomLetterData } from '../types/board'
 import SpecialLetter from '../components/SpecialLetter'
 import type { SpecialLetterItem } from '../types/board'
@@ -236,6 +237,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showShop, setShowShop] = useState(false)
   const [showFinance, setShowFinance] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [panicMode, setPanicModeLocal] = useState(false)
+  useEffect(() => {
+    const unsub = subscribePanicMode(cid, setPanicModeLocal)
+    return unsub
+  }, [cid])
   const [showCustomLetter, setShowCustomLetter] = useState(false)
   const [stickerPickerPos, setStickerPickerPos] = useState<{ x: number; y: number } | null>(null)
   const [openCustomLetterViewer, setOpenCustomLetterViewer] = useState<CustomLetterData | null>(
@@ -347,7 +353,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     deletePreset,
   } = useCharacter(uid)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates(cid)
-  const { days } = useStreak(cid, uid, displayName)
+  const { days } = useStreak(cid, uid, displayName, panicMode)
   const { movies, moviesLoaded } = useMovies(cid, uid, displayName)
   const {
     transactions,

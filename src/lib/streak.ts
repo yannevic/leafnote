@@ -30,7 +30,7 @@ export async function resetStreak(coupleId: string): Promise<void> {
     startDate: now,
     resetAt: now,
   })
-  await set(ref(db, `couples/${coupleId}/garden/specialSeedGiven`), false)
+  await set(ref(db, `couples/${coupleId}/garden/specialSeedGiven`), -1)
 }
 
 export function calcDays(startDate: string): number {
@@ -54,13 +54,15 @@ const specialSeedPath = (coupleId: string) => `couples/${coupleId}/garden/specia
 
 export async function checkSpecialSeedReward(coupleId: string, days: number): Promise<boolean> {
   if (days < 30) return false
+  const currentCycle = Math.floor(days / 30)
   const snap = await get(ref(db, specialSeedPath(coupleId)))
-  if (snap.val() === true) return false
-  return true
+  const lastCycle = (snap.val() as number) ?? -1
+  return currentCycle > lastCycle
 }
 
-export async function claimSpecialSeedReward(coupleId: string): Promise<void> {
-  await set(ref(db, specialSeedPath(coupleId)), true)
+export async function claimSpecialSeedReward(coupleId: string, days: number): Promise<void> {
+  const currentCycle = Math.floor(days / 30)
+  await set(ref(db, specialSeedPath(coupleId)), currentCycle)
 }
 
 export interface MilestoneChecks {
