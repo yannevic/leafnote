@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.40': [
+    "🌸 modo pânico libera abertura de carta própria e alinha largura da carta final com preview",
+  ],
+
   '3.0.39': [
     "📅 calendário da carta livre abre corretamente sem ser cortado",
     "🖼️ fotos e stickers ficam fixos no lugar certo ao rolar a carta",
