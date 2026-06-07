@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.41': [
+    "🌸 modo pânico libera abertura de carta própria e alinha largura da carta final com preview",
+  ],
+
   '3.0.40': [
     "🌸 modo pânico libera abertura de carta própria e alinha largura da carta final com preview",
   ],
