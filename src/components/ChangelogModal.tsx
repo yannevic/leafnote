@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.38': [
+    "📅 calendário da carta livre abre corretamente sem ser cortado",
+    "🖼️ fotos e stickers ficam fixos no lugar certo ao rolar a carta",
+    "🎲 notificação quando tiver dado pra girar no jardim",
+    "🌸 notificação quando uma flor estiver pronta pra vender",
+  ],
+
   '3.0.37': [
     "📅 calendário da carta livre abre corretamente sem ser cortado",
     "🖼️ fotos e stickers ficam fixos no lugar certo ao rolar a carta",
