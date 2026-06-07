@@ -355,8 +355,8 @@ export default function CustomLetterViewer({ letter, onClose }: Props) {
           style={{
             animation: 'letterRise 0.45s cubic-bezier(.34,1.4,.64,1)',
             position: 'relative',
-            width: '100%',
-            maxWidth: 560,
+            width: 610,
+            maxWidth: '92vw',
             maxHeight: '85vh',
             display: 'flex',
             flexDirection: 'column',
