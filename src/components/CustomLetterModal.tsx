@@ -812,163 +812,67 @@ export default function CustomLetterModal({
               <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {/* ── coluna esquerda — ferramentas de estilo ── */}
                 <div
-                  className="custom-letter-scroll"
                   style={{
                     width: 210,
                     flexShrink: 0,
-                    padding: '16px',
                     borderRight: '2px dashed rgba(232,160,176,0.3)',
+                    position: 'relative',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 16,
-                    overflowY: 'auto',
                   }}
                 >
-                  {/* papel */}
-                  <div>
-                    <span style={labelStyle}>cor do papel</span>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {PAPER_COLORS.map((c) => (
-                        <div
-                          key={c.value}
-                          onClick={() => setPaperColor(c.value)}
-                          title={c.label}
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: '50%',
-                            background: c.value,
-                            border: `2px solid ${paperColor === c.value ? '#c87090' : 'rgba(0,0,0,0.1)'}`,
-                            cursor: 'pointer',
-                            transition: 'transform .15s',
-                            transform: paperColor === c.value ? 'scale(1.2)' : 'scale(1)',
-                            boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* pauta */}
-                  <div>
-                    <span style={labelStyle}>estilo</span>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {[
-                        { v: true, l: 'com pauta' },
-                        { v: false, l: 'sem pauta' },
-                      ].map((o) => (
-                        <button
-                          key={String(o.v)}
-                          onClick={() => setLined(o.v)}
-                          style={{
-                            flex: 1,
-                            padding: '5px 0',
-                            borderRadius: 8,
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: 10,
-                            fontWeight: 800,
-                            fontFamily: 'Baloo 2, sans-serif',
-                            background:
-                              lined === o.v ? 'rgba(232,160,176,0.45)' : 'rgba(232,160,176,0.12)',
-                            color: lined === o.v ? '#3d1a10' : 'rgba(61,26,16,0.5)',
-                          }}
-                        >
-                          {o.l}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* fonte */}
-                  <div>
-                    <span style={labelStyle}>fonte</span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {FONT_FAMILIES.map((f) => (
-                        <button
-                          key={f.value}
-                          onClick={() => setFontFamily(f.value)}
-                          style={{
-                            padding: '5px 10px',
-                            borderRadius: 8,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background:
-                              fontFamily === f.value
-                                ? 'rgba(232,160,176,0.45)'
-                                : 'rgba(232,160,176,0.12)',
-                            fontFamily: f.value,
-                            fontSize: 13,
-                            color: '#3d1a10',
-                            textAlign: 'left',
-                            transition: 'all .15s',
-                          }}
-                        >
-                          {f.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* tamanho */}
-                  <div>
-                    <span style={labelStyle}>tamanho — {fontSize}px</span>
-                    <input
-                      type="range"
-                      min={11}
-                      max={22}
-                      value={fontSize}
-                      onChange={(e) => setFontSize(Number(e.target.value))}
-                      style={{ width: '100%', accentColor: '#c87090' }}
-                    />
-                  </div>
-
-                  {/* cor do texto */}
-                  <div>
-                    <span style={labelStyle}>cor do texto</span>
-                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                      {TEXT_COLORS.map((c) => (
-                        <div
-                          key={c}
-                          onClick={() => setTextColor(c)}
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: '50%',
-                            background: c,
-                            border: `2px solid ${textColor === c ? '#c87090' : 'transparent'}`,
-                            cursor: 'pointer',
-                            transition: 'transform .15s',
-                            transform: textColor === c ? 'scale(1.2)' : 'scale(1)',
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* data especial */}
-                  <div>
-                    <span style={labelStyle}>data especial</span>
-                    {availableDates.length === 0 ? (
-                      <div
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 600,
-                          color: 'rgba(61,26,16,0.4)',
-                          fontFamily: 'Baloo 2, sans-serif',
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        nenhuma data cadastrada ainda
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        {availableDates.map((d) => (
-                          <button
-                            key={d.key}
-                            onClick={() => setSelectedDateKey(d.key)}
+                  <div
+                    className="custom-letter-scroll"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 16,
+                      padding: '16px',
+                      overflowY: 'auto',
+                      flex: 1,
+                      paddingBottom: 240,
+                    }}
+                  >
+                    {/* todo conteúdo da coluna esquerda igual, sem mudança */}
+                    {/* papel */}
+                    <div>
+                      <span style={labelStyle}>cor do papel</span>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {PAPER_COLORS.map((c) => (
+                          <div
+                            key={c.value}
+                            onClick={() => setPaperColor(c.value)}
+                            title={c.label}
                             style={{
-                              padding: '4px 10px',
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              background: c.value,
+                              border: `2px solid ${paperColor === c.value ? '#c87090' : 'rgba(0,0,0,0.1)'}`,
+                              cursor: 'pointer',
+                              transition: 'transform .15s',
+                              transform: paperColor === c.value ? 'scale(1.2)' : 'scale(1)',
+                              boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* pauta */}
+                    <div>
+                      <span style={labelStyle}>estilo</span>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {[
+                          { v: true, l: 'com pauta' },
+                          { v: false, l: 'sem pauta' },
+                        ].map((o) => (
+                          <button
+                            key={String(o.v)}
+                            onClick={() => setLined(o.v)}
+                            style={{
+                              flex: 1,
+                              padding: '5px 0',
                               borderRadius: 8,
                               border: 'none',
                               cursor: 'pointer',
@@ -976,24 +880,131 @@ export default function CustomLetterModal({
                               fontWeight: 800,
                               fontFamily: 'Baloo 2, sans-serif',
                               background:
-                                selectedDateKey === d.key
-                                  ? 'rgba(232,160,176,0.45)'
-                                  : 'rgba(232,160,176,0.12)',
-                              color: '#3d1a10',
-                              textAlign: 'left',
+                                lined === o.v ? 'rgba(232,160,176,0.45)' : 'rgba(232,160,176,0.12)',
+                              color: lined === o.v ? '#3d1a10' : 'rgba(61,26,16,0.5)',
                             }}
                           >
-                            {d.label} · {formatMmdd(d.mmdd)}
+                            {o.l}
                           </button>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* disponível a partir de */}
-                  <div>
-                    <span style={labelStyle}>disponível a partir de</span>
-                    <DatePicker value={availableFrom} onChange={setAvailableFrom} />
+                    {/* fonte */}
+                    <div>
+                      <span style={labelStyle}>fonte</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {FONT_FAMILIES.map((f) => (
+                          <button
+                            key={f.value}
+                            onClick={() => setFontFamily(f.value)}
+                            style={{
+                              padding: '5px 10px',
+                              borderRadius: 8,
+                              border: 'none',
+                              cursor: 'pointer',
+                              background:
+                                fontFamily === f.value
+                                  ? 'rgba(232,160,176,0.45)'
+                                  : 'rgba(232,160,176,0.12)',
+                              fontFamily: f.value,
+                              fontSize: 13,
+                              color: '#3d1a10',
+                              textAlign: 'left',
+                              transition: 'all .15s',
+                            }}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* tamanho */}
+                    <div>
+                      <span style={labelStyle}>tamanho — {fontSize}px</span>
+                      <input
+                        type="range"
+                        min={11}
+                        max={22}
+                        value={fontSize}
+                        onChange={(e) => setFontSize(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: '#c87090' }}
+                      />
+                    </div>
+
+                    {/* cor do texto */}
+                    <div>
+                      <span style={labelStyle}>cor do texto</span>
+                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                        {TEXT_COLORS.map((c) => (
+                          <div
+                            key={c}
+                            onClick={() => setTextColor(c)}
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              background: c,
+                              border: `2px solid ${textColor === c ? '#c87090' : 'transparent'}`,
+                              cursor: 'pointer',
+                              transition: 'transform .15s',
+                              transform: textColor === c ? 'scale(1.2)' : 'scale(1)',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* data especial */}
+                    <div>
+                      <span style={labelStyle}>data especial</span>
+                      {availableDates.length === 0 ? (
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: 'rgba(61,26,16,0.4)',
+                            fontFamily: 'Baloo 2, sans-serif',
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          nenhuma data cadastrada ainda
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {availableDates.map((d) => (
+                            <button
+                              key={d.key}
+                              onClick={() => setSelectedDateKey(d.key)}
+                              style={{
+                                padding: '4px 10px',
+                                borderRadius: 8,
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: 10,
+                                fontWeight: 800,
+                                fontFamily: 'Baloo 2, sans-serif',
+                                background:
+                                  selectedDateKey === d.key
+                                    ? 'rgba(232,160,176,0.45)'
+                                    : 'rgba(232,160,176,0.12)',
+                                color: '#3d1a10',
+                                textAlign: 'left',
+                              }}
+                            >
+                              {d.label} · {formatMmdd(d.mmdd)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* disponível a partir de */}
+                    <div>
+                      <span style={labelStyle}>disponível a partir de</span>
+                      <DatePicker value={availableFrom} onChange={setAvailableFrom} />
+                    </div>
                   </div>
                 </div>
 

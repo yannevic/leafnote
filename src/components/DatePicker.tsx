@@ -237,9 +237,16 @@ export default function DatePicker({
       {open && (
         <div
           style={{
-            position: 'absolute',
-            ...(openUp ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
-            left: 0,
+            position: 'fixed',
+            top: (() => {
+              if (!triggerRef.current) return 0
+              const rect = triggerRef.current.getBoundingClientRect()
+              return openUp ? rect.top - 6 - 320 : rect.bottom + 6
+            })(),
+            left: (() => {
+              if (!triggerRef.current) return 0
+              return triggerRef.current.getBoundingClientRect().left
+            })(),
             zIndex: 9999,
             background:
               'linear-gradient(160deg, rgba(253,246,240,0.99) 0%, rgba(252,232,238,0.99) 100%)',
@@ -253,19 +260,19 @@ export default function DatePicker({
           }}
         >
           <style>{`
-            @keyframes dpFadeIn {
-              from { opacity: 0; transform: translateY(${openUp ? '4px' : '-4px'}) scale(0.98); }
-              to   { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            .dp-day { transition: background 0.12s; }
-            .dp-day:hover:not(:disabled) { background: rgba(232,160,176,0.2) !important; }
-            .dp-day-sel { background: rgba(232,160,176,0.55) !important; color: #3d1a10 !important; font-weight: 800 !important; }
-            .dp-day-today:not(.dp-day-sel) { border: 1.5px solid rgba(232,160,176,0.6) !important; color: #7a3040 !important; font-weight: 800 !important; }
-            .dp-chip:hover { background: rgba(232,160,176,0.2) !important; }
-            .dp-chip-sel { background: rgba(232,160,176,0.55) !important; color: #3d1a10 !important; font-weight: 800 !important; }
-            .dp-nav:hover { background: rgba(200,120,140,0.22) !important; }
-            .dp-hoje:hover { background: rgba(232,160,176,0.25) !important; }
-          `}</style>
+              @keyframes dpFadeIn {
+                from { opacity: 0; transform: translateY(${openUp ? '4px' : '-4px'}) scale(0.98); }
+                to   { opacity: 1; transform: translateY(0) scale(1); }
+              }
+              .dp-day { transition: background 0.12s; }
+              .dp-day:hover:not(:disabled) { background: rgba(232,160,176,0.2) !important; }
+              .dp-day-sel { background: rgba(232,160,176,0.55) !important; color: #3d1a10 !important; font-weight: 800 !important; }
+              .dp-day-today:not(.dp-day-sel) { border: 1.5px solid rgba(232,160,176,0.6) !important; color: #7a3040 !important; font-weight: 800 !important; }
+              .dp-chip:hover { background: rgba(232,160,176,0.2) !important; }
+              .dp-chip-sel { background: rgba(232,160,176,0.55) !important; color: #3d1a10 !important; font-weight: 800 !important; }
+              .dp-nav:hover { background: rgba(200,120,140,0.22) !important; }
+              .dp-hoje:hover { background: rgba(232,160,176,0.25) !important; }
+            `}</style>
 
           {/* Header navegação */}
           <div

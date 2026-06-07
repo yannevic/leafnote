@@ -360,6 +360,7 @@ export default function CustomLetterViewer({ letter, onClose }: Props) {
             maxHeight: '85vh',
             display: 'flex',
             flexDirection: 'column',
+            isolation: 'isolate',
           }}
         >
           {/* botão fechar */}
@@ -486,80 +487,76 @@ export default function CustomLetterViewer({ letter, onClose }: Props) {
                 — {letter.signature}
               </div>
             )}
+          </div>
 
-            {/* fotos */}
-            {letter.photos && Object.values(letter.photos).length > 0 && (
+          {/* fotos — fora do scroll, position absolute relativo ao wrapper */}
+          {letter.photos &&
+            Object.values(letter.photos).map((photo) => (
               <div
+                key={photo.id}
                 style={{
-                  marginTop: 20,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 10,
-                  position: 'relative',
+                  position: 'absolute',
+                  left: photo.x,
+                  top: photo.y,
+                  width: photo.width,
+                  height: photo.height,
                   zIndex: 2,
+                  transform: `rotate(${photo.rotation ?? 0}deg)`,
+                  transformOrigin: 'center center',
+                  pointerEvents: 'none',
                 }}
               >
-                {Object.values(letter.photos).map((photo) => (
-                  <div
-                    key={photo.id}
-                    style={{
-                      width: Math.min(photo.width, 200),
-                      height: Math.min(photo.height, 200),
-                      borderRadius: 8,
-                      overflow: 'hidden',
-                      border: '2px solid rgba(255,255,255,0.8)',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                      flexShrink: 0,
-                      transform: `rotate(${photo.rotation ?? 0}deg)`,
-                      transformOrigin: 'center center',
-                    }}
-                  >
-                    <img
-                      src={photo.url}
-                      alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      draggable={false}
-                      onError={(e) => {
-                        ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-                      }}
-                    />
-                  </div>
-                ))}
+                <img
+                  src={photo.url}
+                  alt=""
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    border: '2px solid rgba(255,255,255,0.8)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    display: 'block',
+                  }}
+                  draggable={false}
+                  onError={(e) => {
+                    ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+                  }}
+                />
               </div>
-            )}
+            ))}
 
-            {/* stickers */}
-            {letter.stickers &&
-              Object.values(letter.stickers).map((sticker) => {
-                const pack = STICKER_PACKS.find((p) =>
-                  p.stickers.some((s) => s.key === sticker.stickerKey)
-                )
-                const stickerItem = pack?.stickers.find((s) => s.key === sticker.stickerKey)
-                if (!stickerItem) return null
-                return (
-                  <div
-                    key={sticker.id}
-                    style={{
-                      position: 'absolute',
-                      left: sticker.x,
-                      top: sticker.y,
-                      width: sticker.width,
-                      height: sticker.height,
-                      zIndex: 3,
-                      transform: `rotate(${sticker.rotation ?? 0}deg)`,
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    <img
-                      src={`./stickers/${stickerItem.file}`}
-                      alt={sticker.stickerKey}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      draggable={false}
-                    />
-                  </div>
-                )
-              })}
-          </div>
+          {/* stickers — fora do fluxo de scroll, position absolute relativo ao wrapper da carta */}
+          {letter.stickers &&
+            Object.values(letter.stickers).map((sticker) => {
+              const pack = STICKER_PACKS.find((p) =>
+                p.stickers.some((s) => s.key === sticker.stickerKey)
+              )
+              const stickerItem = pack?.stickers.find((s) => s.key === sticker.stickerKey)
+              if (!stickerItem) return null
+              return (
+                <div
+                  key={sticker.id}
+                  style={{
+                    position: 'absolute',
+                    left: sticker.x,
+                    top: sticker.y,
+                    width: sticker.width,
+                    height: sticker.height,
+                    zIndex: 3,
+                    transform: `rotate(${sticker.rotation ?? 0}deg)`,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <img
+                    src={`./stickers/${stickerItem.file}`}
+                    alt={sticker.stickerKey}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    draggable={false}
+                  />
+                </div>
+              )
+            })}
         </div>
       )}
     </div>

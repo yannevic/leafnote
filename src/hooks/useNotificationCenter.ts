@@ -3,7 +3,7 @@ import { ref, onValue, off } from 'firebase/database'
 import useSound from 'use-sound'
 import { db } from '../lib/firebase'
 import type { AnyBoardItem, LetterItem, SpecialLetterItem } from '../types/board'
-import type { PlantData } from '../lib/garden'
+import type { PlantData, StageEvent } from '../lib/garden'
 import { boardItemsPath, DEFAULT_BOARD_ID } from '../lib/boards'
 import { subscribeSpecialDates, getAvailableDates } from '../lib/specialDates'
 import type { SpecialDates } from '../lib/specialDates'
@@ -19,7 +19,14 @@ import { subscribeWeeklyPending } from '../lib/streak'
 
 export interface AppNotification {
   id: string
-  type: 'letter' | 'special-letter' | 'garden-water' | 'calendar-event' | 'weekly-sorteo'
+  type:
+    | 'letter'
+    | 'special-letter'
+    | 'garden-water'
+    | 'garden-dice'
+    | 'garden-sell'
+    | 'calendar-event'
+    | 'weekly-sorteo'
   message: string
   boardId?: string
   boardName?: string
@@ -162,6 +169,40 @@ export function useNotificationCenter({
 
     return () => off(r, 'value', handler)
   }, [uid, partnerUid])
+
+  // Dado pendente (stageEvents onde uid ainda não rolou)
+  useEffect(() => {
+    if (!uid) return
+    const r = ref(db, `couples/${coupleId}/garden/stageEvents`)
+    const handler = onValue(r, (snap) => {
+      const data = (snap.val() ?? {}) as Record<string, StageEvent>
+      const pending = Object.values(data).filter((e) => e.rolls?.[uid] == null)
+      const diceNotifs: AppNotification[] = pending.map((e) => ({
+        id: `garden-dice-${e.id}`,
+        type: 'garden-dice' as const,
+        message: `${e.plantName} subiu de estágio — gire o dado!`,
+      }))
+      setNotifications((prev) => [...prev.filter((n) => n.type !== 'garden-dice'), ...diceNotifs])
+    })
+    return () => off(r, 'value', handler)
+  }, [uid])
+
+  // Plantas prontas pra vender (stage 5)
+  useEffect(() => {
+    if (!uid) return
+    const r = ref(db, `couples/${coupleId}/garden/plants`)
+    const handler = onValue(r, (snap) => {
+      const data = (snap.val() ?? {}) as Record<string, PlantData>
+      const ready = Object.values(data).filter((p) => p.stage >= 5)
+      const sellNotifs: AppNotification[] = ready.map((p) => ({
+        id: `garden-sell-${p.id}`,
+        type: 'garden-sell' as const,
+        message: `${p.flowerType} floriu e está pronta pra vender`,
+      }))
+      setNotifications((prev) => [...prev.filter((n) => n.type !== 'garden-sell'), ...sellNotifs])
+    })
+    return () => off(r, 'value', handler)
+  }, [uid])
 
   // Datas especiais + eventos do calendário — unificados, agrupados por dia
   useEffect(() => {

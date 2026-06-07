@@ -1,1 +1,1 @@
-🚨 botão de modo pânico na barra superior | 📬 data de abertura na carta livre | 🔧 panicMode assinado no AppInner e passado pro TitleBar | 🔧 prêmio de 30 dias respeita modo pânico e repete a cada ciclo
+📅 calendário da carta livre abre corretamente sem ser cortado | 🖼️ fotos e stickers ficam fixos no lugar certo ao rolar a carta | 🎲 notificação quando tiver dado pra girar no jardim | 🌸 notificação quando uma flor estiver pronta pra vender | 
