@@ -988,6 +988,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   isOwner={item.createdBy === uid}
                   editMode={editMode}
                   zIndex={z}
+                  panicMode={panicMode}
                   onOpen={(id: string) =>
                     handleUpdate(id, { opened: true, openedAt: new Date().toISOString() } as any)
                   }

@@ -4,6 +4,7 @@ import type { CustomLetterBoardItem } from '../types/board'
 interface Props {
   item: CustomLetterBoardItem
   isOwner: boolean
+  panicMode?: boolean
   editMode: boolean
   zIndex: number
   onOpen: (id: string) => void
@@ -19,6 +20,7 @@ interface Props {
 export default function CustomLetterEnvelope({
   item,
   isOwner,
+  panicMode,
   editMode,
   zIndex,
   onOpen,
@@ -40,7 +42,7 @@ export default function CustomLetterEnvelope({
   const ENV_H = 70
 
   const canOpen = (() => {
-    if (isOwner) return item.opened === true
+    if (isOwner) return item.opened === true || !!panicMode
     if (!item.availableFrom) return true
     const today = new Date().toISOString().split('T')[0]
     return today >= item.availableFrom
@@ -85,7 +87,7 @@ export default function CustomLetterEnvelope({
       dragRef.current.moved = false
       return
     }
-    if (isOwner && !item.opened) return
+    if (isOwner && !item.opened && !panicMode) return
     if (!canOpen) {
       setShowBlocked(true)
       setTimeout(() => setShowBlocked(false), 3000)
