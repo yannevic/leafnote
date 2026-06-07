@@ -108,6 +108,7 @@ export default function CustomLetterModal({
   const [ownedStickers, setOwnedStickers] = useState<OwnedStickers>({})
   const [expandedPack, setExpandedPack] = useState<string | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [lastAddedSticker, setLastAddedSticker] = useState<string | null>(null)
 
   // ── rascunho automático ──
   const DRAFT_KEY = `customletter_draft_${myUid}`
@@ -173,7 +174,6 @@ export default function CustomLetterModal({
     if (!coupleId) return
     return subscribeOwnedStickers(coupleId, myUid, setOwnedStickers)
   }, [coupleId, myUid])
-
   const handleAddSticker = (stickerKey: string) => {
     setStickers((prev) => [
       ...prev,
@@ -187,7 +187,8 @@ export default function CustomLetterModal({
         rotation: 0,
       },
     ])
-    setTab('preview')
+    setLastAddedSticker(stickerKey)
+    setTimeout(() => setLastAddedSticker(null), 2000)
   }
 
   // drag de sticker/foto no preview
@@ -1353,6 +1354,30 @@ export default function CustomLetterModal({
                     {/* ── aba stickers ── */}
                     {rightTab === 'stickers' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {lastAddedSticker && (
+                          <div
+                            style={{
+                              position: 'fixed',
+                              bottom: 32,
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              zIndex: 99999,
+                              padding: '8px 18px',
+                              borderRadius: 20,
+                              background: 'rgba(50,90,50,0.88)',
+                              backdropFilter: 'blur(6px)',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: '#d4f0d4',
+                              fontFamily: 'Baloo 2, sans-serif',
+                              pointerEvents: 'none',
+                              whiteSpace: 'nowrap',
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                            }}
+                          >
+                            adicionado ao preview
+                          </div>
+                        )}
                         {STICKER_PACKS.map((pack) => {
                           const ownedInPack = pack.stickers.filter((s) => ownedStickers[s.key])
                           const hasAny = ownedInPack.length > 0
@@ -1369,7 +1394,6 @@ export default function CustomLetterModal({
                                 overflow: 'hidden',
                               }}
                             >
-                              {/* cabeçalho do pack */}
                               <div
                                 onClick={() =>
                                   hasAny && setExpandedPack(isExpanded ? null : pack.id)
@@ -1446,8 +1470,6 @@ export default function CustomLetterModal({
                                   />
                                 )}
                               </div>
-
-                              {/* grid de stickers do pack */}
                               {isExpanded && hasAny && (
                                 <div
                                   style={{

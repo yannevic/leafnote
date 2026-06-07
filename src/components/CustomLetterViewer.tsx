@@ -355,12 +355,11 @@ export default function CustomLetterViewer({ letter, onClose }: Props) {
           style={{
             animation: 'letterRise 0.45s cubic-bezier(.34,1.4,.64,1)',
             position: 'relative',
-            width: 610,
-            maxWidth: '92vw',
+            width: 'calc(92vw - 48px)',
+            maxWidth: 772,
             maxHeight: '85vh',
             display: 'flex',
             flexDirection: 'column',
-            isolation: 'isolate',
           }}
         >
           {/* botão fechar */}
@@ -399,164 +398,180 @@ export default function CustomLetterViewer({ letter, onClose }: Props) {
               overflowY: 'auto',
               overflowX: 'hidden',
               maxHeight: '85vh',
+              isolation: 'isolate',
             }}
           >
-            {/* linhas */}
-            {letter.lined && (
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-                {Array.from({ length: Math.ceil(800 / lineHeight) }).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      position: 'absolute',
-                      left: 24,
-                      right: 24,
-                      top: 28 + i * lineHeight + (letter.fontSize ?? 14) * 1.2,
-                      height: 1,
-                      background: 'rgba(0,0,0,0.06)',
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* data */}
-            {letter.showDate && (
-              <div
-                style={{
-                  fontSize: 11,
-                  color: 'rgba(0,0,0,0.3)',
-                  fontFamily: "'Baloo 2', sans-serif",
-                  textAlign: 'right',
-                  marginBottom: 12,
-                }}
-              >
-                {today}
-              </div>
-            )}
-
-            {/* data especial */}
-            {letter.specialDateLabel && (
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: 'rgba(200,112,144,0.7)',
-                  fontFamily: "'Baloo 2', sans-serif",
-                  marginBottom: 16,
-                  fontStyle: 'italic',
-                }}
-              >
-                {letter.specialDateLabel}
-              </div>
-            )}
-
-            {/* conteúdo */}
+            {/* wrapper interno — tudo position relative aqui dentro */}
             <div
               style={{
-                fontFamily: letter.fontFamily ?? "'Baloo 2', sans-serif",
-                fontSize: letter.fontSize ?? 14,
-                color: letter.textColor ?? '#2a1010',
-                textAlign: letter.textAlign ?? 'left',
-                lineHeight: `${lineHeight}px`,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
                 position: 'relative',
-                zIndex: 1,
-                minHeight: 120,
+                minHeight: (() => {
+                  const allItems = [
+                    ...(letter.photos ? Object.values(letter.photos) : []),
+                    ...(letter.stickers ? Object.values(letter.stickers) : []),
+                  ]
+                  if (allItems.length === 0) return 0
+                  return Math.max(...allItems.map((i) => i.y + (i.height ?? 80) + 40))
+                })(),
               }}
             >
-              {letter.content}
-            </div>
+              {/* linhas */}
+              {letter.lined && (
+                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                  {Array.from({ length: Math.ceil(800 / lineHeight) }).map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        top: 28 + i * lineHeight + (letter.fontSize ?? 14) * 1.2,
+                        height: 1,
+                        background: 'rgba(0,0,0,0.06)',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
 
-            {/* assinatura */}
-            {letter.signature && (
-              <div
-                style={{
-                  marginTop: 20,
-                  textAlign: 'right',
-                  fontFamily: letter.fontFamily ?? "'Baloo 2', sans-serif",
-                  fontSize: (letter.fontSize ?? 14) - 1,
-                  color: letter.textColor ?? '#2a1010',
-                  fontStyle: 'italic',
-                  opacity: 0.65,
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
-                — {letter.signature}
-              </div>
-            )}
-          </div>
-
-          {/* fotos — fora do scroll, position absolute relativo ao wrapper */}
-          {letter.photos &&
-            Object.values(letter.photos).map((photo) => (
-              <div
-                key={photo.id}
-                style={{
-                  position: 'absolute',
-                  left: photo.x,
-                  top: photo.y,
-                  width: photo.width,
-                  height: photo.height,
-                  zIndex: 2,
-                  transform: `rotate(${photo.rotation ?? 0}deg)`,
-                  transformOrigin: 'center center',
-                  pointerEvents: 'none',
-                }}
-              >
-                <img
-                  src={photo.url}
-                  alt=""
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    borderRadius: 8,
-                    border: '2px solid rgba(255,255,255,0.8)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                    display: 'block',
-                  }}
-                  draggable={false}
-                  onError={(e) => {
-                    ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-                  }}
-                />
-              </div>
-            ))}
-
-          {/* stickers — fora do fluxo de scroll, position absolute relativo ao wrapper da carta */}
-          {letter.stickers &&
-            Object.values(letter.stickers).map((sticker) => {
-              const pack = STICKER_PACKS.find((p) =>
-                p.stickers.some((s) => s.key === sticker.stickerKey)
-              )
-              const stickerItem = pack?.stickers.find((s) => s.key === sticker.stickerKey)
-              if (!stickerItem) return null
-              return (
+              {/* data */}
+              {letter.showDate && (
                 <div
-                  key={sticker.id}
                   style={{
-                    position: 'absolute',
-                    left: sticker.x,
-                    top: sticker.y,
-                    width: sticker.width,
-                    height: sticker.height,
-                    zIndex: 3,
-                    transform: `rotate(${sticker.rotation ?? 0}deg)`,
-                    pointerEvents: 'none',
+                    fontSize: 11,
+                    color: 'rgba(0,0,0,0.3)',
+                    fontFamily: "'Baloo 2', sans-serif",
+                    textAlign: 'right',
+                    marginBottom: 12,
                   }}
                 >
-                  <img
-                    src={`./stickers/${stickerItem.file}`}
-                    alt={sticker.stickerKey}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    draggable={false}
-                  />
+                  {today}
                 </div>
-              )
-            })}
+              )}
+
+              {/* data especial */}
+              {letter.specialDateLabel && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: 'rgba(200,112,144,0.7)',
+                    fontFamily: "'Baloo 2', sans-serif",
+                    marginBottom: 16,
+                    fontStyle: 'italic',
+                  }}
+                >
+                  {letter.specialDateLabel}
+                </div>
+              )}
+
+              {/* conteúdo */}
+              <div
+                style={{
+                  fontFamily: letter.fontFamily ?? "'Baloo 2', sans-serif",
+                  fontSize: letter.fontSize ?? 14,
+                  color: letter.textColor ?? '#2a1010',
+                  textAlign: letter.textAlign ?? 'left',
+                  lineHeight: `${lineHeight}px`,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  position: 'relative',
+                  zIndex: 1,
+                  minHeight: 120,
+                }}
+              >
+                {letter.content}
+              </div>
+
+              {/* assinatura */}
+              {letter.signature && (
+                <div
+                  style={{
+                    marginTop: 20,
+                    textAlign: 'right',
+                    fontFamily: letter.fontFamily ?? "'Baloo 2', sans-serif",
+                    fontSize: (letter.fontSize ?? 14) - 1,
+                    color: letter.textColor ?? '#2a1010',
+                    fontStyle: 'italic',
+                    opacity: 0.65,
+                    position: 'relative',
+                    zIndex: 1,
+                  }}
+                >
+                  — {letter.signature}
+                </div>
+              )}
+
+              {/* fotos — dentro do wrapper, scrollam junto */}
+              {letter.photos &&
+                Object.values(letter.photos).map((photo) => (
+                  <div
+                    key={photo.id}
+                    style={{
+                      position: 'absolute',
+                      left: photo.x - 30,
+                      top: photo.y + 15,
+                      width: photo.width,
+                      height: photo.height,
+                      zIndex: 2,
+                      transform: `rotate(${photo.rotation ?? 0}deg)`,
+                      transformOrigin: 'center center',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <img
+                      src={photo.url}
+                      alt=""
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: 8,
+                        border: '2px solid rgba(255,255,255,0.8)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        display: 'block',
+                      }}
+                      draggable={false}
+                      onError={(e) => {
+                        ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  </div>
+                ))}
+
+              {/* stickers — dentro do wrapper, scrollam junto */}
+              {letter.stickers &&
+                Object.values(letter.stickers).map((sticker) => {
+                  const pack = STICKER_PACKS.find((p) =>
+                    p.stickers.some((s) => s.key === sticker.stickerKey)
+                  )
+                  const stickerItem = pack?.stickers.find((s) => s.key === sticker.stickerKey)
+                  if (!stickerItem) return null
+                  return (
+                    <div
+                      key={sticker.id}
+                      style={{
+                        position: 'absolute',
+                        left: sticker.x - 30,
+                        top: sticker.y + 15,
+                        width: sticker.width,
+                        height: sticker.height,
+                        zIndex: 3,
+                        transform: `rotate(${sticker.rotation ?? 0}deg)`,
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <img
+                        src={`./stickers/${stickerItem.file}`}
+                        alt={sticker.stickerKey}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        draggable={false}
+                      />
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
         </div>
       )}
     </div>
