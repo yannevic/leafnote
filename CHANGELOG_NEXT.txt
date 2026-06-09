@@ -1,1 +1,1 @@
-🚨 feat(streak): ocultar botão "sortear sozinho" sem modo pânico ativo |
+🚨 adiciona botão de reset do bootstrap para reprocessar conquistas |

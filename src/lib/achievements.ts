@@ -661,6 +661,10 @@ export async function markBootstrapped(coupleId: string): Promise<void> {
   await set(ref(db, `couples/${coupleId}/achievements/bootstrapped`), true)
 }
 
+export async function resetBootstrap(coupleId: string): Promise<void> {
+  await set(ref(db, `couples/${coupleId}/achievements/bootstrapped`), null)
+}
+
 // ═══════════════════════════════════════
 // BÔNUS DE CATEGORIA — pago 1x para sempre
 // ═══════════════════════════════════════

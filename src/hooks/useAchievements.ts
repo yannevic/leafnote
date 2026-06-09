@@ -11,6 +11,7 @@ import {
   getByCategory,
   type AchievementsMap,
   type AchievementCategory,
+  resetBootstrap,
 } from '../lib/achievements'
 
 // ═══════════════════════════════════════
@@ -75,6 +76,7 @@ interface UseAchievementsReturn {
   claim: (id: string) => Promise<void>
   newlyUnlocked: string[]
   clearNewlyUnlocked: () => void
+  reset: () => Promise<void>
 }
 
 // ═══════════════════════════════════════
@@ -261,5 +263,11 @@ export function useAchievements({
 
   const clearNewlyUnlocked = useCallback(() => setNewlyUnlocked([]), [])
 
-  return { achievements, categoryBonus, unlock, claim, newlyUnlocked, clearNewlyUnlocked }
+  const reset = useCallback(async () => {
+    bootstrapRanRef.current = false
+    dataReadyRef.current = false
+    await resetBootstrap(coupleId!)
+  }, [])
+
+  return { achievements, categoryBonus, unlock, claim, newlyUnlocked, clearNewlyUnlocked, reset }
 }

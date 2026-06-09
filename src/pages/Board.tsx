@@ -367,7 +367,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   ).length
   const totalPackCount = STICKER_PACKS.length
   const { plants, seeds, coins, maxPlants } = useGarden(cid, uid, partnerUid ?? '')
-  const { achievements, unlock, claim, categoryBonus, newlyUnlocked, clearNewlyUnlocked } =
+  const { achievements, unlock, claim, categoryBonus, newlyUnlocked, clearNewlyUnlocked, reset } =
     useAchievements({
       uid,
       plants,
@@ -2643,10 +2643,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             totalPackCount,
             uniqueStickersOnBoard,
           }}
-          onClaimCategoryBonus={async (_cat) => {
-            // checkAndPayCategoryBonus já é chamado automaticamente no subscribe,
-            // mas se quiser forçar manualmente pode chamar aqui — não precisa fazer nada extra
-          }}
+          onClaimCategoryBonus={async (_cat) => {}}
+          onResetBootstrap={reset}
         />
       )}
       {stickerPickerPos && (

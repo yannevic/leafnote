@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Trophy, Lock, Gift, CheckCircle } from 'lucide-react'
+import { X, Trophy, Lock, Gift, CheckCircle, RotateCcw } from 'lucide-react'
 import {
   ACHIEVEMENTS,
   CATEGORY_BONUS,
@@ -42,6 +42,7 @@ interface Props {
   onClose: () => void
   onClaim: (id: string) => Promise<void>
   onClaimCategoryBonus?: (categoria: AchievementCategory) => Promise<void>
+  onResetBootstrap?: () => Promise<void>
   progress?: ProgressData
 }
 
@@ -635,6 +636,7 @@ export default function AchievementsModal({
   onClose,
   onClaim,
   onClaimCategoryBonus,
+  onResetBootstrap,
   progress,
 }: Props) {
   const total = ACHIEVEMENTS.length
@@ -699,23 +701,45 @@ export default function AchievementsModal({
               {totalUnlocked}/{total}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'rgba(200,120,140,0.15)',
-              border: 'none',
-              borderRadius: '50%',
-              width: 28,
-              height: 28,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {onResetBootstrap && (
+              <button
+                onClick={onResetBootstrap}
+                title="reiniciar bootstrap"
+                style={{
+                  background: 'rgba(200,120,140,0.15)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                <RotateCcw size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(200,120,140,0.15)',
+                border: 'none',
+                borderRadius: '50%',
+                width: 28,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              <X size={13} color="rgba(122,48,64,0.7)" strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
 
         {/* ── Barra de progresso geral ── */}
