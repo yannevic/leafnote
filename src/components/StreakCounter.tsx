@@ -46,7 +46,15 @@ function getNextMilestone(days: number) {
 
 const BAR_GRADIENT = 'linear-gradient(90deg, #e8607a, #fda4b4)'
 
-export default function StreakCounter({ uid, nick }: { uid: string; nick: string }) {
+export default function StreakCounter({
+  uid,
+  nick,
+  panicMode,
+}: {
+  uid: string
+  nick: string
+  panicMode?: boolean
+}) {
   const { coupleId } = useCoupleId()
   const {
     streak,
@@ -495,30 +503,32 @@ export default function StreakCounter({ uid, nick }: { uid: string; nick: string
                   <Shuffle size={11} strokeWidth={2} />
                   sortear meta da semana
                 </button>
-                <button
-                  onClick={async (e) => {
-                    e.stopPropagation()
-                    await panicSorteo()
-                  }}
-                  style={{
-                    padding: '5px 0',
-                    borderRadius: 10,
-                    background: 'transparent',
-                    border: '1.5px solid rgba(232,160,176,0.35)',
-                    color: 'rgba(61,26,16,0.45)',
-                    fontWeight: 800,
-                    fontSize: 10,
-                    cursor: 'pointer',
-                    fontFamily: 'Baloo 2, sans-serif',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 5,
-                  }}
-                >
-                  <Zap size={10} strokeWidth={2} />
-                  sortear sozinho (pânico)
-                </button>
+                {panicMode && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation()
+                      await panicSorteo()
+                    }}
+                    style={{
+                      padding: '5px 0',
+                      borderRadius: 10,
+                      background: 'transparent',
+                      border: '1.5px solid rgba(232,160,176,0.35)',
+                      color: 'rgba(61,26,16,0.45)',
+                      fontWeight: 800,
+                      fontSize: 10,
+                      cursor: 'pointer',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    <Zap size={10} strokeWidth={2} />
+                    sortear sozinho (pânico)
+                  </button>
+                )}
               </div>
             )}
           </div>

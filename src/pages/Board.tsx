@@ -1918,7 +1918,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           trashCount={trashedItems.length}
           onOpenStickerPicker={() => setStickerPickerPos({ x: 300, y: 200 })}
         />
-        <StreakCounter uid={uid} nick={displayName} />
+        <StreakCounter uid={uid} nick={displayName} panicMode={panicMode} />
         {showCalendar && (
           <WeekCalendar
             displayName={displayName}

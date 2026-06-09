@@ -1,1 +1,1 @@
-🌸 modo pânico libera abertura de carta própria e alinha largura da carta final com preview |
+🚨 feat(streak): ocultar botão "sortear sozinho" sem modo pânico ativo |
