@@ -1,1 +1,1 @@
-🚨 adiciona botão de reset do bootstrap para reprocessar conquistas |
+🚨 corrige recompensa de semente épica a cada 4 semanas |

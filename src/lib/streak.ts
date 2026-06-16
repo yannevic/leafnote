@@ -53,15 +53,15 @@ export function calcDays(startDate: string): number {
 const specialSeedPath = (coupleId: string) => `couples/${coupleId}/garden/specialSeedGiven`
 
 export async function checkSpecialSeedReward(coupleId: string, days: number): Promise<boolean> {
-  if (days < 30) return false
-  const currentCycle = Math.floor(days / 30)
+  if (days < 28) return false
+  const currentCycle = Math.floor(days / 28)
   const snap = await get(ref(db, specialSeedPath(coupleId)))
   const lastCycle = (snap.val() as number) ?? -1
   return currentCycle > lastCycle
 }
 
 export async function claimSpecialSeedReward(coupleId: string, days: number): Promise<void> {
-  const currentCycle = Math.floor(days / 30)
+  const currentCycle = Math.floor(days / 28)
   await set(ref(db, specialSeedPath(coupleId)), currentCycle)
 }
 
@@ -93,11 +93,11 @@ export async function resetMilestoneChecks(coupleId: string): Promise<void> {
 }
 
 export function formatMilestoneDays(days: number): string {
-  const months = Math.floor(days / 30)
-  const rest = days % 30
-  if (months === 0) return `${days} dia${days !== 1 ? 's' : ''}`
-  if (rest === 0) return `${months} ${months === 1 ? 'mês' : 'meses'}`
-  return `${months} ${months === 1 ? 'mês' : 'meses'} e ${rest} dia${rest !== 1 ? 's' : ''}`
+  const weeks = Math.floor(days / 7)
+  const rest = days % 7
+  if (weeks === 0) return `${days} dia${days !== 1 ? 's' : ''}`
+  if (rest === 0) return `${weeks} semana${weeks !== 1 ? 's' : ''}`
+  return `${weeks} semana${weeks !== 1 ? 's' : ''} e ${rest} dia${rest !== 1 ? 's' : ''}`
 }
 
 // adiciona depois de formatMilestoneDays

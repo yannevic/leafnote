@@ -20,20 +20,10 @@ import {
 } from 'lucide-react'
 import DatePicker from './DatePicker'
 
-const SPECIAL_PRIZE =
-  'Filme com pipoca ao mesmo tempo em chamada e noite especial — e uma semente épica foi adicionada ao jardim de vocês!'
-
 function getMilestoneTitle(targetDay: number): string {
+  if (targetDay % 28 === 0) return 'Super prêmio!'
   const weeks = targetDay / 7
-  if (targetDay % 30 === 0) {
-    const months = targetDay / 30
-    return `${months} ${months === 1 ? 'mês' : 'meses'}! Super prêmio!`
-  }
-  return `${weeks} semana${weeks !== 1 ? 's' : ''}!`
-}
-
-function getMilestonePrize(targetDay: number): string | null {
-  return targetDay % 30 === 0 ? SPECIAL_PRIZE : null
+  return `${weeks}ª semana!`
 }
 
 function getCurrentMilestone(days: number, milestones: number[]) {
@@ -1042,9 +1032,9 @@ export default function StreakCounter({
                   color="rgba(122,48,64,0.5)"
                   style={{ flexShrink: 0, marginTop: 2 }}
                 />
-                {getMilestonePrize(milestoneDay!) ??
-                  weeklyChallengeName ??
-                  'meta da semana sorteada!'}
+                {milestoneDay! % 28 === 0
+                  ? `${weeklyChallengeName ? weeklyChallengeName + ' — e uma' : 'Uma'} semente épica foi adicionada ao jardim de vocês!`
+                  : (weeklyChallengeName ?? 'meta da semana sorteada!')}
               </div>
               <button
                 onClick={() => setShowMilestone(false)}

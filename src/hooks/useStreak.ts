@@ -23,14 +23,19 @@ import {
 } from '../lib/streak'
 import type { StreakData } from '../lib/streak'
 
-const BASE_MILESTONES = [7, 14, 21, 30]
+const BASE_MILESTONES = [7, 14, 21, 28]
 
-function buildCurrentMilestones(days: number): number[] {
-  // mostra o ciclo atual de 4 marcos (ex: 7-30, 37-60, 61-90...)
-  const cycleSize = 30
-  const currentCycle = Math.floor(Math.max(0, days) / cycleSize)
-  const offset = currentCycle * cycleSize
-  return BASE_MILESTONES.map((d) => d + offset)
+// PARA:
+function buildCurrentMilestones(milestoneChecks: MilestoneChecks): number[] {
+  const cycleSize = 28
+  let cycle = 0
+  while (true) {
+    const offset = cycle * cycleSize
+    const marcos = BASE_MILESTONES.map((d) => d + offset)
+    const lastMarco = marcos[marcos.length - 1]
+    if (!milestoneChecks[lastMarco]) return marcos
+    cycle++
+  }
 }
 
 export function useStreak(coupleId: string, uid?: string, nick?: string, panicMode?: boolean) {
@@ -64,11 +69,13 @@ export function useStreak(coupleId: string, uid?: string, nick?: string, panicMo
   }, [])
 
   const days = streakData?.startDate ? calcDays(streakData.startDate) : 0
-  const checkedRef = useRef(false)
+  const checkedCycleRef = useRef(-1)
 
   useEffect(() => {
-    if (checkedRef.current || days < 30) return
-    checkedRef.current = true
+    if (days < 28) return
+    const currentCycle = Math.floor(days / 28)
+    if (checkedCycleRef.current === currentCycle) return
+    checkedCycleRef.current = currentCycle
     checkSpecialSeedReward(coupleId, days).then(async (eligible) => {
       if (!eligible) return
       const { addSeed } = await import('../lib/garden')
@@ -82,18 +89,12 @@ export function useStreak(coupleId: string, uid?: string, nick?: string, panicMo
     })
   }, [days])
 
-  const currentMilestones = buildCurrentMilestones(days)
+  const currentMilestones = buildCurrentMilestones(milestoneChecks)
 
   const handleCheck = useCallback(
     async (day: number) => {
       const current = milestoneChecks[day] ?? false
       await toggleMilestoneCheck(coupleId, day, !current)
-      const lastOfCycle = currentMilestones[currentMilestones.length - 1]
-      if (day === lastOfCycle && !current) {
-        setTimeout(async () => {
-          await resetMilestoneChecks(coupleId)
-        }, 800)
-      }
     },
     [milestoneChecks, currentMilestones]
   )
