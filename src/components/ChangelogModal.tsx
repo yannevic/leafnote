@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.43': [
+    "🚨 adiciona botão de reset do bootstrap para reprocessar conquistas",
+  ],
+
   '3.0.42': [
     "🚨 feat(streak): ocultar botão \"sortear sozinho\" sem modo pânico ativo",
   ],
