@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.44': [
+    "🚨 corrige recompensa de semente épica a cada 4 semanas",
+  ],
+
   '3.0.43': [
     "🚨 adiciona botão de reset do bootstrap para reprocessar conquistas",
   ],
