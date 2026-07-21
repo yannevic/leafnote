@@ -1,1 +1,1 @@
-🚨 corrige bug de rega falsa e adiciona bloqueio persistente do botão |
+🚨 corrige bug de rega falsa e adiciona bloqueio persistente do botão | 

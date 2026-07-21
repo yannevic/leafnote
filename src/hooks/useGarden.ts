@@ -107,8 +107,6 @@ export function useGarden(coupleId: string, uid: string, partnerUid: string) {
   const partnerWatered = (plantId: string) => {
     const p = plants.find((x) => x.id === plantId)
     if (!p) return false
-    const today = new Date().toLocaleDateString('en-CA')
-    if (p.waterDate === today && !p.water?.[uid] && !p.water?.[partnerUid]) return true
     return (p.water ?? {})[partnerUid] === true
   }
 
