@@ -192,6 +192,7 @@ export async function waterPlant(
 
   await update(plantRef, {
     [`water/${uid}`]: true,
+    ...(panicMode && { [`water/${partnerUid}`]: true }),
     waterDate: today,
   })
 
