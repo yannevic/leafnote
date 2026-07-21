@@ -220,8 +220,6 @@ export async function waterPlant(
     daysWatered: newDaysWatered,
     stage: newStage,
     wilted: false,
-    [`water/${uid}`]: null,
-    [`water/${partnerUid}`]: null,
   })
 
   if (newStage > plant.stage) {

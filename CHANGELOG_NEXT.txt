@@ -1,1 +1,1 @@
-🚨 corrige recompensa de semente épica a cada 4 semanas |
+🚨 corrige bug de rega falsa e adiciona bloqueio persistente do botão |
