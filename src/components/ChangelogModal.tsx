@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.48': [
+    "🚨 corrige calendário de seleção de data que aparecia cortado ou escondido ao editar a streak ou a data de um filme assistido",
+    "🚨 corrige cor de texto da flor épica",
+  ],
+
   '3.0.47': [
     "🚨 corrige bug de rega falsa e adiciona bloqueio persistente do botão",
   ],
