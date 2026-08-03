@@ -100,8 +100,6 @@ export function formatMilestoneDays(days: number): string {
   return `${weeks} semana${weeks !== 1 ? 's' : ''} e ${rest} dia${rest !== 1 ? 's' : ''}`
 }
 
-// adiciona depois de formatMilestoneDays
-
 export const WEEKLY_CHALLENGES = [
   'Trocar couplezinho',
   'Escrevam uma cartinha fofa um pro outro e escolham juntos um prêmio especial',

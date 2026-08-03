@@ -176,13 +176,27 @@ export default function FlowerModal({
             <TbPlant2 size={16} color={RARITY_COLOR[info.rarity]} />
             <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>{info.name}</span>
             <span
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                color: rarityColor,
-                textTransform: 'uppercase',
-                letterSpacing: '0.7px',
-              }}
+              style={
+                info.rarity === 'epica'
+                  ? {
+                      fontSize: 10,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.7px',
+                      background:
+                        'linear-gradient(135deg, #ffd700 0%, #ff6ec7 25%, #6ec1ff 50%, #a06eff 75%, #ffd700 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }
+                  : {
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: rarityColor,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.7px',
+                    }
+              }
             >
               {info.rarity}
             </span>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { CalendarDays, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { createPortal } from 'react-dom'
 
 interface DatePickerProps {
   value: string // "YYYY-MM-DD"
@@ -46,10 +47,14 @@ export default function DatePicker({
 
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      const clickedContainer = containerRef.current?.contains(target)
+      const clickedDropdown = dropdownRef.current?.contains(target)
+      if (!clickedContainer && !clickedDropdown) {
         setOpen(false)
         setMode('days')
       }
@@ -234,32 +239,34 @@ export default function DatePicker({
       </button>
 
       {/* Dropdown */}
-      {open && (
-        <div
-          style={{
-            position: 'fixed',
-            top: (() => {
-              if (!triggerRef.current) return 0
-              const rect = triggerRef.current.getBoundingClientRect()
-              return openUp ? rect.top - 6 - 320 : rect.bottom + 6
-            })(),
-            left: (() => {
-              if (!triggerRef.current) return 0
-              return triggerRef.current.getBoundingClientRect().left
-            })(),
-            zIndex: 9999,
-            background:
-              'linear-gradient(160deg, rgba(253,246,240,0.99) 0%, rgba(252,232,238,0.99) 100%)',
-            backdropFilter: 'blur(18px) saturate(1.4)',
-            border: '1.5px solid rgba(232,160,176,0.4)',
-            borderRadius: 16,
-            padding: 12,
-            width: 256,
-            boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
-            animation: 'dpFadeIn 0.15s ease',
-          }}
-        >
-          <style>{`
+      {open &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: (() => {
+                if (!triggerRef.current) return 0
+                const rect = triggerRef.current.getBoundingClientRect()
+                return openUp ? rect.top - 6 - 320 : rect.bottom + 6
+              })(),
+              left: (() => {
+                if (!triggerRef.current) return 0
+                return triggerRef.current.getBoundingClientRect().left
+              })(),
+              zIndex: 9999,
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.99) 0%, rgba(252,232,238,0.99) 100%)',
+              backdropFilter: 'blur(18px) saturate(1.4)',
+              border: '1.5px solid rgba(232,160,176,0.4)',
+              borderRadius: 16,
+              padding: 12,
+              width: 256,
+              boxShadow: '0 8px 40px rgba(200,120,140,0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+              animation: 'dpFadeIn 0.15s ease',
+            }}
+          >
+            <style>{`
               @keyframes dpFadeIn {
                 from { opacity: 0; transform: translateY(${openUp ? '4px' : '-4px'}) scale(0.98); }
                 to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -274,171 +281,142 @@ export default function DatePicker({
               .dp-hoje:hover { background: rgba(232,160,176,0.25) !important; }
             `}</style>
 
-          {/* Header navegação */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 10,
-            }}
-          >
-            <button
-              type="button"
-              className="dp-nav"
-              onClick={() => {
-                if (mode === 'days') prevMonth()
-                else if (mode === 'years') setViewYear((y) => y - 12)
+            {/* Header navegação */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 10,
               }}
-              style={navBtnStyle}
             >
-              <ChevronLeft size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
-            </button>
-
-            <div style={{ display: 'flex', gap: 5 }}>
-              {mode !== 'months' && (
-                <button
-                  type="button"
-                  onClick={() => setMode((m) => (m === 'months' ? 'days' : 'months'))}
-                  style={headerChipStyle}
-                >
-                  {MONTHS_PT[viewMonth].slice(0, 3)}
-                </button>
-              )}
               <button
                 type="button"
-                onClick={() => setMode((m) => (m === 'years' ? 'days' : 'years'))}
-                style={headerChipStyle}
+                className="dp-nav"
+                onClick={() => {
+                  if (mode === 'days') prevMonth()
+                  else if (mode === 'years') setViewYear((y) => y - 12)
+                }}
+                style={navBtnStyle}
               >
-                {mode === 'years' ? `${yearStart}–${yearStart + 11}` : viewYear}
+                <ChevronLeft size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
+              </button>
+
+              <div style={{ display: 'flex', gap: 5 }}>
+                {mode !== 'months' && (
+                  <button
+                    type="button"
+                    onClick={() => setMode((m) => (m === 'months' ? 'days' : 'months'))}
+                    style={headerChipStyle}
+                  >
+                    {MONTHS_PT[viewMonth].slice(0, 3)}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setMode((m) => (m === 'years' ? 'days' : 'years'))}
+                  style={headerChipStyle}
+                >
+                  {mode === 'years' ? `${yearStart}–${yearStart + 11}` : viewYear}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="dp-nav"
+                onClick={() => {
+                  if (mode === 'days') nextMonth()
+                  else if (mode === 'years') setViewYear((y) => y + 12)
+                }}
+                style={navBtnStyle}
+              >
+                <ChevronRight size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
               </button>
             </div>
 
-            <button
-              type="button"
-              className="dp-nav"
-              onClick={() => {
-                if (mode === 'days') nextMonth()
-                else if (mode === 'years') setViewYear((y) => y + 12)
-              }}
-              style={navBtnStyle}
-            >
-              <ChevronRight size={13} strokeWidth={2.5} color="rgba(122,48,64,0.7)" />
-            </button>
-          </div>
-
-          {/* Modo: dias */}
-          {mode === 'days' && (
-            <>
-              <div
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 3 }}
-              >
-                {DAYS_PT.map((d, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      textAlign: 'center',
-                      fontSize: 9,
-                      fontWeight: 800,
-                      color: 'rgba(122,48,64,0.4)',
-                      padding: '2px 0',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    {d}
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
-                {Array.from({ length: totalCells }).map((_, i) => {
-                  const day = i - firstDay + 1
-                  if (day < 1 || day > daysInMonth) return <div key={i} />
-                  const date = new Date(viewYear, viewMonth, day)
-                  const disabled = isDisabled(date)
-                  const sel = isSelected(date)
-                  const tod = isToday(date)
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`dp-day${sel ? ' dp-day-sel' : ''}${tod ? ' dp-day-today' : ''}`}
-                      onClick={() => handleDayClick(day)}
-                      disabled={disabled}
-                      style={{
-                        width: '100%',
-                        aspectRatio: '1',
-                        border: '1.5px solid transparent',
-                        borderRadius: 8,
-                        background: 'transparent',
-                        color: disabled ? 'rgba(61,26,16,0.2)' : '#3d1a10',
-                        fontSize: 11,
-                        fontFamily: 'Baloo 2, sans-serif',
-                        fontWeight: 600,
-                        cursor: disabled ? 'not-allowed' : 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: 0,
-                      }}
-                    >
-                      {day}
-                    </button>
-                  )
-                })}
-              </div>
-            </>
-          )}
-
-          {/* Modo: meses */}
-          {mode === 'months' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
-              {MONTHS_PT.map((m, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={`dp-chip${i === viewMonth ? ' dp-chip-sel' : ''}`}
-                  onClick={() => {
-                    setViewMonth(i)
-                    setMode('days')
-                  }}
+            {/* Modo: dias */}
+            {mode === 'days' && (
+              <>
+                <div
                   style={{
-                    border: 'none',
-                    borderRadius: 10,
-                    padding: '7px 4px',
-                    background: 'rgba(232,160,176,0.1)',
-                    color: '#3d1a10',
-                    fontSize: 10,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'background 0.12s',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    marginBottom: 3,
                   }}
                 >
-                  {m.slice(0, 3)}
-                </button>
-              ))}
-            </div>
-          )}
+                  {DAYS_PT.map((d, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 9,
+                        fontWeight: 800,
+                        color: 'rgba(122,48,64,0.4)',
+                        padding: '2px 0',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      {d}
+                    </div>
+                  ))}
+                </div>
 
-          {/* Modo: anos */}
-          {mode === 'years' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
-              {Array.from({ length: 12 }).map((_, i) => {
-                const yr = yearStart + i
-                return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+                  {Array.from({ length: totalCells }).map((_, i) => {
+                    const day = i - firstDay + 1
+                    if (day < 1 || day > daysInMonth) return <div key={i} />
+                    const date = new Date(viewYear, viewMonth, day)
+                    const disabled = isDisabled(date)
+                    const sel = isSelected(date)
+                    const tod = isToday(date)
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`dp-day${sel ? ' dp-day-sel' : ''}${tod ? ' dp-day-today' : ''}`}
+                        onClick={() => handleDayClick(day)}
+                        disabled={disabled}
+                        style={{
+                          width: '100%',
+                          aspectRatio: '1',
+                          border: '1.5px solid transparent',
+                          borderRadius: 8,
+                          background: 'transparent',
+                          color: disabled ? 'rgba(61,26,16,0.2)' : '#3d1a10',
+                          fontSize: 11,
+                          fontFamily: 'Baloo 2, sans-serif',
+                          fontWeight: 600,
+                          cursor: disabled ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 0,
+                        }}
+                      >
+                        {day}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Modo: meses */}
+            {mode === 'months' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+                {MONTHS_PT.map((m, i) => (
                   <button
-                    key={yr}
+                    key={i}
                     type="button"
-                    className={`dp-chip${yr === viewYear ? ' dp-chip-sel' : ''}`}
+                    className={`dp-chip${i === viewMonth ? ' dp-chip-sel' : ''}`}
                     onClick={() => {
-                      setViewYear(yr)
+                      setViewMonth(i)
                       setMode('days')
                     }}
                     style={{
                       border: 'none',
                       borderRadius: 10,
-                      padding: '7px 2px',
+                      padding: '7px 4px',
                       background: 'rgba(232,160,176,0.1)',
                       color: '#3d1a10',
                       fontSize: 10,
@@ -448,52 +426,86 @@ export default function DatePicker({
                       transition: 'background 0.12s',
                     }}
                   >
-                    {yr}
+                    {m.slice(0, 3)}
                   </button>
-                )
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {/* Botão hoje */}
-          {mode === 'days' && (
-            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center' }}>
-              <button
-                type="button"
-                className="dp-hoje"
-                onClick={() => {
-                  const yr = today.getFullYear()
-                  const mm = String(today.getMonth() + 1).padStart(2, '0')
-                  const dd = String(today.getDate()).padStart(2, '0')
-                  const dateStr = `${yr}-${mm}-${dd}`
-                  if (!isDisabled(new Date(`${dateStr}T00:00:00`))) {
-                    onChange(dateStr)
-                    setOpen(false)
-                  } else {
-                    setViewYear(yr)
-                    setViewMonth(today.getMonth())
-                  }
-                }}
-                style={{
-                  background: 'rgba(232,160,176,0.15)',
-                  border: '1.5px solid rgba(232,160,176,0.35)',
-                  borderRadius: 8,
-                  padding: '3px 16px',
-                  color: 'rgba(122,48,64,0.8)',
-                  fontSize: 10,
-                  fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  transition: 'background 0.12s',
-                  textTransform: 'lowercase' as const,
-                }}
-              >
-                hoje
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+            {/* Modo: anos */}
+            {mode === 'years' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const yr = yearStart + i
+                  return (
+                    <button
+                      key={yr}
+                      type="button"
+                      className={`dp-chip${yr === viewYear ? ' dp-chip-sel' : ''}`}
+                      onClick={() => {
+                        setViewYear(yr)
+                        setMode('days')
+                      }}
+                      style={{
+                        border: 'none',
+                        borderRadius: 10,
+                        padding: '7px 2px',
+                        background: 'rgba(232,160,176,0.1)',
+                        color: '#3d1a10',
+                        fontSize: 10,
+                        fontFamily: 'Baloo 2, sans-serif',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'background 0.12s',
+                      }}
+                    >
+                      {yr}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Botão hoje */}
+            {mode === 'days' && (
+              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="dp-hoje"
+                  onClick={() => {
+                    const yr = today.getFullYear()
+                    const mm = String(today.getMonth() + 1).padStart(2, '0')
+                    const dd = String(today.getDate()).padStart(2, '0')
+                    const dateStr = `${yr}-${mm}-${dd}`
+                    if (!isDisabled(new Date(`${dateStr}T00:00:00`))) {
+                      onChange(dateStr)
+                      setOpen(false)
+                    } else {
+                      setViewYear(yr)
+                      setViewMonth(today.getMonth())
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(232,160,176,0.15)',
+                    border: '1.5px solid rgba(232,160,176,0.35)',
+                    borderRadius: 8,
+                    padding: '3px 16px',
+                    color: 'rgba(122,48,64,0.8)',
+                    fontSize: 10,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: 'background 0.12s',
+                    textTransform: 'lowercase' as const,
+                  }}
+                >
+                  hoje
+                </button>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
