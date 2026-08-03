@@ -107,6 +107,20 @@ import { ref as stickerRef, onValue as stickerOnValue, off as stickerOff } from 
 import { STICKER_PACKS } from '../assets/stickers/index'
 import { useNotificationCenter } from '@/hooks/useNotificationCenter'
 
+const MURAL_WIDTH = 1920
+const MURAL_HEIGHT = 1080
+
+function clampPan(next: { x: number; y: number }) {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : MURAL_WIDTH
+  const vh = typeof window !== 'undefined' ? window.innerHeight : MURAL_HEIGHT
+  const minX = Math.min(0, vw - MURAL_WIDTH)
+  const minY = Math.min(0, vh - MURAL_HEIGHT)
+  return {
+    x: Math.max(minX, Math.min(0, next.x)),
+    y: Math.max(minY, Math.min(0, next.y)),
+  }
+}
+
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
@@ -203,6 +217,17 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     markMoving,
   } = useBoard(items, setItems, activeBoardId)
   const boardRef = useRef<HTMLDivElement>(null)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const panRef = useRef({ x: 0, y: 0 })
+  const panDragStartRef = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
+  const didPanDragRef = useRef(false)
+  const [isPanning, setIsPanning] = useState(false)
+
+  const updatePan = useCallback((next: { x: number; y: number }) => {
+    const clamped = clampPan(next)
+    panRef.current = clamped
+    setPan(clamped)
+  }, [])
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
@@ -478,6 +503,64 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     }
   }
 
+  const handleBoardPanStart = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (editMode) return
+      if (e.button !== 0) return
+      const target = e.target as HTMLElement
+      // só ativa em cima de um item do mural OU no fundo vazio do mural
+      const isMuralArea = target === boardRef.current || !!target.closest('[data-item]')
+      if (!isMuralArea) return
+
+      document.body.style.userSelect = 'none'
+      setIsPanning(true)
+
+      panDragStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        panX: panRef.current.x,
+        panY: panRef.current.y,
+      }
+      didPanDragRef.current = false
+
+      const THRESHOLD = 6
+
+      function onMove(ev: MouseEvent) {
+        const start = panDragStartRef.current
+        if (!start) return
+        const dx = ev.clientX - start.x
+        const dy = ev.clientY - start.y
+        if (!didPanDragRef.current && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)) {
+          didPanDragRef.current = true
+        }
+        if (didPanDragRef.current) {
+          updatePan({ x: start.panX + dx, y: start.panY + dy })
+        }
+      }
+
+      function onUp() {
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+        panDragStartRef.current = null
+        document.body.style.userSelect = ''
+        setIsPanning(false)
+
+        if (didPanDragRef.current && boardRef.current) {
+          const swallowClick = (ev: MouseEvent) => {
+            ev.stopPropagation()
+            ev.preventDefault()
+          }
+          boardRef.current.addEventListener('click', swallowClick, { capture: true, once: true })
+        }
+        didPanDragRef.current = false
+      }
+
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    },
+    [editMode, updatePan]
+  )
+
   const handleBoardClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (editMode) return
@@ -491,8 +574,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
       if (!isBackground) return
 
       const rect = boardRef.current!.getBoundingClientRect()
-      const x = e.clientX - rect.left - 75
-      const y = e.clientY - rect.top - 40
+      const x = e.clientX - rect.left - panRef.current.x - 75
+      const y = e.clientY - rect.top - panRef.current.y - 40
 
       if (selectedTool === 'postit') {
         const postitColor = POSTIT_COLORS[colorCursor % POSTIT_COLORS.length]
@@ -775,8 +858,18 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
       <div
         ref={boardRef}
         className="fixed inset-0 overflow-hidden"
-        style={{ background: '#c8a882', cursor: editMode ? 'default' : 'crosshair' }}
+        style={{
+          background: '#c8a882',
+          cursor: editMode
+            ? 'default'
+            : selectedTool
+              ? 'crosshair'
+              : isPanning
+                ? 'grabbing'
+                : 'grab',
+        }}
         onClick={handleBoardClick}
+        onMouseDown={handleBoardPanStart}
       >
         {/* Textura de madeira */}
         <svg
@@ -850,7 +943,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           <rect width="100%" height="100%" fill="url(#vignette)" />
         </svg>
         {/* Itens do mural */}
-        <div>
+        <div style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}>
           {sortedItems.map((item) => {
             const z = Math.min((item.zOrder ?? 0) + 10, 40)
             const commonProps = {
