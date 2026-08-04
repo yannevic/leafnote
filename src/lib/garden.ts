@@ -1,5 +1,6 @@
 import { ref, set, get, push, remove, onValue, off, update } from 'firebase/database'
 import { db } from './firebase'
+import { addCoins as addPersonalCoins } from './personalCoin'
 
 export type FlowerType =
   | 'rosa'
@@ -195,6 +196,10 @@ export async function waterPlant(
     ...(panicMode && { [`water/${partnerUid}`]: true }),
     waterDate: today,
   })
+
+  // moeda pessoal por rega válida — só pra quem de fato regou (mesmo em pânico,
+  // não dá reward pro parceiro que teve o campo marcado automaticamente)
+  await addPersonalCoins(uid, 3, 'rega')
 
   const snapAfter = await get(plantRef)
   if (!snapAfter.exists()) return

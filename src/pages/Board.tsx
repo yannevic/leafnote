@@ -65,7 +65,10 @@ import {
   User,
   Sparkles,
   Trophy,
+  Gem,
+  Heart,
 } from 'lucide-react'
+import WheelMenu from '../components/WheelMenu'
 import SpecialLetterModal from '../components/SpecialLetterModal'
 import CustomLetterModal from '../components/CustomLetterModal'
 import CustomLetterViewer from '../components/CustomLetterViewer'
@@ -100,6 +103,7 @@ import GameLobbyTab from '../components/Games/GameLobbyTab'
 import GameModal from '../components/Games/GameModal'
 import { subscribeLobby } from '../lib/games'
 import type { GameMode, GameLobby } from '../lib/games'
+import CardsModal from '../components/Cards/CardsModal'
 import AchievementsModal from '../components/AchievementsModal'
 import AchievementToast from '../components/AchievementToast'
 import { subscribeFlowerHistory } from '../lib/achievements'
@@ -169,36 +173,6 @@ const SPECIAL_LAYOUT_TEXT_AREA = {
   C: { top: '30%', bottom: '24%', left: '20%', right: '10%' },
 }
 
-function NotifBadge({ count, color = '#c87090' }: { count: number; color?: string }) {
-  if (count === 0) return null
-  return (
-    <span
-      style={{
-        position: 'absolute',
-        top: -4,
-        right: -4,
-        background: color,
-        color: '#fff',
-        fontSize: 8,
-        fontWeight: 800,
-        fontFamily: 'Baloo 2, sans-serif',
-        borderRadius: '50%',
-        width: 14,
-        height: 14,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        lineHeight: 1,
-        pointerEvents: 'none',
-        zIndex: 2,
-        boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
-      }}
-    >
-      {count > 9 ? '9+' : count}
-    </span>
-  )
-}
-
 export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [user] = useAuthState(auth)
   const { coupleId } = useCoupleId()
@@ -262,6 +236,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showShop, setShowShop] = useState(false)
   const [showFinance, setShowFinance] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [showCards, setShowCards] = useState(false)
   const [panicMode, setPanicModeLocal] = useState(false)
   useEffect(() => {
     const unsub = subscribePanicMode(cid, setPanicModeLocal)
@@ -273,7 +248,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     null
   )
   const [shopInitialItem, setShopInitialItem] = useState<string | undefined>()
-  const [expandedMenu, setExpandedMenu] = useState(false)
   const [cycleToast, setCycleToast] = useState<string | null>(null)
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
   const [flowerHistory, setFlowerHistory] = useState<string[]>([])
@@ -1157,466 +1131,132 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             {cycleToast}
           </div>
         )}
-        {/* ── Botões fixos direita ── */}
-        <div
-          style={{
-            position: 'fixed',
-            right: 95 - 86,
-            bottom: 95 - 86,
-            zIndex: 48,
-            width: 220,
-            height: 220,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onMouseLeave={() => setExpandedMenu(false)}
-        >
-          {/* ── Roda de 9 itens — raio 75px, 40° entre cada um, início no topo (-90°) ── */}
 
-          {/* Jardim — -90° → x=0, y=-75 */}
-          <div
-            onClick={() => setShowGarden(true)}
-            title="jardim"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(160,220,170,0.48)',
-              border: '1.5px solid rgba(140,200,150,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1), opacity 0.25s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + 0px), calc(-50% + -75px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <NotifBadge count={notifCountBySection.garden} color="#7FB87F" />
-            <Sprout size={20} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              jardim
-            </span>
-          </div>
+        {/* ── Roda: essenciais (direita, embaixo) ── */}
+        <WheelMenu
+          bottom={9}
+          right={9}
+          radius={58}
+          size={180}
+          totalNotif={notifCountBySection.agenda + notifCountBySection.carta}
+          centerIcon={<Sparkles size={20} strokeWidth={1.8} />}
+          centerBg="rgba(210,185,245,0.42)"
+          centerBgActive="rgba(220,175,235,0.55)"
+          centerBorder="rgba(255,255,255,0.55)"
+          centerShadow="0 4px 16px rgba(160,100,200,0.25)"
+          items={[
+            {
+              id: 'agenda',
+              icon: <CalendarDays size={17} strokeWidth={1.8} />,
+              label: 'agenda',
+              onClick: () => setShowCalendar(true),
+              bg: 'rgba(175,220,215,0.48)',
+              border: 'rgba(120,185,178,0.65)',
+              notifCount: notifCountBySection.agenda,
+              notifColor: '#c87090',
+            },
+            {
+              id: 'carta',
+              icon: <Mail size={17} strokeWidth={1.8} />,
+              label: 'carta',
+              onClick: () => setShowSpecialLetter(true),
+              bg: 'rgba(245,185,210,0.48)',
+              border: 'rgba(215,145,180,0.65)',
+              notifCount: notifCountBySection.carta,
+              notifColor: '#E8A0B0',
+            },
+            {
+              id: 'widgets',
+              icon: <LayoutGrid size={17} strokeWidth={1.8} />,
+              label: 'widgets',
+              onClick: () => setShowWidgets(true),
+              bg: 'rgba(210,185,245,0.48)',
+              border: 'rgba(170,140,225,0.65)',
+            },
+            {
+              id: 'financas',
+              icon: <Wallet size={17} strokeWidth={1.8} />,
+              label: 'finanças',
+              onClick: () => setShowFinance(true),
+              bg: 'rgba(196,149,106,0.48)',
+              border: 'rgba(175,120,70,0.65)',
+            },
+            {
+              id: 'filmes',
+              icon: <Film size={17} strokeWidth={1.8} />,
+              label: 'filmes',
+              onClick: () => setShowMovies(true),
+              bg: 'rgba(180,210,245,0.48)',
+              border: 'rgba(130,170,225,0.65)',
+            },
+          ]}
+        />
 
-          {/* Agenda — -50° → x=48, y=-57 */}
-          <div
-            onClick={() => setShowCalendar(true)}
-            title="calendário"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(175,220,215,0.48)',
-              border: '1.5px solid rgba(120,185,178,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.03s, opacity 0.25s 0.03s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + 48px), calc(-50% + -57px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <NotifBadge count={notifCountBySection.agenda} color="#c87090" />
-            <CalendarDays size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              agenda
-            </span>
-          </div>
-
-          {/* Carta — -10° → x=74, y=-13 */}
-          <div
-            onClick={() => setShowSpecialLetter(true)}
-            title="carta especial"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(245,185,210,0.48)',
-              border: '1.5px solid rgba(215,145,180,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.04s, opacity 0.25s 0.04s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + 74px), calc(-50% + -13px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <NotifBadge count={notifCountBySection.carta} color="#E8A0B0" />
-            <Mail size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              carta
-            </span>
-          </div>
-
-          {/* Widgets — 30° → x=65, y=37 */}
-          <div
-            onClick={() => setShowWidgets(true)}
-            title="widgets"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(210,185,245,0.48)',
-              border: '1.5px solid rgba(170,140,225,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.06s, opacity 0.25s 0.06s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + 65px), calc(-50% + 37px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <LayoutGrid size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              widgets
-            </span>
-          </div>
-
-          {/* Finanças — 70° → x=26, y=70 */}
-          <div
-            onClick={() => setShowFinance(true)}
-            title="finanças"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(196,149,106,0.48)',
-              border: '1.5px solid rgba(175,120,70,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.08s, opacity 0.25s 0.08s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + 26px), calc(-50% + 70px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <Wallet size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              finanças
-            </span>
-          </div>
-
-          {/* Filmes — 110° → x=-26, y=70 */}
-          <div
-            onClick={() => setShowMovies(true)}
-            title="filmes e séries"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(180,210,245,0.48)',
-              border: '1.5px solid rgba(130,170,225,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.10s, opacity 0.25s 0.10s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + -26px), calc(-50% + 70px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <Film size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              filmes
-            </span>
-          </div>
-
-          {/* Roupa — 150° → x=-65, y=37 */}
-          <div
-            onClick={() => setShowCharacter(true)}
-            title="guarda-roupa"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(235,185,220,0.48)',
-              border: '1.5px solid rgba(205,145,190,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.12s, opacity 0.25s 0.12s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + -65px), calc(-50% + 37px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <User size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              roupa
-            </span>
-          </div>
-
-          {/* Casa — 190° → x=-74, y=-13 */}
-          <div
-            onClick={() => setShowHouse(true)}
-            title="casinha"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(180,210,245,0.48)',
-              border: '1.5px solid rgba(140,175,225,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.15s, opacity 0.25s 0.15s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + -74px), calc(-50% + -13px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <House size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              casa
-            </span>
-          </div>
-
-          {/* Loja — 230° → x=-48, y=-57 */}
-          <div
-            onClick={() => setShowShop(true)}
-            title="loja"
-            style={{
-              position: 'absolute',
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(245,210,160,0.48)',
-              border: '1.5px solid rgba(220,175,110,0.65)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              cursor: 'pointer',
-              color: 'rgba(61,36,8,0.8)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              transition: 'transform 0.35s cubic-bezier(.34,1.4,.64,1) 0.18s, opacity 0.25s 0.18s',
-              transform: expandedMenu
-                ? 'translate(calc(-50% + -48px), calc(-50% + -57px)) scale(1)'
-                : 'translate(-50%, -50%) scale(0.3)',
-              opacity: expandedMenu ? 1 : 0,
-              pointerEvents: expandedMenu ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
-            }}
-          >
-            <ShoppingBag size={17} strokeWidth={1.8} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'rgba(61,36,8,0.75)',
-                fontFamily: 'Baloo 2, sans-serif',
-              }}
-            >
-              loja
-            </span>
-          </div>
-
-          {/* Conquistas */}
-          <div
-            onClick={() => setShowAchievements(true)}
-            title="conquistas"
-            style={{
-              position: 'fixed',
-              bottom: 18,
-              right: 18,
-              zIndex: 48,
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'rgba(196,149,106,0.35)',
-              border: '1.5px solid rgba(196,149,106,0.55)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-            }}
-          >
-            <Trophy size={16} color="#8b6914" strokeWidth={2} />
-          </div>
-
-          {/* Botão central */}
-          <div
-            onMouseEnter={() => setExpandedMenu(true)}
-            style={{
-              position: 'relative',
-              zIndex: 3,
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: expandedMenu ? 'rgba(220,175,235,0.55)' : 'rgba(210,185,245,0.42)',
-              border: '1.5px solid rgba(255,255,255,0.55)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: expandedMenu
-                ? '0 4px 16px rgba(160,100,200,0.25)'
-                : '0 2px 8px rgba(0,0,0,0.1)',
-              transition: 'all 0.2s',
-              color: 'rgba(61,36,8,0.82)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-            }}
-          >
-            <Sparkles size={20} strokeWidth={1.8} />
-            <NotifBadge count={notifCountBySection.total} />
-          </div>
-        </div>
+        {/* ── Roda: nosso cantinho (direita, empilhada acima, reta com a de baixo) ── */}
+        <WheelMenu
+          bottom={195}
+          right={9}
+          radius={58}
+          size={180}
+          totalNotif={notifCountBySection.garden}
+          centerIcon={<Heart size={20} strokeWidth={1.8} />}
+          centerBg="rgba(232,160,176,0.42)"
+          centerBgActive="rgba(232,140,160,0.55)"
+          centerBorder="rgba(255,255,255,0.55)"
+          centerShadow="0 4px 16px rgba(200,112,144,0.25)"
+          items={[
+            {
+              id: 'jardim',
+              icon: <Sprout size={20} strokeWidth={1.8} />,
+              label: 'jardim',
+              onClick: () => setShowGarden(true),
+              bg: 'rgba(160,220,170,0.48)',
+              border: 'rgba(140,200,150,0.65)',
+              notifCount: notifCountBySection.garden,
+              notifColor: '#7FB87F',
+            },
+            {
+              id: 'casa',
+              icon: <House size={17} strokeWidth={1.8} />,
+              label: 'casa',
+              onClick: () => setShowHouse(true),
+              bg: 'rgba(180,210,245,0.48)',
+              border: 'rgba(140,175,225,0.65)',
+            },
+            {
+              id: 'roupa',
+              icon: <User size={17} strokeWidth={1.8} />,
+              label: 'roupa',
+              onClick: () => setShowCharacter(true),
+              bg: 'rgba(235,185,220,0.48)',
+              border: 'rgba(205,145,190,0.65)',
+            },
+            {
+              id: 'loja',
+              icon: <ShoppingBag size={17} strokeWidth={1.8} />,
+              label: 'loja',
+              onClick: () => setShowShop(true),
+              bg: 'rgba(245,210,160,0.48)',
+              border: 'rgba(220,175,110,0.65)',
+            },
+            {
+              id: 'cartinhas',
+              icon: <Gem size={17} strokeWidth={1.8} />,
+              label: 'coleção de cartas',
+              onClick: () => setShowCards(true),
+              bg: 'rgba(200,112,144,0.35)',
+              border: 'rgba(200,112,144,0.55)',
+            },
+            {
+              id: 'conquistas',
+              icon: <Trophy size={17} strokeWidth={1.8} />,
+              label: 'conquistas',
+              onClick: () => setShowAchievements(true),
+              bg: 'rgba(196,149,106,0.48)',
+              border: 'rgba(175,120,70,0.65)',
+            },
+          ]}
+        />
 
         {/* Painel de widgets */}
         {showWidgets && (
@@ -2697,6 +2337,15 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           myNick={displayName}
           partnerNick={otherName}
           onClose={() => setShowFinance(false)}
+        />
+      )}
+
+      {showCards && (
+        <CardsModal
+          coupleId={cid}
+          uid={uid}
+          partnerUid={partnerUid ?? ''}
+          onClose={() => setShowCards(false)}
         />
       )}
 
