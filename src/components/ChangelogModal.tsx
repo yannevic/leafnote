@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.52': [
+    "🚨 corrige calendário de seleção de data que aparecia cortado ou escondido ao editar a streak ou a data de um filme assistido",
+    "🚨 corrige cor de texto da flor épica",
+    "🚨 limita pan do mural e melhora cursor de arrasto",
+    "🎴 adiciona sistema de cartinhas colecionaveis (colecao Jardim Secreto, inventario individual, moeda pessoal com setup de nome/icone/cor, reward de rega)",
+    "🎴 ajusta arte final dos pacotes (comum/promocional) e reorganiza layout da loja de cartinhas (pacotes e loja rotativa lado a lado, mesma altura, sem scroll)",
+    "🎡 divide a roda de widgets em duas rodas empilhadas (essenciais e pessoais) usando componente reutilizavel WheelMenu, corrige bug de fechamento prematuro do menu",
+    "🏆 move conquistas da roda antiga pra dentro da roda pessoal",
+    "🎴 todos pacotes e cartas vao pra o inventario e podem ser movidos pra coleçao",
+  ],
+
   '3.0.51': [
     "🚨 corrige calendário de seleção de data que aparecia cortado ou escondido ao editar a streak ou a data de um filme assistido",
     "🚨 corrige cor de texto da flor épica",
