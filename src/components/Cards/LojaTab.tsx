@@ -1,14 +1,17 @@
-import { useState } from 'react'
-import { Package, ZoomIn } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { useCountdown, formatCountdown } from '../../hooks/useCountdown'
+import { Package, ZoomIn, HelpCircle } from 'lucide-react'
+import CardsGuideModal from './CardsGuideModal'
 import { CardDefinition, CARDS } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
-import { openPack, PackType, PACK_PRICES } from '../../lib/packs'
+import { PackType, PACK_PRICES } from '../../lib/packs'
+import { buyPack } from '../../lib/unopenedPacks'
 import { buyFromRotatingShop, SHOP_PRICES } from '../../lib/rotatingShop'
-import { useCardInventory } from '../../hooks/useCardInventory'
+
 import { useRotatingShop } from '../../hooks/useRotatingShop'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
-import PackOpenModal from './PackOpenModal'
+
 import CardZoomModal from './CardZoomModal'
 import { PACK_ART } from '../../assets/cards/packs'
 
@@ -35,16 +38,14 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
   const [confirmPack, setConfirmPack] = useState<PackType | null>(null)
   const [confirmShopCard, setConfirmShopCard] = useState<CardDefinition | null>(null)
   const [zoomCard, setZoomCard] = useState<CardDefinition | null>(null)
-  const [result, setResult] = useState<CardDefinition[] | null>(null)
-  const [ownedBefore, setOwnedBefore] = useState<Record<string, number>>({})
   const [toast, setToast] = useState<string | null>(null)
   const [shopRefresh, setShopRefresh] = useState(0)
+  const [showGuide, setShowGuide] = useState(false)
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 2500)
   }
-  const { inventory } = useCardInventory(coupleId, uid)
   const { data: shopData, loading: shopLoading } = useRotatingShop(coupleId, shopRefresh)
   const { coin } = usePersonalCoin(uid)
   const CoinIcon = coin ? COIN_ICONS[coin.icon] : Package
@@ -55,15 +56,13 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
     const type = confirmPack
     setConfirmPack(null)
     setOpening(type)
-    const snapshotBefore = { ...(inventory['jardim-secreto'] ?? {}) }
-    const res = await openPack(coupleId, uid, type)
+    const ok = await buyPack(coupleId, uid, type)
     setOpening(null)
-    if (!res) {
+    if (!ok) {
       showToast('saldo insuficiente')
       return
     }
-    setOwnedBefore(snapshotBefore)
-    setResult(res.cards)
+    showToast('pacote guardado na mochila!')
   }
 
   async function handleConfirmShopPurchase() {
@@ -83,9 +82,20 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
     .map((id) => CARDS.find((c) => c.id === id))
     .filter((c): c is CardDefinition => !!c)
 
-  const daysLeft = shopData
-    ? Math.max(0, Math.ceil((shopData.nextRotation - Date.now()) / (24 * 60 * 60 * 1000)))
-    : null
+  const countdown = useCountdown(shopData?.nextRotation ?? null)
+
+  // quando o contador zera, força um refresh do hook da loja rotativa
+  // pra buscar as cartas novas assim que a rotação virar
+  const hasRefreshedRef = useRef(false)
+  useEffect(() => {
+    if (countdown?.expired && !hasRefreshedRef.current) {
+      hasRefreshedRef.current = true
+      setShopRefresh((v) => v + 1)
+    }
+    if (countdown && !countdown.expired) {
+      hasRefreshedRef.current = false
+    }
+  }, [countdown?.expired])
 
   return (
     <div
@@ -96,8 +106,30 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
         alignItems: 'stretch',
         justifyContent: 'center',
         gap: 16,
+        position: 'relative',
       }}
     >
+      <button
+        onClick={() => setShowGuide(true)}
+        style={{
+          position: 'absolute',
+          top: 20,
+          right: 24,
+          width: 30,
+          height: 30,
+          borderRadius: '50%',
+          border: 'none',
+          background: 'rgba(200,120,140,0.15)',
+          color: 'rgba(122,48,64,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 10,
+        }}
+      >
+        <HelpCircle size={16} strokeWidth={2.2} />
+      </button>
       {/* ── Bloco pacotes ── */}
       <section
         style={{
@@ -201,9 +233,17 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
       >
         <SectionTitle>
           loja rotativa
-          {daysLeft !== null && (
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#8b6914', marginLeft: 8 }}>
-              renova em {daysLeft}d
+          {countdown !== null && (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#8b6914',
+                marginLeft: 8,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              renova em {formatCountdown(countdown)}
             </span>
           )}
         </SectionTitle>
@@ -347,11 +387,9 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
         />
       )}
 
-      {result && (
-        <PackOpenModal cards={result} ownedBefore={ownedBefore} onClose={() => setResult(null)} />
-      )}
-
       {zoomCard && <CardZoomModal card={zoomCard} onClose={() => setZoomCard(null)} />}
+
+      {showGuide && <CardsGuideModal onClose={() => setShowGuide(false)} />}
 
       {toast && (
         <div

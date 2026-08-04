@@ -2,8 +2,6 @@ import { ref, runTransaction } from 'firebase/database'
 import { db } from './firebase'
 import { CARDS, CardDefinition } from './cards'
 import { CardRarity } from './rarity'
-import { grantCard } from './cardsInventory'
-import { spendCoins } from './personalCoin'
 
 const PACK_SIZE = 5
 
@@ -17,9 +15,10 @@ export { PACK_PRICES }
 // lançar a coleção 2 (Dexter)
 export const CURRENT_PROMO_COLLECTION_ID = 'jardim-secreto'
 
-function cardPoolForPack(packType: PackType): CardDefinition[] {
+function cardPoolForPack(packType: PackType, promoCollectionId?: string): CardDefinition[] {
   if (packType === 'promocional') {
-    return CARDS.filter((c) => c.collectionId === CURRENT_PROMO_COLLECTION_ID)
+    const collectionId = promoCollectionId ?? CURRENT_PROMO_COLLECTION_ID
+    return CARDS.filter((c) => c.collectionId === collectionId)
   }
   return CARDS
 }
@@ -48,15 +47,15 @@ export interface PackResult {
   pityTriggered: boolean
 }
 
-export async function openPack(
+// ⚠️ NÃO faz pagamento — só sorteia e grava no inventário. O pagamento
+// acontece na compra (buyPack, lib/unopenedPacks.ts). Chamada tanto pelo
+// fluxo antigo quanto pela abertura de pacote guardado na mochila.
+export async function drawPackCards(
   coupleId: string,
   uid: string,
-  packType: PackType
-): Promise<PackResult | null> {
-  const price = PACK_PRICES[packType]
-  const paid = await spendCoins(uid, price, `pacote ${packType}`)
-  if (!paid) return null
-
+  packType: PackType,
+  promoCollectionId?: string
+): Promise<PackResult> {
   const pityRef = ref(db, `couples/${coupleId}/cards/pity/${uid}`)
   const pityResult = await runTransaction(pityRef, (current) => (current ?? 0) + 1)
   const pityCount = (pityResult.snapshot.val() as number) ?? 1
@@ -65,15 +64,13 @@ export async function openPack(
     await runTransaction(pityRef, () => 0)
   }
 
-  const pool = cardPoolForPack(packType)
+  const pool = cardPoolForPack(packType, promoCollectionId)
   const drawnCards: CardDefinition[] = []
   for (let i = 0; i < PACK_SIZE; i++) {
     const forceRareOrBetter = pityTriggered && i === 0
     const rarity = weightedRarity(forceRareOrBetter)
     drawnCards.push(randomCardOfRarity(pool, rarity))
   }
-
-  await Promise.all(drawnCards.map((c) => grantCard(coupleId, uid, c.collectionId, c.id, 1)))
 
   return { cards: drawnCards, pityTriggered }
 }

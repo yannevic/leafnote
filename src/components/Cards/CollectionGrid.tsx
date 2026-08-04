@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, DragEvent } from 'react'
 import { Users, User } from 'lucide-react'
-import { CARDS, COLLECTIONS } from '../../lib/cards'
+import { CARDS, COLLECTIONS, CardDefinition } from '../../lib/cards'
 import { useCardInventory } from '../../hooks/useCardInventory'
+import { placePendingCard } from '../../lib/pendingCards'
 import CollectibleCard from './CollectibleCard'
 
 interface CollectionGridProps {
@@ -12,7 +13,28 @@ interface CollectionGridProps {
 
 export default function CollectionGrid({ coupleId, uid, partnerUid }: CollectionGridProps) {
   const [viewingUid, setViewingUid] = useState(uid)
+  const [rejectedCardId, setRejectedCardId] = useState<string | null>(null)
   const { inventory, loading } = useCardInventory(coupleId, viewingUid)
+
+  async function handleDrop(e: DragEvent<HTMLDivElement>, card: CardDefinition) {
+    e.preventDefault()
+    if (viewingUid !== uid) return // não dá pra encaixar carta na coleção do parceiro
+    const raw = e.dataTransfer.getData('application/json')
+    if (!raw) return
+    const data = JSON.parse(raw) as { instanceId: string; cardId: string; collectionId: string }
+    const success = await placePendingCard(
+      coupleId,
+      uid,
+      data.instanceId,
+      data.cardId,
+      data.collectionId,
+      card.id
+    )
+    if (!success) {
+      setRejectedCardId(card.id)
+      setTimeout(() => setRejectedCardId(null), 500)
+    }
+  }
 
   const collectionId = 'jardim-secreto'
   const cards = CARDS.filter((c) => c.collectionId === collectionId).sort(
@@ -78,11 +100,18 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
           }}
         >
           {cards.map((card) => (
-            <CollectibleCard
+            <div
               key={card.id}
-              card={card}
-              quantity={collectionInventory[card.id] ?? 0}
-            />
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(e, card)}
+              style={{
+                borderRadius: 12,
+                boxShadow: rejectedCardId === card.id ? '0 0 0 3px #c0392b' : 'none',
+                transition: 'box-shadow 0.15s',
+              }}
+            >
+              <CollectibleCard card={card} quantity={collectionInventory[card.id] ?? 0} />
+            </div>
           ))}
         </div>
       )}

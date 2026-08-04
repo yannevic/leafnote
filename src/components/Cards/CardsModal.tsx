@@ -1,10 +1,12 @@
 import { useState, ReactNode } from 'react'
-import { X, Sprout, ShoppingBag, Repeat, ArrowLeft } from 'lucide-react'
+import { X, Sprout, ShoppingBag, Repeat, ArrowLeft, HelpCircle } from 'lucide-react'
+import CardsGuideModal from './CardsGuideModal'
 import CollectionGrid from './CollectionGrid'
 import PersonalCoinSetupModal from './PersonalCoinSetupModal'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
 import LojaTab from './LojaTab'
+import BackpackDrawer from './BackpackDrawer'
 
 interface CardsModalProps {
   coupleId: string
@@ -17,6 +19,7 @@ type Tab = 'colecao' | 'loja' | 'trocas'
 
 export default function CardsModal({ coupleId, uid, partnerUid, onClose }: CardsModalProps) {
   const [tab, setTab] = useState<Tab>('colecao')
+  const [showGuide, setShowGuide] = useState(false)
   const { coin, needsSetup } = usePersonalCoin(uid)
 
   return (
@@ -82,6 +85,23 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => setShowGuide(true)}
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255,255,255,0.5)',
+              color: '#2D4A2D',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <HelpCircle size={16} strokeWidth={2.2} />
+          </button>
           {coin && (
             <div
               style={{
@@ -115,7 +135,10 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'colecao' && (
-          <CollectionGrid coupleId={coupleId} uid={uid} partnerUid={partnerUid || null} />
+          <>
+            <CollectionGrid coupleId={coupleId} uid={uid} partnerUid={partnerUid || null} />
+            <BackpackDrawer coupleId={coupleId} uid={uid} />
+          </>
         )}
         {tab === 'loja' && <LojaTab coupleId={coupleId} uid={uid} />}
         {tab === 'trocas' && (
@@ -125,6 +148,7 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
         )}
       </div>
       {needsSetup && <PersonalCoinSetupModal uid={uid} onDone={() => {}} />}
+      {showGuide && <CardsGuideModal onClose={() => setShowGuide(false)} />}
     </div>
   )
 }
