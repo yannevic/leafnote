@@ -1,6 +1,8 @@
 import { ref, set, get, push, remove, onValue, off, update } from 'firebase/database'
 import { db } from './firebase'
 import { addCoins as addPersonalCoins } from './personalCoin'
+import { SLOT_PRICES, EXCHANGE_COST } from './economyConfig'
+import { SEED_ROLL_THRESHOLDS } from './dropRates'
 
 export type FlowerType =
   | 'rosa'
@@ -197,9 +199,12 @@ export async function waterPlant(
     waterDate: today,
   })
 
-  // moeda pessoal por rega válida — só pra quem de fato regou (mesmo em pânico,
-  // não dá reward pro parceiro que teve o campo marcado automaticamente)
-  await addPersonalCoins(uid, 3, 'rega')
+  // moeda pessoal por rega válida — em modo pânico, os dois recebem (o modo
+  // pânico simula os dois regando quando só um está disponível)
+  await addPersonalCoins(uid, WATER_REWARD, 'rega')
+  if (panicMode && partnerUid) {
+    await addPersonalCoins(partnerUid, WATER_REWARD, 'rega')
+  }
 
   const snapAfter = await get(plantRef)
   if (!snapAfter.exists()) return
@@ -390,26 +395,10 @@ export const DAYS_PER_STAGE: Record<FlowerRarity, number> = {
   epica: 6,
 }
 
-export const SEED_SELL_VALUE: Record<FlowerRarity, number> = {
-  comum: 2,
-  incomum: 5,
-  rara: 14,
-  epica: 40,
-}
+import { SEED_SELL_VALUE, FLOWER_SELL_VALUE, WATER_REWARD } from './economyConfig'
+export { SEED_SELL_VALUE, FLOWER_SELL_VALUE }
 
-export const FLOWER_SELL_VALUE: Record<FlowerRarity, number> = {
-  comum: 6,
-  incomum: 18,
-  rara: 55,
-  epica: 180,
-}
-
-export const EXCHANGE_COST: Record<FlowerRarity, number> = {
-  comum: 5,
-  incomum: 6,
-  rara: 7,
-  epica: 999,
-}
+export { EXCHANGE_COST }
 
 export function getExchangeOptions(tier: FlowerRarity, selectedTypes: FlowerType[]): FlowerType[] {
   const sameTier = (Object.values(FLOWERS) as FlowerInfo[])
@@ -429,7 +418,7 @@ export function getExchangeOptions(tier: FlowerRarity, selectedTypes: FlowerType
 
 // ─── Slots do jardim ──────────────────────────────────────────────────────────
 
-export const SLOT_PRICES = [80, 250, 500, 900]
+export { SLOT_PRICES }
 export const MAX_SLOTS = BASE_MAX_PLANTS + SLOT_PRICES.length // 8
 
 export function subscribeMaxPlants(coupleId: string, callback: (max: number) => void): () => void {
@@ -478,27 +467,43 @@ export async function addCoins(coupleId: string, amount: number): Promise<void> 
   await set(coinsRef, current + amount)
 }
 
+async function splitCoinsBetweenPartners(
+  uid: string,
+  partnerUid: string,
+  total: number,
+  reason: string
+): Promise<void> {
+  const half = Math.floor(total / 2)
+  const remainder = total - half * 2 // sobra de 1 moeda (se houver) fica com quem vendeu
+  await addPersonalCoins(uid, half + remainder, reason)
+  if (partnerUid) await addPersonalCoins(partnerUid, half, reason)
+}
+
 export async function sellSeed(
   coupleId: string,
   seedId: string,
-  flowerType: FlowerType
+  flowerType: FlowerType,
+  uid: string,
+  partnerUid: string
 ): Promise<number> {
   const rarity = FLOWERS[flowerType].rarity
   const value = SEED_SELL_VALUE[rarity]
   await remove(ref(db, `couples/${coupleId}/garden/seeds/${seedId}`))
-  await addCoins(coupleId, value)
+  await splitCoinsBetweenPartners(uid, partnerUid, value, 'venda de semente')
   return value
 }
 
 export async function sellFlower(
   coupleId: string,
   plantId: string,
-  flowerType: FlowerType
+  flowerType: FlowerType,
+  uid: string,
+  partnerUid: string
 ): Promise<number> {
   const rarity = FLOWERS[flowerType].rarity
   const value = FLOWER_SELL_VALUE[rarity]
   await remove(ref(db, `couples/${coupleId}/garden/plants/${plantId}`))
-  await addCoins(coupleId, value)
+  await splitCoinsBetweenPartners(uid, partnerUid, value, 'venda de flor')
   return value
 }
 
@@ -525,8 +530,8 @@ function randomFrom(arr: FlowerType[]): FlowerType {
 }
 
 export function getFlowerFromSum(sum: number): FlowerType {
-  if (sum <= 8) return randomFrom(COMMON_FLOWERS)
-  if (sum <= 10) return randomFrom(UNCOMMON_FLOWERS)
+  if (sum <= SEED_ROLL_THRESHOLDS.comumMax) return randomFrom(COMMON_FLOWERS)
+  if (sum <= SEED_ROLL_THRESHOLDS.incomumMax) return randomFrom(UNCOMMON_FLOWERS)
   return randomFrom(RARE_FLOWERS)
 }
 

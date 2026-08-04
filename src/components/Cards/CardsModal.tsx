@@ -4,6 +4,7 @@ import CollectionGrid from './CollectionGrid'
 import PersonalCoinSetupModal from './PersonalCoinSetupModal'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
+import LojaTab from './LojaTab'
 
 interface CardsModalProps {
   coupleId: string
@@ -116,11 +117,7 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
         {tab === 'colecao' && (
           <CollectionGrid coupleId={coupleId} uid={uid} partnerUid={partnerUid || null} />
         )}
-        {tab === 'loja' && (
-          <div style={{ padding: 24, textAlign: 'center', color: '#8B6914' }}>
-            loja em construção — chega na Fase 3
-          </div>
-        )}
+        {tab === 'loja' && <LojaTab coupleId={coupleId} uid={uid} />}
         {tab === 'trocas' && (
           <div style={{ padding: 24, textAlign: 'center', color: '#8B6914' }}>
             trocas em construção — chega na Fase 5

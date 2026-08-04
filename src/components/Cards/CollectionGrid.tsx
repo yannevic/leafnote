@@ -73,8 +73,8 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
-            gap: 12,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+            gap: 16,
           }}
         >
           {cards.map((card) => (

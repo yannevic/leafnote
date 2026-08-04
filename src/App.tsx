@@ -17,6 +17,7 @@ import { CoupleProvider, useCoupleId } from './contexts/CoupleContext'
 import CoupleSetup from './components/CoupleSetup'
 import WaitingPartner from './components/WaitingPartner'
 import { Loader2 } from 'lucide-react'
+import CoinPopupLayer from './components/CoinPopupLayer'
 
 function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
@@ -91,6 +92,7 @@ function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
           </Routes>
         </HashRouter>
       </div>
+      <CoinPopupLayer />
     </div>
   )
 }

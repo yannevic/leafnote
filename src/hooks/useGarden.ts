@@ -142,12 +142,12 @@ export function useGarden(coupleId: string, uid: string, partnerUid: string) {
   const iAlreadyRolledWelcome = welcomeRolls[uid] != null
 
   const handleSellSeed = async (seedId: string, flowerType: FlowerType): Promise<number> => {
-    return sellSeed(coupleId, seedId, flowerType)
+    return sellSeed(coupleId, seedId, flowerType, uid, partnerUid)
   }
 
   const handleSellFlower = async (plantId: string, flowerType: FlowerType): Promise<number> => {
     await recordFlowerHistory(flowerType, coupleId)
-    return sellFlower(coupleId, plantId, flowerType)
+    return sellFlower(coupleId, plantId, flowerType, uid, partnerUid)
   }
 
   const handleRemovePlant = async (plantId: string): Promise<void> => {

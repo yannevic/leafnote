@@ -10,6 +10,8 @@ import {
 import { getFlowerImage } from '../../assets/garden'
 import { useState } from 'react'
 import { TbPlant2 } from 'react-icons/tb'
+import { triggerCoinPopupFromEvent } from '../../lib/coinPopupBus'
+import { WATER_REWARD } from '../../lib/economyConfig'
 
 const T = {
   bg: 'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
@@ -83,10 +85,11 @@ export default function FlowerModal({
   const daysInStage = plant.daysWatered % daysNeeded
   const progressPct = (daysInStage / daysNeeded) * 100
 
-  const handleSell = async () => {
+  const handleSell = async (e: React.MouseEvent<HTMLButtonElement>) => {
     const value = await onSellFlower(plant.id, plant.flowerType)
     setEarnedCoins(value)
     setSellDone(true)
+    triggerCoinPopupFromEvent(e, value, 'moedas', '#4A7A4A')
   }
 
   const handleRemove = async () => {
@@ -370,7 +373,10 @@ export default function FlowerModal({
           {/* Botão regar */}
           {!isFullyGrown && !alreadyWatered && (
             <button
-              onClick={onWater}
+              onClick={(e) => {
+                onWater()
+                triggerCoinPopupFromEvent(e, WATER_REWARD, 'moedas', '#4A7A4A')
+              }}
               style={{
                 width: '100%',
                 padding: '10px 0',
