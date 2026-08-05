@@ -148,7 +148,7 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
         )}
       </div>
       {needsSetup && <PersonalCoinSetupModal uid={uid} onDone={() => {}} />}
-      {showGuide && <CardsGuideModal onClose={() => setShowGuide(false)} />}
+      {showGuide && <CardsGuideModal coupleId={coupleId} onClose={() => setShowGuide(false)} />}
     </div>
   )
 }

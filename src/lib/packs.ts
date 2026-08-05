@@ -11,13 +11,15 @@ import { PACK_PRICES } from './economyConfig'
 import { PACK_ODDS, PITY_THRESHOLD } from './dropRates'
 export { PACK_PRICES }
 
-// coleção que está "em cartaz" no pacote promocional — trocar aqui quando
-// lançar a coleção 2 (Dexter)
-export const CURRENT_PROMO_COLLECTION_ID = 'jardim-secreto'
+// fallback de segurança — só usado se por algum motivo drawPackCards for
+// chamada sem promoCollectionId (não deve acontecer no fluxo normal, já
+// que unopenedPacks.ts sempre resolve a coleção atual via promoCollection.ts
+// antes de travar a compra)
+const FALLBACK_PROMO_COLLECTION_ID = 'jardim-secreto'
 
 function cardPoolForPack(packType: PackType, promoCollectionId?: string): CardDefinition[] {
   if (packType === 'promocional') {
-    const collectionId = promoCollectionId ?? CURRENT_PROMO_COLLECTION_ID
+    const collectionId = promoCollectionId ?? FALLBACK_PROMO_COLLECTION_ID
     return CARDS.filter((c) => c.collectionId === collectionId)
   }
   return CARDS

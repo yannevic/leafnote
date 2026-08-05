@@ -3,7 +3,6 @@ import { db } from './firebase'
 import { CARDS, CardDefinition } from './cards'
 import { grantCard } from './cardsInventory'
 import { spendCoins } from './personalCoin'
-import { CURRENT_PROMO_COLLECTION_ID } from './packs'
 import { ROTATING_SHOP_WEIGHTS, ROTATING_SHOP_ROTATION_DAYS } from './dropRates'
 
 const SLOTS = 3
@@ -25,10 +24,10 @@ function weightedShopRarity(): ShopRarity {
   return pool[pool.length - 1]
 }
 
+// sorteia entre TODAS as coleções cadastradas — a loja rotativa é
+// independente do sistema de pacote promocional
 function pickRandomCardIds(): string[] {
-  const eligible = CARDS.filter(
-    (c) => c.collectionId === CURRENT_PROMO_COLLECTION_ID && c.rarity !== 'comum'
-  )
+  const eligible = CARDS.filter((c) => c.rarity !== 'comum')
   const picked: string[] = []
   for (let i = 0; i < SLOTS; i++) {
     const rarity = weightedShopRarity()
@@ -46,7 +45,7 @@ export interface RotatingShopData {
 }
 
 export async function getRotatingShop(coupleId: string): Promise<RotatingShopData> {
-  const shopRef = ref(db, `couples/${coupleId}/cards/rotatingShop/${CURRENT_PROMO_COLLECTION_ID}`)
+  const shopRef = ref(db, `couples/${coupleId}/cards/rotatingShop/main`)
   const snap = await get(shopRef)
   const now = Date.now()
   const existing = snap.val() as RotatingShopData | null

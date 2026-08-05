@@ -2,18 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import { useCountdown, formatCountdown } from '../../hooks/useCountdown'
 import { Package, ZoomIn, HelpCircle } from 'lucide-react'
 import CardsGuideModal from './CardsGuideModal'
-import { CardDefinition, CARDS } from '../../lib/cards'
+import { CardDefinition, CARDS, COLLECTIONS } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { PackType, PACK_PRICES } from '../../lib/packs'
 import { buyPack } from '../../lib/unopenedPacks'
 import { buyFromRotatingShop, SHOP_PRICES } from '../../lib/rotatingShop'
 
 import { useRotatingShop } from '../../hooks/useRotatingShop'
+import { usePromoCollection } from '../../hooks/usePromoCollection'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
 
 import CardZoomModal from './CardZoomModal'
-import { PACK_ART } from '../../assets/cards/packs'
+import { PACK_ART, getPromoPackArt } from '../../assets/cards/packs'
 
 interface LojaTabProps {
   coupleId: string
@@ -41,12 +42,18 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
   const [toast, setToast] = useState<string | null>(null)
   const [shopRefresh, setShopRefresh] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
+  const [hoveredPack, setHoveredPack] = useState<PackType | null>(null)
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 2500)
   }
   const { data: shopData, loading: shopLoading } = useRotatingShop(coupleId, shopRefresh)
+  const { state: promoState } = usePromoCollection(coupleId)
+  const promoCountdown = useCountdown(promoState?.nextRotation ?? null)
+  const promoCollectionName = promoState?.current
+    ? COLLECTIONS[promoState.current as keyof typeof COLLECTIONS]?.name
+    : null
   const { coin } = usePersonalCoin(uid)
   const CoinIcon = coin ? COIN_ICONS[coin.icon] : Package
   const coinColor = coin?.color ?? '#8b6914'
@@ -152,70 +159,134 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
         >
           {(['comum', 'promocional'] as PackType[]).map((type) => {
             const theme = PACK_THEME[type]
+            const tooltipText =
+              type === 'comum'
+                ? Object.values(COLLECTIONS)
+                    .map((c) => c.name)
+                    .join(', ')
+                : (promoCollectionName ?? '...')
+            const packImage =
+              type === 'comum'
+                ? PACK_ART.comum
+                : promoState?.current
+                  ? getPromoPackArt(promoState.current)
+                  : null
             return (
-              <button
+              <div
                 key={type}
-                onClick={() => setConfirmPack(type)}
-                disabled={opening !== null}
+                onMouseEnter={() => setHoveredPack(type)}
+                onMouseLeave={() => setHoveredPack(null)}
                 style={{
+                  position: 'relative',
                   flex: '1 1 200px',
                   maxWidth: 260,
-                  border: 'none',
-                  borderRadius: 18,
-                  overflow: 'hidden',
-                  cursor: opening ? 'default' : 'pointer',
-                  background: '#fff',
-                  boxShadow: '0 6px 20px rgba(122,48,64,0.16)',
-                  fontFamily: 'Baloo 2',
-                  padding: 0,
-                  transition: 'transform 0.15s',
                 }}
               >
-                <div
+                {hoveredPack === type && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      marginBottom: 8,
+                      background: 'rgba(44,20,8,0.92)',
+                      color: '#fff',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: 'Baloo 2',
+                      padding: '8px 12px',
+                      borderRadius: 10,
+                      whiteSpace: 'nowrap',
+                      zIndex: 20,
+                      pointerEvents: 'none',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    pode conter: {tooltipText}
+                  </div>
+                )}
+                <button
+                  onClick={() => setConfirmPack(type)}
+                  disabled={opening !== null || !packImage}
                   style={{
-                    aspectRatio: '5 / 8',
-                    background: 'transparent',
+                    width: '100%',
+                    border: 'none',
+                    borderRadius: 18,
                     overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    cursor: opening ? 'default' : 'pointer',
+                    background: '#fff',
+                    boxShadow: '0 6px 20px rgba(122,48,64,0.16)',
+                    fontFamily: 'Baloo 2',
+                    padding: 0,
+                    transition: 'transform 0.15s',
                   }}
                 >
-                  <img
-                    src={PACK_ART[type]}
-                    alt={theme.label}
-                    style={{ width: '80%', height: '80%', objectFit: 'contain', display: 'block' }}
-                  />
-                </div>
-                <div
-                  style={{
-                    padding: '14px 12px 16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: theme.accent }}>
-                    {opening === type ? 'abrindo...' : theme.label}
+                  <div
+                    style={{
+                      aspectRatio: '5 / 8',
+                      background: 'transparent',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {packImage && (
+                      <img
+                        src={packImage}
+                        alt={theme.label}
+                        style={{
+                          width: '80%',
+                          height: '80%',
+                          objectFit: 'contain',
+                          display: 'block',
+                        }}
+                      />
+                    )}
                   </div>
                   <div
                     style={{
+                      padding: '14px 12px 16px',
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
-                      gap: 6,
-                      background: `${coinColor}1a`,
-                      color: coinColor,
-                      fontWeight: 800,
-                      fontSize: 13,
-                      padding: '6px 16px',
-                      borderRadius: 999,
+                      gap: 8,
                     }}
                   >
-                    <CoinIcon size={14} /> {PACK_PRICES[type]}
+                    <div style={{ fontSize: 14, fontWeight: 800, color: theme.accent }}>
+                      {opening === type ? 'abrindo...' : theme.label}
+                    </div>
+                    {type === 'promocional' && promoCountdown !== null && (
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: theme.accent,
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        troca em {formatCountdown(promoCountdown)}
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        background: `${coinColor}1a`,
+                        color: coinColor,
+                        fontWeight: 800,
+                        fontSize: 13,
+                        padding: '6px 16px',
+                        borderRadius: 999,
+                      }}
+                    >
+                      <CoinIcon size={14} /> {PACK_PRICES[type]}
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </div>
             )
           })}
         </div>
@@ -389,7 +460,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
 
       {zoomCard && <CardZoomModal card={zoomCard} onClose={() => setZoomCard(null)} />}
 
-      {showGuide && <CardsGuideModal onClose={() => setShowGuide(false)} />}
+      {showGuide && <CardsGuideModal coupleId={coupleId} onClose={() => setShowGuide(false)} />}
 
       {toast && (
         <div

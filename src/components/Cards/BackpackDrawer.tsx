@@ -4,6 +4,7 @@ import { PackType } from '../../lib/packs'
 import { openUnopenedPack } from '../../lib/unopenedPacks'
 import { useUnopenedPacks } from '../../hooks/useUnopenedPacks'
 import { usePendingCards } from '../../hooks/usePendingCards'
+import { useCardInventory } from '../../hooks/useCardInventory'
 import { CardDefinition, CARDS } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { PACK_ART } from '../../assets/cards/packs'
@@ -24,18 +25,28 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [openingId, setOpeningId] = useState<string | null>(null)
   const [result, setResult] = useState<CardDefinition[] | null>(null)
+  const [ownedBefore, setOwnedBefore] = useState<Record<string, number>>({})
 
   const { packs, loading: loadingPacks } = useUnopenedPacks(coupleId, uid)
   const { pending, loading: loadingPending } = usePendingCards(coupleId, uid)
+  const { inventory } = useCardInventory(coupleId, uid)
 
   const totalItems = packs.length + pending.length
 
   async function handleOpenPack(packId: string, type: PackType, collectionId?: string) {
     setOpeningId(packId)
+    // inventário ATUAL, no instante de abrir — como as cartas não vão
+    // mais pro inventário na abertura (ficam pendentes até arrastar),
+    // esse já é o "antes" real, sem precisar de snapshot
+    const snapshotBefore: Record<string, number> = {}
+    for (const collectionInventory of Object.values(inventory)) {
+      Object.assign(snapshotBefore, collectionInventory)
+    }
     const res = await openUnopenedPack(coupleId, uid, packId, type, collectionId)
     setOpeningId(null)
     setSelectedId(null)
     setResult(res.cards)
+    setOwnedBefore(snapshotBefore)
   }
 
   return (
@@ -267,7 +278,9 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
         </div>
       )}
 
-      {result && <PackOpenModal cards={result} ownedBefore={{}} onClose={() => setResult(null)} />}
+      {result && (
+        <PackOpenModal cards={result} ownedBefore={ownedBefore} onClose={() => setResult(null)} />
+      )}
     </>
   )
 }

@@ -1,6 +1,7 @@
 import { X, Package, Sparkles, Backpack, ShoppingBag, Repeat, Info } from 'lucide-react'
 import { RARITY_COLOR } from '../../lib/rarity'
-import { PACK_PRICES, CURRENT_PROMO_COLLECTION_ID } from '../../lib/packs'
+import { PACK_PRICES } from '../../lib/packs'
+import { usePromoCollection } from '../../hooks/usePromoCollection'
 import {
   PACK_ODDS,
   PITY_THRESHOLD,
@@ -11,6 +12,7 @@ import { SHOP_PRICES } from '../../lib/rotatingShop'
 import { COLLECTIONS } from '../../lib/cards'
 
 interface Props {
+  coupleId: string
   onClose: () => void
 }
 
@@ -93,9 +95,11 @@ const Row = ({
   </div>
 )
 
-export default function CardsGuideModal({ onClose }: Props) {
-  const currentPromoCollection =
-    COLLECTIONS[CURRENT_PROMO_COLLECTION_ID as keyof typeof COLLECTIONS]
+export default function CardsGuideModal({ coupleId, onClose }: Props) {
+  const { state: promoState } = usePromoCollection(coupleId)
+  const currentPromoCollection = promoState?.current
+    ? COLLECTIONS[promoState.current as keyof typeof COLLECTIONS]
+    : null
 
   return (
     <div
@@ -214,10 +218,13 @@ export default function CardsGuideModal({ onClose }: Props) {
             <div style={{ marginTop: 8, lineHeight: 1.6 }}>
               o pacote <b>promocional</b> é sempre da coleção "em cartaz" no momento em que você{' '}
               <b>compra</b> — hoje é{' '}
-              <b style={{ color: '#2D4A2D' }}>{currentPromoCollection?.name ?? 'jardim secreto'}</b>
-              . diferente do comum, ele não muda: se você comprar hoje e abrir daqui um mês, mesmo
-              que a coleção em cartaz já tenha trocado, o seu pacote continua sorteando só da
-              coleção de quando você comprou.
+              <b style={{ color: '#2D4A2D' }}>{currentPromoCollection?.name ?? 'carregando...'}</b>.
+              diferente do comum, ele não muda: se você comprar hoje e abrir daqui um mês, mesmo que
+              a coleção em cartaz já tenha trocado, o seu pacote continua sorteando só da coleção de
+              quando você comprou. a coleção em cartaz troca sozinha toda semana, aos domingos à
+              meia-noite (horário de Brasília) — sempre priorizando alguma coleção que ainda não
+              entrou em cartaz; quando todas já passaram por lá, intercala entre elas sem repetir a
+              mesma duas vezes seguidas.
             </div>
           </Section>
 

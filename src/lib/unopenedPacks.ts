@@ -1,13 +1,8 @@
 import { ref, push, remove, onValue, off } from 'firebase/database'
 import { db } from './firebase'
 import { spendCoins } from './personalCoin'
-import {
-  PackType,
-  PACK_PRICES,
-  CURRENT_PROMO_COLLECTION_ID,
-  drawPackCards,
-  PackResult,
-} from './packs'
+import { PackType, PACK_PRICES, drawPackCards, PackResult } from './packs'
+import { ensurePromoCollectionCurrent } from './promoCollection'
 import { addPendingCards } from './pendingCards'
 
 export interface UnopenedPack {
@@ -23,13 +18,21 @@ export async function buyPack(coupleId: string, uid: string, packType: PackType)
   const paid = await spendCoins(uid, price, `pacote ${packType}`)
   if (!paid) return false
 
+  // pro promocional, trava a coleção que está em cartaz AGORA (garante
+  // rotação em dia antes de travar) — se abrir o pacote depois de a
+  // rotação virar, continua sorteando da coleção que estava em cartaz na
+  // hora da compra
+  let collectionId: string | undefined
+  if (packType === 'promocional') {
+    const promoState = await ensurePromoCollectionCurrent(coupleId)
+    collectionId = promoState.current
+  }
+
   const packsRef = ref(db, `couples/${coupleId}/cards/unopenedPacks/${uid}`)
   await push(packsRef, {
     type: packType,
     boughtAt: Date.now(),
-    // trava a coleção no momento da compra, pra não mudar se
-    // CURRENT_PROMO_COLLECTION_ID trocar antes do pacote ser aberto
-    ...(packType === 'promocional' && { collectionId: CURRENT_PROMO_COLLECTION_ID }),
+    ...(collectionId && { collectionId }),
   })
   return true
 }

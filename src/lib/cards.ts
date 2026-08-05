@@ -1,5 +1,6 @@
 import { CardRarity } from './rarity'
 import { JARDIM_SECRETO_IMAGES } from '../assets/cards/jardim-secreto'
+import { DEXTER_IMAGES } from '../assets/cards/dexter'
 
 export interface CardDefinition {
   id: string
@@ -8,12 +9,18 @@ export interface CardDefinition {
   collectionId: string
   number: number
   image: string
+  secret?: boolean // carta bônus, não entra na numeração oficial da coleção — mas sorteia normal
 }
 
 export const COLLECTIONS = {
   'jardim-secreto': {
     id: 'jardim-secreto',
     name: 'Jardim Secreto',
+    total: 20,
+  },
+  'dexter-serie': {
+    id: 'dexter-serie',
+    name: 'Dexter: Dark Passenger',
     total: 20,
   },
 }
@@ -178,5 +185,176 @@ export const CARDS: CardDefinition[] = [
     collectionId: 'jardim-secreto',
     number: 20,
     image: JARDIM_SECRETO_IMAGES['jardim-secreto-lua'],
+  },
+
+  // ─── Dexter: Dark Passenger ───
+  {
+    id: 'blood-slide',
+    name: 'Blood Slide',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 1,
+    image: DEXTER_IMAGES['blood-slide'],
+  },
+  {
+    id: 'luvas-de-latex',
+    name: 'Luvas de Látex',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 2,
+    image: DEXTER_IMAGES['luvas-de-latex'],
+  },
+  {
+    id: 'harry-morgan',
+    name: 'Harry Morgan',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 3,
+    image: DEXTER_IMAGES['harry-morgan'],
+  },
+  {
+    id: 'seringa-m99',
+    name: 'Seringa M99',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 4,
+    image: DEXTER_IMAGES['seringa-m99'],
+  },
+  {
+    id: 'brian-moser',
+    name: 'Brian Moser',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 5,
+    image: DEXTER_IMAGES['brian-moser'],
+  },
+  {
+    id: 'donuts',
+    name: 'Donuts',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 6,
+    image: DEXTER_IMAGES['donuts'],
+  },
+  {
+    id: 'miguel-prado',
+    name: 'Miguel Prado',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 7,
+    image: DEXTER_IMAGES['miguel-prado'],
+  },
+  {
+    id: 'gota-de-sangue',
+    name: 'Gota de Sangue',
+    rarity: 'comum',
+    collectionId: 'dexter-serie',
+    number: 8,
+    image: DEXTER_IMAGES['gota-de-sangue'],
+  },
+  {
+    id: 'unhas-coloridas',
+    name: 'Unhas Coloridas',
+    rarity: 'incomum',
+    collectionId: 'dexter-serie',
+    number: 9,
+    image: DEXTER_IMAGES['unhas-coloridas'],
+  },
+  {
+    id: 'trinity-killer',
+    name: 'Trinity Killer',
+    rarity: 'incomum',
+    collectionId: 'dexter-serie',
+    number: 10,
+    image: DEXTER_IMAGES['trinity-killer'],
+  },
+  {
+    id: 'slice-of-life',
+    name: 'Slice of Life',
+    rarity: 'incomum',
+    collectionId: 'dexter-serie',
+    number: 11,
+    image: DEXTER_IMAGES['slice-of-life'],
+  },
+  {
+    id: 'kill-room',
+    name: 'Kill Room',
+    rarity: 'incomum',
+    collectionId: 'dexter-serie',
+    number: 12,
+    image: DEXTER_IMAGES['kill-room'],
+  },
+  {
+    id: 'colecao-de-blood-slides',
+    name: 'Coleção de Blood Slides',
+    rarity: 'incomum',
+    collectionId: 'dexter-serie',
+    number: 13,
+    image: DEXTER_IMAGES['colecao-de-blood-slides'],
+  },
+  {
+    id: 'nascidos-em-sangue',
+    name: 'Nascidos em Sangue',
+    rarity: 'incomum',
+    collectionId: 'dexter-serie',
+    number: 14,
+    image: DEXTER_IMAGES['nascidos-em-sangue'],
+  },
+  {
+    id: 'dexter-morgan',
+    name: 'Dexter Morgan',
+    rarity: 'rara',
+    collectionId: 'dexter-serie',
+    number: 15,
+    image: DEXTER_IMAGES['dexter-morgan'],
+  },
+  {
+    id: 'rita-morgan',
+    name: 'Rita Morgan',
+    rarity: 'rara',
+    collectionId: 'dexter-serie',
+    number: 16,
+    image: DEXTER_IMAGES['rita-morgan'],
+  },
+  {
+    id: 'debra-morgan',
+    name: 'Debra Morgan',
+    rarity: 'rara',
+    collectionId: 'dexter-serie',
+    number: 17,
+    image: DEXTER_IMAGES['debra-morgan'],
+  },
+  {
+    id: 'lila-west',
+    name: 'Lila West',
+    rarity: 'rara',
+    collectionId: 'dexter-serie',
+    number: 18,
+    image: DEXTER_IMAGES['lila-west'],
+  },
+  {
+    id: 'codigo-de-harry',
+    name: 'Código de Harry',
+    rarity: 'epica',
+    collectionId: 'dexter-serie',
+    number: 19,
+    image: DEXTER_IMAGES['codigo-de-harry'],
+  },
+  {
+    id: 'banho-de-sangue',
+    name: 'Banho de Sangue',
+    rarity: 'epica',
+    collectionId: 'dexter-serie',
+    number: 20,
+    image: DEXTER_IMAGES['banho-de-sangue'],
+  },
+  {
+    id: 'sargento-doakes',
+    name: 'Sargento Doakes',
+    rarity: 'rara',
+    collectionId: 'dexter-serie',
+    number: 21,
+    image: DEXTER_IMAGES['sargento-doakes'],
+    secret: true,
   },
 ]
