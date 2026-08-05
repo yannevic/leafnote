@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.53': [
+    "🎴 adiciona segunda coleção de cartinhas (Dexter: Dark Passenger)",
+    "🎴 coleção agora mostra as duas empilhadas, cada uma expansível",
+    "🎴 pacote promocional troca de coleção sozinho todo domingo à meia-noite",
+    "🎴 loja rotativa agora sorteia cartas de todas as coleções juntas",
+  ],
+
   '3.0.52': [
     "🚨 corrige calendário de seleção de data que aparecia cortado ou escondido ao editar a streak ou a data de um filme assistido",
     "🚨 corrige cor de texto da flor épica",
