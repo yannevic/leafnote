@@ -24,7 +24,11 @@ function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
     coupleId,
     user.uid
   )
-  const { partnerUid, myPresence, partnerPresence } = usePresence(user.uid, user.displayName ?? '')
+  const { partnerUid, myPresence, partnerPresence } = usePresence(
+    coupleId,
+    user.uid,
+    user.displayName ?? ''
+  )
   const myNick = myPresence?.displayName ?? ''
   const partnerNick = partnerPresence?.displayName ?? ''
 
