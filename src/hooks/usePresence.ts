@@ -3,8 +3,9 @@ import { ref, onValue, off } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { PresenceData, publishPresence } from '../lib/presence'
 
-export function usePresence(uid: string, displayName: string) {
+export function usePresence(coupleId: string, uid: string, displayName: string) {
   const [allPresence, setAllPresence] = useState<Record<string, PresenceData>>({})
+  const [partnerUid, setPartnerUid] = useState('')
 
   useEffect(() => {
     if (!uid || !displayName) return
@@ -15,17 +16,28 @@ export function usePresence(uid: string, displayName: string) {
 
   useEffect(() => {
     const presRef = ref(db, 'presence')
-    onValue(presRef, (snap) => {
+    const handler = onValue(presRef, (snap) => {
       setAllPresence((snap.val() as Record<string, PresenceData>) ?? {})
     })
-    return () => off(presRef, 'value')
+    return () => off(presRef, 'value', handler)
   }, [])
 
-  const myPresence = allPresence[uid] ?? null
+  // ⚠️ o parceiro é SEMPRE determinado pelos membros reais do casal
+  // (couples/{coupleId}/meta/members) — nunca "qualquer outro uid online",
+  // já que o nó presence é global e pode conter outros casais/contas de teste
+  useEffect(() => {
+    if (!coupleId) return
+    const membersRef = ref(db, `couples/${coupleId}/meta/members`)
+    const handler = onValue(membersRef, (snap) => {
+      const members = (snap.val() as Record<string, boolean>) ?? {}
+      const otherUid = Object.keys(members).find((id) => id !== uid) ?? ''
+      setPartnerUid(otherUid)
+    })
+    return () => off(membersRef, 'value', handler)
+  }, [coupleId, uid])
 
-  const partnerEntry = Object.entries(allPresence).find(([id]) => id !== uid)
-  const partnerUid = partnerEntry ? partnerEntry[0] : ''
-  const partnerPresence = partnerEntry ? partnerEntry[1] : null
+  const myPresence = allPresence[uid] ?? null
+  const partnerPresence = partnerUid ? (allPresence[partnerUid] ?? null) : null
 
   return { myPresence, partnerPresence, partnerUid }
 }

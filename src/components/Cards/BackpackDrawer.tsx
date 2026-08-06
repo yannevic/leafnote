@@ -7,7 +7,8 @@ import { usePendingCards } from '../../hooks/usePendingCards'
 import { useCardInventory } from '../../hooks/useCardInventory'
 import { CardDefinition, CARDS } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
-import { PACK_ART } from '../../assets/cards/packs'
+import { PACK_ART, getPromoPackArt } from '../../assets/cards/packs'
+import { Package } from 'lucide-react'
 import PackOpenModal from './PackOpenModal'
 
 interface BackpackDrawerProps {
@@ -235,11 +236,23 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                     onClick={() => setSelectedId(isSelected ? null : pack.id)}
                     style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
                   >
-                    <img
-                      src={PACK_ART[pack.type]}
-                      alt={PACK_LABEL[pack.type]}
-                      style={{ width: 32, height: 32, objectFit: 'contain' }}
-                    />
+                    {(() => {
+                      const art =
+                        pack.type === 'comum'
+                          ? PACK_ART.comum
+                          : pack.collectionId
+                            ? getPromoPackArt(pack.collectionId)
+                            : undefined
+                      return art ? (
+                        <img
+                          src={art}
+                          alt={PACK_LABEL[pack.type]}
+                          style={{ width: 32, height: 32, objectFit: 'contain' }}
+                        />
+                      ) : (
+                        <Package size={26} color="#8b6914" />
+                      )
+                    })()}
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#3d1a10' }}>
                       {PACK_LABEL[pack.type]}
                     </span>

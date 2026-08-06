@@ -205,7 +205,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
-  const { myPresence, partnerPresence, partnerUid } = usePresence(uid, displayName)
+  const { myPresence, partnerPresence, partnerUid } = usePresence(cid, uid, displayName)
   useNotifications(uid, partnerUid, partnerPresence?.displayName ?? '', cid)
   const otherName = partnerPresence?.displayName ?? '...'
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
