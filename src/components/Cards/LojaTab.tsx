@@ -58,6 +58,14 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
   const CoinIcon = coin ? COIN_ICONS[coin.icon] : Package
   const coinColor = coin?.color ?? '#8b6914'
 
+  function packImageFor(type: PackType) {
+    return type === 'comum'
+      ? PACK_ART.comum
+      : promoState?.current
+        ? getPromoPackArt(promoState.current)
+        : null
+  }
+
   async function handleConfirmPurchase() {
     if (!confirmPack) return
     const type = confirmPack
@@ -116,6 +124,57 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
         position: 'relative',
       }}
     >
+      <style>{`
+        @keyframes lojaShineSweep {
+          0% { transform: translateX(-130%) skewX(-20deg); }
+          100% { transform: translateX(230%) skewX(-20deg); }
+        }
+        @keyframes modalPopIn {
+          0% { opacity: 0; transform: scale(0.82) translateY(12px); }
+          55% { opacity: 1; transform: scale(1.04) translateY(-3px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes modalBackdropIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .pack-buy-btn {
+          transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s;
+        }
+        .pack-buy-btn:hover:not(:disabled) { transform: translateY(-4px) scale(1.035); }
+        .pack-buy-btn:active:not(:disabled) { transform: translateY(-1px) scale(0.98); }
+        .pack-shine {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 40%;
+          height: 100%;
+          background: linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent);
+          animation: lojaShineSweep 3.2s ease-in-out infinite;
+          pointer-events: none;
+        }
+        .confirm-btn-anim {
+          transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .confirm-btn-anim:hover { transform: scale(1.05); }
+        .confirm-btn-anim:active { transform: scale(0.95); }
+        @keyframes lojaCardGlow {
+          0%, 100% { box-shadow: 0 6px 20px rgba(122,48,64,0.12); }
+          50% { box-shadow: 0 6px 20px rgba(122,48,64,0.12), 0 0 18px 3px var(--glow-color, rgba(0,0,0,0)); }
+        }
+        .shop-card {
+          animation: lojaCardGlow 2.6s ease-in-out infinite;
+          transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .shop-card:hover { transform: translateY(-4px) scale(1.03); }
+        @keyframes modalImagePop {
+          0% { opacity: 0; transform: scale(0.85); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .confirm-modal-image {
+          animation: modalImagePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both;
+        }
+      `}</style>
       <button
         onClick={() => setShowGuide(true)}
         style={{
@@ -165,12 +224,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
                     .map((c) => c.name)
                     .join(', ')
                 : (promoCollectionName ?? '...')
-            const packImage =
-              type === 'comum'
-                ? PACK_ART.comum
-                : promoState?.current
-                  ? getPromoPackArt(promoState.current)
-                  : null
+            const packImage = packImageFor(type)
             return (
               <div
                 key={type}
@@ -209,6 +263,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
                 <button
                   onClick={() => setConfirmPack(type)}
                   disabled={opening !== null || !packImage}
+                  className="pack-buy-btn"
                   style={{
                     width: '100%',
                     border: 'none',
@@ -219,9 +274,10 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
                     boxShadow: '0 6px 20px rgba(122,48,64,0.16)',
                     fontFamily: 'Baloo 2',
                     padding: 0,
-                    transition: 'transform 0.15s',
+                    position: 'relative',
                   }}
                 >
+                  {packImage && <div className="pack-shine" />}
                   <div
                     style={{
                       aspectRatio: '5 / 8',
@@ -335,15 +391,19 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
               return (
                 <div
                   key={card.id}
-                  style={{
-                    flex: '1 1 180px',
-                    maxWidth: 220,
-                    borderRadius: 16,
-                    overflow: 'hidden',
-                    background: '#fff',
-                    border: `2px solid ${color}`,
-                    boxShadow: '0 6px 20px rgba(122,48,64,0.12)',
-                  }}
+                  className="shop-card"
+                  style={
+                    {
+                      flex: '1 1 180px',
+                      maxWidth: 220,
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                      background: '#fff',
+                      border: `2px solid ${color}`,
+                      boxShadow: '0 6px 20px rgba(122,48,64,0.12)',
+                      '--glow-color': `${color}88`,
+                    } as React.CSSProperties
+                  }
                 >
                   <div
                     onClick={() => setZoomCard(card)}
@@ -367,6 +427,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
                         display: 'block',
                       }}
                     />
+                    <div className="pack-shine" />
                     <div
                       className="zoom-hint"
                       style={{
@@ -408,6 +469,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
                     </div>
                     <button
                       onClick={() => setConfirmShopCard(card)}
+                      className="confirm-btn-anim"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -440,8 +502,11 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
         <ConfirmPurchaseModal
           label={PACK_THEME[confirmPack].label}
           price={PACK_PRICES[confirmPack]}
+          image={packImageFor(confirmPack) ?? ''}
+          imageAspect="5 / 8"
           CoinIcon={CoinIcon}
           coinColor={coinColor}
+          accentColor={PACK_THEME[confirmPack].accent}
           onConfirm={handleConfirmPurchase}
           onCancel={() => setConfirmPack(null)}
         />
@@ -451,8 +516,11 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
         <ConfirmPurchaseModal
           label={confirmShopCard.name}
           price={SHOP_PRICES[confirmShopCard.rarity as 'incomum' | 'rara' | 'epica']}
+          image={confirmShopCard.image}
+          imageAspect="5 / 7"
           CoinIcon={CoinIcon}
           coinColor={coinColor}
+          accentColor={RARITY_COLOR[confirmShopCard.rarity]}
           onConfirm={handleConfirmShopPurchase}
           onCancel={() => setConfirmShopCard(null)}
         />
@@ -512,15 +580,21 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function ConfirmPurchaseModal({
   label,
   price,
+  image,
+  imageAspect = '5 / 7',
   CoinIcon,
   coinColor,
+  accentColor,
   onConfirm,
   onCancel,
 }: {
   label: string
   price: number
+  image: string
+  imageAspect?: string
   CoinIcon: React.ComponentType<{ size?: number; color?: string }>
   coinColor: string
+  accentColor: string
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -535,6 +609,7 @@ function ConfirmPurchaseModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        animation: 'modalBackdropIn 0.2s ease-out',
       }}
       onClick={onCancel}
     >
@@ -542,14 +617,34 @@ function ConfirmPurchaseModal({
         onClick={(e) => e.stopPropagation()}
         style={{
           background: 'linear-gradient(160deg, #FBEAF0 0%, #F5ECD7 100%)',
-          border: '1.5px solid rgba(212,160,176,0.5)',
+          border: `1.5px solid ${accentColor}66`,
           borderRadius: 18,
           padding: '24px 26px',
-          width: 280,
+          width: 300,
           fontFamily: 'Baloo 2, sans-serif',
           textAlign: 'center',
+          animation: 'modalPopIn 0.38s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          boxShadow: `0 12px 40px rgba(122,48,64,0.25), 0 0 0 4px ${accentColor}22`,
         }}
       >
+        <div
+          className="confirm-modal-image"
+          style={{
+            width: 150,
+            aspectRatio: imageAspect,
+            margin: '0 auto 16px',
+            borderRadius: 14,
+            overflow: 'hidden',
+            border: `2.5px solid ${accentColor}`,
+            boxShadow: `0 8px 24px ${accentColor}55`,
+          }}
+        >
+          <img
+            src={image}
+            alt={label}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        </div>
         <div style={{ fontSize: 14, fontWeight: 800, color: '#3d1a10', marginBottom: 8 }}>
           comprar {label}?
         </div>
@@ -570,6 +665,7 @@ function ConfirmPurchaseModal({
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={onCancel}
+            className="confirm-btn-anim"
             style={{
               flex: 1,
               padding: '9px 0',
@@ -587,6 +683,7 @@ function ConfirmPurchaseModal({
           </button>
           <button
             onClick={onConfirm}
+            className="confirm-btn-anim"
             style={{
               flex: 1,
               padding: '9px 0',

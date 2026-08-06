@@ -9,7 +9,7 @@ interface PackOpenModalProps {
   onClose: () => void
 }
 
-export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenModalProps) {
+export default function PackOpenModal({ cards, onClose }: PackOpenModalProps) {
   const [revealed, setRevealed] = useState<boolean[]>(cards.map(() => false))
   const [hovered, setHovered] = useState<number | null>(null)
   const allRevealed = revealed.every(Boolean)
@@ -54,10 +54,11 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
       <div
         style={{
           display: 'flex',
-          gap: 18,
+          gap: 20,
           flexWrap: 'wrap',
           justifyContent: 'center',
-          maxWidth: 900,
+          maxWidth: 1150,
+          padding: '0 20px',
         }}
       >
         {cards.map((card, i) => {
@@ -65,7 +66,6 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
           const isHigh = card.rarity === 'rara' || card.rarity === 'epica'
           const isHovered = hovered === i
           const isRevealed = revealed[i]
-          const wasNew = (ownedBefore[card.id] ?? 0) === 0
 
           return (
             <div
@@ -74,8 +74,8 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
               onMouseLeave={() => setHovered(null)}
               onClick={() => reveal(i)}
               style={{
-                width: 130,
-                height: 182,
+                width: 210,
+                height: 294,
                 perspective: 800,
                 cursor: isRevealed ? 'default' : 'pointer',
                 animation: isRevealed ? 'none' : 'cardFloat 2.6s ease-in-out infinite',
@@ -124,7 +124,7 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                   )}
                 </div>
 
-                {/* frente */}
+                {/* frente — só a imagem, sem texto nem badges por cima */}
                 <div
                   style={{
                     position: 'absolute',
@@ -141,44 +141,15 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                   <img
                     src={card.image}
                     alt={card.name}
-                    style={{ width: '100%', height: 130, objectFit: 'cover', display: 'block' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
-                  <div
-                    style={{
-                      padding: '6px 8px',
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color,
-                      textAlign: 'center',
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {card.name}
-                  </div>
-                  {wasNew && isRevealed && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 4,
-                        left: 4,
-                        background: '#4A7A4A',
-                        color: '#fff',
-                        fontSize: 8,
-                        fontWeight: 800,
-                        borderRadius: 6,
-                        padding: '2px 5px',
-                      }}
-                    >
-                      nova!
-                    </div>
-                  )}
                   {isRevealed && isHigh && (
                     <div
                       style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
-                        width: 40,
+                        width: 60,
                         height: '100%',
                         background:
                           'linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.85) 50%, transparent 100%)',

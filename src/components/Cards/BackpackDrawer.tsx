@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Backpack, X, PackageOpen } from 'lucide-react'
+import { Backpack, X, PackageOpen, ZoomIn, Package } from 'lucide-react'
 import { PackType } from '../../lib/packs'
 import { openUnopenedPack } from '../../lib/unopenedPacks'
 import { useUnopenedPacks } from '../../hooks/useUnopenedPacks'
@@ -8,8 +8,8 @@ import { useCardInventory } from '../../hooks/useCardInventory'
 import { CardDefinition, CARDS } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { PACK_ART, getPromoPackArt } from '../../assets/cards/packs'
-import { Package } from 'lucide-react'
 import PackOpenModal from './PackOpenModal'
+import CardZoomModal from './CardZoomModal'
 
 interface BackpackDrawerProps {
   coupleId: string
@@ -27,6 +27,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
   const [openingId, setOpeningId] = useState<string | null>(null)
   const [result, setResult] = useState<CardDefinition[] | null>(null)
   const [ownedBefore, setOwnedBefore] = useState<Record<string, number>>({})
+  const [zoomCard, setZoomCard] = useState<CardDefinition | null>(null)
 
   const { packs, loading: loadingPacks } = useUnopenedPacks(coupleId, uid)
   const { pending, loading: loadingPending } = usePendingCards(coupleId, uid)
@@ -36,6 +37,9 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
 
   async function handleOpenPack(packId: string, type: PackType, collectionId?: string) {
     setOpeningId(packId)
+    setOpen(false) // fecha o painel da mochila já aqui, pra evitar ver as
+    // cartas soltas (pendingCards atualiza em tempo real assim que o
+    // Firebase grava, antes do PackOpenModal terminar a animação)
     // inventário ATUAL, no instante de abrir — como as cartas não vão
     // mais pro inventário na abertura (ficam pendentes até arrastar),
     // esse já é o "antes" real, sem precisar de snapshot
@@ -105,8 +109,8 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
             right: 20,
             bottom: 82,
             zIndex: 400,
-            width: 280,
-            maxHeight: 420,
+            width: 340,
+            maxHeight: 480,
             overflowY: 'auto',
             background: 'linear-gradient(160deg, #FBEAF0 0%, #F5ECD7 100%)',
             border: '1.5px solid rgba(212,160,176,0.5)',
@@ -147,7 +151,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
               >
                 cartas soltas — arraste até a coleção
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 {pending.map((p) => {
                   const card = CARDS.find((c) => c.id === p.cardId)
                   if (!card) return null
@@ -168,9 +172,10 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                       }}
                       title={card.name}
                       style={{
-                        width: 54,
-                        height: 76,
-                        borderRadius: 8,
+                        position: 'relative',
+                        width: 84,
+                        height: 118,
+                        borderRadius: 10,
                         overflow: 'hidden',
                         border: `2px solid ${color}`,
                         cursor: 'grab',
@@ -188,6 +193,29 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                           display: 'block',
                         }}
                       />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setZoomCard(card)
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          width: 22,
+                          height: 22,
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: 'rgba(0,0,0,0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          padding: 0,
+                        }}
+                      >
+                        <ZoomIn size={12} color="#fff" strokeWidth={2.5} />
+                      </button>
                     </div>
                   )
                 })}
@@ -294,6 +322,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
       {result && (
         <PackOpenModal cards={result} ownedBefore={ownedBefore} onClose={() => setResult(null)} />
       )}
+      {zoomCard && <CardZoomModal card={zoomCard} onClose={() => setZoomCard(null)} />}
     </>
   )
 }
