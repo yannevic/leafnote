@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Backpack, X, PackageOpen, ZoomIn, Package } from 'lucide-react'
 import { PackType } from '../../lib/packs'
 import { openUnopenedPack } from '../../lib/unopenedPacks'
@@ -32,6 +32,21 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
   const { packs, loading: loadingPacks } = useUnopenedPacks(coupleId, uid)
   const { pending, loading: loadingPending } = usePendingCards(coupleId, uid)
   const { inventory } = useCardInventory(coupleId, uid)
+
+  // agrupa as pendentes iguais (mesmo cardId) só pra exibição empilhada —
+  // cada instância continua existindo separada no Firebase, isso é só visual
+  const groupedPending = useMemo(() => {
+    const order: string[] = []
+    const map = new Map<string, typeof pending>()
+    for (const p of pending) {
+      if (!map.has(p.cardId)) {
+        map.set(p.cardId, [])
+        order.push(p.cardId)
+      }
+      map.get(p.cardId)!.push(p)
+    }
+    return order.map((cardId) => map.get(cardId)!)
+  }, [pending])
 
   const totalItems = packs.length + pending.length
 
@@ -152,70 +167,137 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                 cartas soltas — arraste até a coleção
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {pending.map((p) => {
-                  const card = CARDS.find((c) => c.id === p.cardId)
+                {groupedPending.map((group) => {
+                  const top = group[0]
+                  const stackCount = group.length
+                  const card = CARDS.find((c) => c.id === top.cardId)
                   if (!card) return null
                   const color = RARITY_COLOR[card.rarity]
                   return (
                     <div
-                      key={p.id}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData(
-                          'application/json',
-                          JSON.stringify({
-                            instanceId: p.id,
-                            cardId: p.cardId,
-                            collectionId: p.collectionId,
-                          })
-                        )
-                      }}
-                      title={card.name}
-                      style={{
-                        position: 'relative',
-                        width: 84,
-                        height: 118,
-                        borderRadius: 10,
-                        overflow: 'hidden',
-                        border: `2px solid ${color}`,
-                        cursor: 'grab',
-                        background: '#fff',
-                        flexShrink: 0,
-                      }}
+                      key={top.id}
+                      style={{ position: 'relative', width: 84, height: 118, flexShrink: 0 }}
                     >
-                      <img
-                        src={card.image}
-                        alt={card.name}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block',
+                      {stackCount > 1 && (
+                        <>
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 6,
+                              left: 6,
+                              width: 84,
+                              height: 118,
+                              borderRadius: 10,
+                              background: '#e8d9c4',
+                              border: `2px solid ${color}55`,
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 3,
+                              left: 3,
+                              width: 84,
+                              height: 118,
+                              borderRadius: 10,
+                              background: '#f5ecd7',
+                              border: `2px solid ${color}88`,
+                            }}
+                          />
+                        </>
+                      )}
+                      <div
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(
+                            'application/json',
+                            JSON.stringify({
+                              instanceId: top.id,
+                              cardId: top.cardId,
+                              collectionId: top.collectionId,
+                            })
+                          )
                         }}
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setZoomCard(card)
-                        }}
+                        title={stackCount > 1 ? `${card.name} (${stackCount})` : card.name}
                         style={{
                           position: 'absolute',
-                          top: 4,
-                          right: 4,
-                          width: 22,
-                          height: 22,
-                          borderRadius: '50%',
-                          border: 'none',
-                          background: 'rgba(0,0,0,0.5)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          padding: 0,
+                          top: 0,
+                          left: 0,
+                          width: 84,
+                          height: 118,
+                          borderRadius: 10,
+                          overflow: 'hidden',
+                          border: `2px solid ${color}`,
+                          cursor: 'grab',
+                          background: '#fff',
                         }}
                       >
-                        <ZoomIn size={12} color="#fff" strokeWidth={2.5} />
-                      </button>
+                        <img
+                          src={card.image}
+                          alt={card.name}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                          }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setZoomCard(card)
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            width: 22,
+                            height: 22,
+                            borderRadius: '50%',
+                            border: 'none',
+                            background: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            padding: 0,
+                          }}
+                        >
+                          <ZoomIn size={12} color="#fff" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                      {stackCount > 1 && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: -6,
+                            right: -6,
+                            minWidth: 22,
+                            height: 22,
+                            padding: '0 5px',
+                            borderRadius: 999,
+                            background: '#c87090',
+                            border: '2px solid #fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 2,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#fff',
+                              fontSize: 11,
+                              fontWeight: 800,
+                              fontFamily: 'Baloo 2',
+                              lineHeight: 1,
+                            }}
+                          >
+                            {stackCount}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )
                 })}

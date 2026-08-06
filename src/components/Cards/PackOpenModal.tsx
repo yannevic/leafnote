@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import { CardDefinition } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
 import versoCard from '../../assets/cards/jardim-secreto/verso-card.png'
@@ -9,7 +10,7 @@ interface PackOpenModalProps {
   onClose: () => void
 }
 
-export default function PackOpenModal({ cards, onClose }: PackOpenModalProps) {
+export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenModalProps) {
   const [revealed, setRevealed] = useState<boolean[]>(cards.map(() => false))
   const [hovered, setHovered] = useState<number | null>(null)
   const allRevealed = revealed.every(Boolean)
@@ -49,15 +50,19 @@ export default function PackOpenModal({ cards, onClose }: PackOpenModalProps) {
           60% { opacity: 1; }
           100% { transform: translateX(120%) rotate(20deg); opacity: 0; }
         }
+        @keyframes newBadgePop {
+          0% { transform: scale(0); opacity: 0; }
+          70% { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
       `}</style>
 
       <div
         style={{
           display: 'flex',
           gap: 20,
-          flexWrap: 'wrap',
+          flexWrap: 'nowrap',
           justifyContent: 'center',
-          maxWidth: 1150,
           padding: '0 20px',
         }}
       >
@@ -66,6 +71,7 @@ export default function PackOpenModal({ cards, onClose }: PackOpenModalProps) {
           const isHigh = card.rarity === 'rara' || card.rarity === 'epica'
           const isHovered = hovered === i
           const isRevealed = revealed[i]
+          const isNew = !ownedBefore[card.id]
 
           return (
             <div
@@ -157,6 +163,37 @@ export default function PackOpenModal({ cards, onClose }: PackOpenModalProps) {
                         pointerEvents: 'none',
                       }}
                     />
+                  )}
+
+                  {isRevealed && isNew && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '3px 9px 3px 7px',
+                        borderRadius: 999,
+                        background: '#4A7A4A',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                        animation: 'newBadgePop 0.4s ease-out 0.55s backwards',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <Sparkles size={11} color="#fff" />
+                      <span
+                        style={{
+                          color: '#fff',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          fontFamily: 'Baloo 2',
+                        }}
+                      >
+                        nova
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
