@@ -2,6 +2,18 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.57': [
+    "🎴 adiciona segunda coleção de cartinhas (Dexter: Dark Passenger)",
+    "🎴 coleção agora mostra as duas empilhadas, cada uma expansível",
+    "🎴 pacote promocional troca de coleção sozinho todo domingo à meia-noite",
+    "🎴 loja rotativa agora sorteia cartas de todas as coleções juntas",
+    "🐛 corrige bug em que moedas de venda de flor/semente podiam creditar só quem vendeu, sem dividir com o parceiro — causado por uma falha na identificação do parceiro quando a presença dele não estava sincronizada no momento da venda",
+    "🎨 confirmação de compra da loja de cartinhas mais bonita (animação, cor por item, imagem do produto); pacotes e loja rotativa com novos efeitos visuais",
+    "✨ Pacote: as 5 cartas agora abrem sempre em uma única linha (antes quebrava 4+1)",
+    "✨ Pacote: cartas viradas que você não tinha antes ganham selo \"✨ nova\"",
+    "✨ Mochila: cartas soltas repetidas (mesma carta) empilham num card só, com bolinha numerada mostrando a quantidade",
+  ],
+
   '3.0.56': [
     "🎴 adiciona segunda coleção de cartinhas (Dexter: Dark Passenger)",
     "🎴 coleção agora mostra as duas empilhadas, cada uma expansível",
