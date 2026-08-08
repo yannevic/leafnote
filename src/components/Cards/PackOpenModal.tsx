@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Repeat } from 'lucide-react'
 import { CardDefinition } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
 import versoCard from '../../assets/cards/jardim-secreto/verso-card.png'
@@ -71,7 +71,10 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
           const isHigh = card.rarity === 'rara' || card.rarity === 'epica'
           const isHovered = hovered === i
           const isRevealed = revealed[i]
-          const isNew = !ownedBefore[card.id]
+          const alreadyOwnedBefore = !!ownedBefore[card.id]
+          const duplicateInPack = cards.slice(0, i).some((c) => c.id === card.id)
+          const isRepeated = alreadyOwnedBefore || duplicateInPack
+          const isNew = !isRepeated
 
           return (
             <div
@@ -192,6 +195,37 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                         }}
                       >
                         nova
+                      </span>
+                    </div>
+                  )}
+
+                  {isRevealed && isRepeated && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '3px 9px 3px 7px',
+                        borderRadius: 999,
+                        background: '#8B6914',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                        animation: 'newBadgePop 0.4s ease-out 0.55s backwards',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <Repeat size={11} color="#fff" />
+                      <span
+                        style={{
+                          color: '#fff',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          fontFamily: 'Baloo 2',
+                        }}
+                      >
+                        repetida
                       </span>
                     </div>
                   )}

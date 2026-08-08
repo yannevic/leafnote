@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStreak } from '../hooks/useStreak'
 import { formatMilestoneDays } from '../lib/streak'
 import { useCoupleId } from '../contexts/CoupleContext'
+import { STREAK_MILESTONE_REWARD, STREAK_CYCLE_BONUS } from '../lib/economyConfig'
 import {
   Bird,
   Lock,
@@ -17,6 +18,8 @@ import {
   Shuffle,
   Zap,
   Clock,
+  Coins,
+  Package,
 } from 'lucide-react'
 import DatePicker from './DatePicker'
 
@@ -63,6 +66,8 @@ export default function StreakCounter({
     requestSorteo,
     confirmSorteo,
     panicSorteo,
+    justClaimed,
+    clearJustClaimed,
   } = useStreak(coupleId ?? '', uid, nick)
 
   const [showPanel, setShowPanel] = useState(false)
@@ -70,6 +75,12 @@ export default function StreakCounter({
   const [showConfirm, setShowConfirm] = useState(false)
   const [dateInput, setDateInput] = useState('')
   const [showMilestone, setShowMilestone] = useState(false)
+
+  useEffect(() => {
+    if (!justClaimed) return
+    const timer = setTimeout(() => clearJustClaimed(), 3200)
+    return () => clearTimeout(timer)
+  }, [justClaimed])
 
   const milestoneDay = getCurrentMilestone(days, currentMilestones)
   const nextMilestoneDay = getNextMilestone(days)
@@ -1033,8 +1044,8 @@ export default function StreakCounter({
                   style={{ flexShrink: 0, marginTop: 2 }}
                 />
                 {milestoneDay! % 28 === 0
-                  ? `${weeklyChallengeName ? weeklyChallengeName + ' — e uma' : 'Uma'} semente épica foi adicionada ao jardim de vocês!`
-                  : (weeklyChallengeName ?? 'meta da semana sorteada!')}
+                  ? `${weeklyChallengeName ? weeklyChallengeName + ' — e uma' : 'Uma'} semente épica foi adicionada ao jardim de vocês! Marca o check pra receber ${STREAK_MILESTONE_REWARD + STREAK_CYCLE_BONUS} moedas e 1 pacote comum de cartas pra cada um.`
+                  : `${weeklyChallengeName ?? 'meta da semana sorteada!'} Marca o check pra receber ${STREAK_MILESTONE_REWARD} moedas pra cada um.`}
               </div>
               <button
                 onClick={() => setShowMilestone(false)}
@@ -1058,6 +1069,58 @@ export default function StreakCounter({
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* ── Toast: recompensa recebida ── */}
+      {justClaimed && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 96,
+            left: 14,
+            zIndex: 310,
+            background:
+              'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
+            border: '1.5px solid rgba(232,160,176,0.5)',
+            borderRadius: 16,
+            boxShadow: '0 6px 30px rgba(200,120,140,0.25)',
+            padding: '12px 16px',
+            fontFamily: 'Baloo 2, sans-serif',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            minWidth: 200,
+            animation: 'streakToastIn 0.35s ease',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              color: '#3d1a10',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Coins size={13} strokeWidth={2} color="rgba(122,48,64,0.7)" />+{justClaimed.amount}{' '}
+            moedas pra cada um!
+          </div>
+          {justClaimed.gotPack && (
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                color: '#3d1a10',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Package size={13} strokeWidth={2} color="rgba(122,48,64,0.7)" />
+              +1 pacote comum pra cada um!
+            </div>
+          )}
         </div>
       )}
     </>

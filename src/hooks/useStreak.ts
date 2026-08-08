@@ -6,6 +6,7 @@ import {
   calcDays,
   checkSpecialSeedReward,
   claimSpecialSeedReward,
+  claimMilestoneReward,
   subscribeMilestoneChecks,
   toggleMilestoneCheck,
   resetMilestoneChecks,
@@ -44,6 +45,11 @@ export function useStreak(coupleId: string, uid?: string, nick?: string, panicMo
   const [milestoneChecks, setMilestoneChecks] = useState<MilestoneChecks>({})
   const [weeklyChallenge, setWeeklyChallenge] = useState<WeeklyChallenge | null>(null)
   const [weeklyPending, setWeeklyPending] = useState<WeeklyPending | null>(null)
+  const [justClaimed, setJustClaimed] = useState<{
+    day: number
+    amount: number
+    gotPack: boolean
+  } | null>(null)
 
   useEffect(() => {
     const unsub = subscribeStreak(coupleId, (data: StreakData | null) => {
@@ -94,11 +100,16 @@ export function useStreak(coupleId: string, uid?: string, nick?: string, panicMo
   const handleCheck = useCallback(
     async (day: number) => {
       const current = milestoneChecks[day] ?? false
-      await toggleMilestoneCheck(coupleId, day, !current)
+      const newValue = !current
+      await toggleMilestoneCheck(coupleId, day, newValue)
+      if (newValue) {
+        const resetAt = streakData?.resetAt ?? 'inicio'
+        const reward = await claimMilestoneReward(coupleId, resetAt, day)
+        if (reward) setJustClaimed({ day, ...reward })
+      }
     },
-    [milestoneChecks, currentMilestones]
+    [milestoneChecks, currentMilestones, streakData]
   )
-
   const setStart = useCallback(async (iso: string) => {
     await setStreakStart(coupleId, iso)
   }, [])
@@ -146,5 +157,7 @@ export function useStreak(coupleId: string, uid?: string, nick?: string, panicMo
     requestSorteo,
     confirmSorteo,
     panicSorteo,
+    justClaimed,
+    clearJustClaimed: () => setJustClaimed(null),
   }
 }

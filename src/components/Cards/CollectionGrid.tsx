@@ -2,7 +2,7 @@ import { useState, DragEvent } from 'react'
 import { Users, User, ChevronDown, ChevronRight } from 'lucide-react'
 import { CARDS, COLLECTIONS, CardDefinition } from '../../lib/cards'
 import { useCardInventory } from '../../hooks/useCardInventory'
-import { placePendingCard } from '../../lib/pendingCards'
+import { placePendingCard, PlaceResult } from '../../lib/pendingCards'
 import CollectibleCard from './CollectibleCard'
 
 interface CollectionGridProps {
@@ -18,6 +18,7 @@ const COLLECTION_IDS = Object.keys(COLLECTIONS)
 export default function CollectionGrid({ coupleId, uid, partnerUid }: CollectionGridProps) {
   const [viewingUid, setViewingUid] = useState(uid)
   const [rejectedCardId, setRejectedCardId] = useState<string | null>(null)
+  const [alreadyOwnedCardId, setAlreadyOwnedCardId] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set([COLLECTION_IDS[0]]))
   const { inventory, loading } = useCardInventory(coupleId, viewingUid)
 
@@ -39,7 +40,7 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
     const raw = e.dataTransfer.getData('application/json')
     if (!raw) return
     const data = JSON.parse(raw) as { instanceId: string; cardId: string; collectionId: string }
-    const success = await placePendingCard(
+    const result: PlaceResult = await placePendingCard(
       coupleId,
       uid,
       data.instanceId,
@@ -47,9 +48,12 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
       data.collectionId,
       card.id
     )
-    if (!success) {
+    if (result === 'wrong_slot') {
       setRejectedCardId(card.id)
       setTimeout(() => setRejectedCardId(null), 500)
+    } else if (result === 'already_owned') {
+      setAlreadyOwnedCardId(card.id)
+      setTimeout(() => setAlreadyOwnedCardId(null), 1800)
     }
   }
 
@@ -152,7 +156,7 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
                       display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                       gap: 16,
-                      padding: '0 18px 20px',
+                      padding: '0 18px 36px',
                     }}
                   >
                     {cards.map((card) => (
@@ -161,12 +165,42 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => handleDrop(e, card)}
                         style={{
+                          position: 'relative',
                           borderRadius: 12,
-                          boxShadow: rejectedCardId === card.id ? '0 0 0 3px #c0392b' : 'none',
+                          boxShadow:
+                            rejectedCardId === card.id
+                              ? '0 0 0 3px #c0392b'
+                              : alreadyOwnedCardId === card.id
+                                ? '0 0 0 3px #8B6914'
+                                : 'none',
                           transition: 'box-shadow 0.15s',
                         }}
                       >
                         <CollectibleCard card={card} quantity={collectionInventory[card.id] ?? 0} />
+
+                        {alreadyOwnedCardId === card.id && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: -30,
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              whiteSpace: 'nowrap',
+                              background: '#8B6914',
+                              color: '#fff',
+                              fontSize: 11,
+                              fontWeight: 800,
+                              fontFamily: 'Baloo 2',
+                              padding: '4px 10px',
+                              borderRadius: 999,
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                              zIndex: 10,
+                              pointerEvents: 'none',
+                            }}
+                          >
+                            você já tem essa carta
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

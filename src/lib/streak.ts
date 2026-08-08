@@ -1,5 +1,8 @@
-import { ref, get, set, onValue, off } from 'firebase/database'
+import { ref, get, set, onValue, off, runTransaction } from 'firebase/database'
 import { db } from './firebase'
+import { addCoins } from './personalCoin'
+import { grantPack } from './unopenedPacks'
+import { STREAK_MILESTONE_REWARD, STREAK_CYCLE_BONUS } from './economyConfig'
 
 export interface StreakData {
   startDate: string // ISO string da data que escolheram
@@ -63,6 +66,45 @@ export async function checkSpecialSeedReward(coupleId: string, days: number): Pr
 export async function claimSpecialSeedReward(coupleId: string, days: number): Promise<void> {
   const currentCycle = Math.floor(days / 28)
   await set(ref(db, specialSeedPath(coupleId)), currentCycle)
+}
+
+async function getCoupleMemberUids(coupleId: string): Promise<string[]> {
+  const snap = await get(ref(db, `couples/${coupleId}/meta/members`))
+  const val = (snap.val() as Record<string, boolean>) ?? {}
+  return Object.keys(val)
+}
+
+const personalCoinClaimedPath = (coupleId: string, resetAt: string, day: number) =>
+  `couples/${coupleId}/streak/personalCoinClaimed/${resetAt}-${day}`
+
+export interface MilestoneRewardResult {
+  amount: number
+  gotPack: boolean
+}
+
+export async function claimMilestoneReward(
+  coupleId: string,
+  resetAt: string,
+  day: number
+): Promise<MilestoneRewardResult | null> {
+  const claimRef = ref(db, personalCoinClaimedPath(coupleId, resetAt, day))
+  const result = await runTransaction(claimRef, (current) => {
+    if (current === true) return undefined // já reclamado, aborta
+    return true
+  })
+  if (!result.committed) return null // parceiro já reclamou esse marco antes
+
+  const isCycleMilestone = day % 28 === 0
+  const amount = STREAK_MILESTONE_REWARD + (isCycleMilestone ? STREAK_CYCLE_BONUS : 0)
+
+  const members = await getCoupleMemberUids(coupleId)
+  await Promise.all(members.map((uid) => addCoins(uid, amount, `marco de streak — ${day} dias`)))
+
+  if (isCycleMilestone) {
+    await Promise.all(members.map((uid) => grantPack(coupleId, uid, 'comum')))
+  }
+
+  return { amount, gotPack: isCycleMilestone }
 }
 
 export interface MilestoneChecks {

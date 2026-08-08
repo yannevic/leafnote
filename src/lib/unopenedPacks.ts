@@ -37,6 +37,16 @@ export async function buyPack(coupleId: string, uid: string, packType: PackType)
   return true
 }
 
+// dá um pacote grátis direto na mochila, sem cobrar — usado em recompensas
+// como o marco de streak de 28 dias (sempre comum, nunca trava coleção)
+export async function grantPack(coupleId: string, uid: string, packType: PackType): Promise<void> {
+  const packsRef = ref(db, `couples/${coupleId}/cards/unopenedPacks/${uid}`)
+  await push(packsRef, {
+    type: packType,
+    boughtAt: Date.now(),
+  })
+}
+
 // abertura: sorteia agora, grava no inventário e remove da mochila
 export async function openUnopenedPack(
   coupleId: string,

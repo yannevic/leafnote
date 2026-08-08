@@ -1,4 +1,4 @@
-import { ref, push, remove, onValue, off } from 'firebase/database'
+import { ref, push, remove, onValue, off, runTransaction } from 'firebase/database'
 import { db } from './firebase'
 import { CardDefinition } from './cards'
 import { grantCard } from './cardsInventory'
@@ -21,8 +21,12 @@ export async function addPendingCards(coupleId: string, uid: string, cards: Card
   )
 }
 
+export type PlaceResult = 'placed' | 'already_owned' | 'wrong_slot'
+
 // chamado no drop do drag-and-drop: só encaixa (e credita no inventário)
-// se o cardId da carta arrastada bater com o cardId do slot onde caiu
+// se o cardId da carta arrastada bater com o cardId do slot onde caiu.
+// Se o jogador já tem 1+ cópia dessa carta, NÃO credita de novo — a
+// carta continua pendente na mochila (ver Plano de Cartinhas, seção 19)
 export async function placePendingCard(
   coupleId: string,
   uid: string,
@@ -30,12 +34,26 @@ export async function placePendingCard(
   cardId: string,
   collectionId: string,
   correctCardId: string
-): Promise<boolean> {
-  if (cardId !== correctCardId) return false
-  await grantCard(coupleId, uid, collectionId, cardId, 1)
+): Promise<PlaceResult> {
+  if (cardId !== correctCardId) return 'wrong_slot'
+
+  const cardRef = ref(db, `couples/${coupleId}/cards/inventory/${uid}/${collectionId}/${cardId}`)
+  let wasAlreadyOwned = false
+  const result = await runTransaction(cardRef, (current) => {
+    if ((current ?? 0) > 0) {
+      wasAlreadyOwned = true
+      return current // já tem — aborta sem incrementar
+    }
+    return 1
+  })
+
+  if (!result.committed || wasAlreadyOwned) {
+    return 'already_owned'
+  }
+
   const pendingRef = ref(db, `couples/${coupleId}/cards/pendingCards/${uid}/${instanceId}`)
   await remove(pendingRef)
-  return true
+  return 'placed'
 }
 
 export function subscribePendingCards(

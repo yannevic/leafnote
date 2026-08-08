@@ -29,3 +29,9 @@ export const SEED_ROLL_THRESHOLDS = {
   incomumMax: 10, // sum <= 10 → incomum
   // acima de 10 → rara
 }
+
+// Venda de carta repetida (negociação com a Folhinha)
+export const CARD_SELL_NEGOTIATE_MAX_MULTIPLIER = 2 // pode pedir até 2x o preço padrão
+export const CARD_SELL_NEGOTIATE_MIN_CHANCE = 0.05 // chance mínima (5%) no valor máximo
+export const CARD_SELL_NEGOTIATE_CURVE_POWER = 0.5 // <1 = chance despenca logo no início do slider
+export const CARD_SELL_COOLDOWN_MS = 60 * 60 * 1000 // 1h de cooldown por cardId após recusa

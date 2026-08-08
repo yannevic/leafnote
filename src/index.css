@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 
+@keyframes streakToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @theme {
   --color-leaf-950: #1a2a1a;
   --color-leaf-800: #2d4a2d;

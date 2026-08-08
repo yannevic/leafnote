@@ -188,7 +188,7 @@ export async function waterPlant(
 
   if (plant.stage >= 5) return
 
-  const today = new Date().toLocaleDateString('en-CA')
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
 
   const alreadyWateredToday = plant.water?.[uid] === true && plant.waterDate === today
   if (alreadyWateredToday && !panicMode) return
@@ -369,7 +369,7 @@ export async function checkWiltAll(coupleId: string): Promise<void> {
       const diffHours = (now.getTime() - last.getTime()) / (1000 * 60 * 60)
       if (diffHours >= 48 && !plant.wilted) {
         const newDaysWatered = Math.max(0, plant.daysWatered - 1)
-        const today = now.toISOString().split('T')[0]
+        const today = now.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
         await update(ref(db, `couples/${coupleId}/garden/plants/${id}`), {
           wilted: true,
           daysWatered: newDaysWatered,
@@ -536,6 +536,6 @@ export function getFlowerFromSum(sum: number): FlowerType {
 }
 
 export function canPlantToday(plants: PlantData[]): boolean {
-  const today = new Date().toLocaleDateString('en-CA')
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
   return !plants.some((p) => p.plantedAt.startsWith(today))
 }
