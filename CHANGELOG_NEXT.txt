@@ -1,1 +1,1 @@
-🔧 Pacote: cartas repetidas dentro do mesmo pacote (ou que você já tinha) agora aparecem com selo "🔁 repetida" em vez de "✨ nova" errado | 🐛 reset de rega/plantio usava UTC em vez de Brasília — murchava/plantava com até 3h de antecedência |
+🔧 Pacote: cartas repetidas dentro do mesmo pacote (ou que você já tinha) agora aparecem com selo "🔁 repetida" em vez de "✨ nova" errado | 🐛 reset de rega/plantio usava UTC em vez de Brasília — murchava/plantava com até 3h de antecedência | 

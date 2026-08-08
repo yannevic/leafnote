@@ -1,7 +1,6 @@
 import { ref, push, remove, onValue, off, runTransaction } from 'firebase/database'
 import { db } from './firebase'
 import { CardDefinition } from './cards'
-import { grantCard } from './cardsInventory'
 
 export interface PendingCardInstance {
   id: string
