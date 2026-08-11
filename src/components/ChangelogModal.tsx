@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.60': [
+    "✨ nova coleção de cartinhas adicionada:  Lúcifer: Fallen Angel",
+  ],
+
   '3.0.59': [
     "🔧 Pacote: cartas repetidas dentro do mesmo pacote (ou que você já tinha) agora aparecem com selo \"🔁 repetida\" em vez de \"✨ nova\" errado",
     "🐛 reset de rega/plantio usava UTC em vez de Brasília — murchava/plantava com até 3h de antecedência",
