@@ -42,7 +42,7 @@ export function useGarden(coupleId: string, uid: string, partnerUid: string) {
 
   useEffect(() => {
     const unsubPlants = subscribePlants(coupleId, (data: PlantData[]) => {
-      const today = new Date().toLocaleDateString('en-CA')
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
       data.forEach((plant) => {
         if (
           plant.water &&
