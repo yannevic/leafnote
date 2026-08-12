@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.62': [
+    "✨ nova coleção de cartinhas adicionada:  Lúcifer: Fallen Angel e League of Legends.",
+  ],
+
   '3.0.61': [
     "✨ nova coleção de cartinhas adicionada:  Lúcifer: Fallen Angel",
   ],
