@@ -1,4 +1,13 @@
-import { ref, onValue, set, runTransaction, push } from 'firebase/database'
+import {
+  ref,
+  onValue,
+  set,
+  runTransaction,
+  push,
+  query,
+  orderByChild,
+  limitToLast,
+} from 'firebase/database'
 import { db } from './firebase'
 import type { CoinIconKey } from './personalCoinIcons'
 
@@ -51,4 +60,27 @@ export async function spendCoins(uid: string, amount: number, reason: string): P
     balanceAfter: newBalance,
   })
   return true
+}
+export interface CoinLedgerEntry {
+  id: string
+  amount: number
+  reason: string
+  timestamp: number
+  balanceAfter: number
+}
+
+export function subscribeCoinLedger(
+  uid: string,
+  callback: (entries: CoinLedgerEntry[]) => void,
+  limit = 50
+) {
+  const q = query(ref(db, `users/${uid}/coinLedger`), orderByChild('timestamp'), limitToLast(limit))
+  return onValue(q, (snap) => {
+    const entries: CoinLedgerEntry[] = []
+    snap.forEach((child) => {
+      entries.push({ id: child.key as string, ...(child.val() as Omit<CoinLedgerEntry, 'id'>) })
+    })
+    entries.reverse() // mais recente primeiro
+    callback(entries)
+  })
 }

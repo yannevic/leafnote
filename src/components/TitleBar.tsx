@@ -5,6 +5,8 @@ import type { BoardMeta } from '../lib/boards'
 import NotificationCenter from './NotificationCenter'
 import type { AppNotification } from '../hooks/useNotificationCenter'
 import { PiMoneyWavyLight } from 'react-icons/pi'
+import { usePersonalCoin } from '../hooks/usePersonalCoin'
+import { COIN_ICONS } from '../lib/personalCoinIcons'
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
 import { AlertTriangle } from 'lucide-react'
@@ -23,6 +25,8 @@ interface TitleBarProps {
   notifications?: AppNotification[]
   onDismissNotification?: (id: string) => void
   coins?: number
+  uid?: string
+  partnerUid?: string
   panicMode?: boolean
   onTogglePanic?: () => void
 }
@@ -40,9 +44,13 @@ export default function TitleBar({
   notifications = [],
   onDismissNotification,
   coins = 0,
+  uid,
+  partnerUid,
   panicMode = false,
   onTogglePanic,
 }: TitleBarProps) {
+  const { coin: myCoin } = usePersonalCoin(uid ?? null)
+  const { coin: partnerCoin } = usePersonalCoin(partnerUid ?? null)
   const [isMaximized, setIsMaximized] = useState(false)
   const [version, setVersion] = useState('')
   const [now, setNow] = useState(new Date())
@@ -221,6 +229,43 @@ export default function TitleBar({
           <PiMoneyWavyLight size={22} />
           <span style={{ fontSize: 15, fontWeight: 800, marginTop: 4 }}>{coins}</span>
         </div>
+
+        {(myCoin || partnerCoin) && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              marginRight: 4,
+              paddingLeft: 8,
+              borderLeft: '1px solid rgba(196,149,106,0.25)',
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+          >
+            {myCoin && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                {(() => {
+                  const Icon = COIN_ICONS[myCoin.icon]
+                  return <Icon size={14} color={myCoin.color} />
+                })()}
+                <span style={{ fontSize: 12, fontWeight: 800, color: myCoin.color }}>
+                  {myCoin.balance}
+                </span>
+              </div>
+            )}
+            {partnerCoin && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                {(() => {
+                  const Icon = COIN_ICONS[partnerCoin.icon]
+                  return <Icon size={14} color={partnerCoin.color} />
+                })()}
+                <span style={{ fontSize: 12, fontWeight: 800, color: partnerCoin.color }}>
+                  {partnerCoin.balance}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         <NotificationCenter
           notifications={notifications}
           onDismiss={onDismissNotification ?? (() => {})}

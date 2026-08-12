@@ -1,6 +1,7 @@
 import { useState, ReactNode } from 'react'
-import { X, Sprout, ShoppingBag, Repeat, ArrowLeft, HelpCircle } from 'lucide-react'
+import { X, Sprout, ShoppingBag, Repeat, ArrowLeft, HelpCircle, Receipt } from 'lucide-react'
 import CardsGuideModal from './CardsGuideModal'
+import CardsExtractModal from './CardsExtractModal'
 import CollectionGrid from './CollectionGrid'
 import PersonalCoinSetupModal from './PersonalCoinSetupModal'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
@@ -20,6 +21,7 @@ type Tab = 'colecao' | 'loja' | 'trocas'
 export default function CardsModal({ coupleId, uid, partnerUid, onClose }: CardsModalProps) {
   const [tab, setTab] = useState<Tab>('colecao')
   const [showGuide, setShowGuide] = useState(false)
+  const [showExtract, setShowExtract] = useState(false)
   const { coin, needsSetup } = usePersonalCoin(uid)
 
   return (
@@ -102,6 +104,23 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
           >
             <HelpCircle size={16} strokeWidth={2.2} />
           </button>
+          <button
+            onClick={() => setShowExtract(true)}
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255,255,255,0.5)',
+              color: '#2D4A2D',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Receipt size={16} strokeWidth={2.2} />
+          </button>
           {coin && (
             <div
               style={{
@@ -149,6 +168,7 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
       </div>
       {needsSetup && <PersonalCoinSetupModal uid={uid} onDone={() => {}} />}
       {showGuide && <CardsGuideModal coupleId={coupleId} onClose={() => setShowGuide(false)} />}
+      {showExtract && <CardsExtractModal uid={uid} onClose={() => setShowExtract(false)} />}
     </div>
   )
 }

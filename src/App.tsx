@@ -83,6 +83,8 @@ function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
         notifications={notifications}
         onDismissNotification={dismiss}
         coins={coins}
+        uid={user.uid}
+        partnerUid={partnerUid}
         panicMode={panicMode}
         onTogglePanic={handleTogglePanic}
       />
