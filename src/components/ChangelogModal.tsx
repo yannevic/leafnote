@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.64': [
+    "✨ nova coleção de cartinhas adicionada:  Lúcifer: Fallen Angel e League of Legends.",
+    "✨ Extrato de moeda pessoal (histórico de movimentações + saldo após cada uma); moeda individual dos dois exibida lado a lado na barra superior",
+    "✨ extrato de ganhos e perdas de moedas individuais",
+  ],
+
   '3.0.63': [
     "✨ nova coleção de cartinhas adicionada:  Lúcifer: Fallen Angel e League of Legends.",
     "✨ Extrato de moeda pessoal (histórico de movimentações + saldo após cada uma); moeda individual dos dois exibida lado a lado na barra superior",
