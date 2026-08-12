@@ -74,8 +74,12 @@ async function getCoupleMemberUids(coupleId: string): Promise<string[]> {
   return Object.keys(val)
 }
 
+function sanitizeFirebaseKey(value: string): string {
+  return value.replace(/[.#$\[\]]/g, '-')
+}
+
 const personalCoinClaimedPath = (coupleId: string, resetAt: string, day: number) =>
-  `couples/${coupleId}/streak/personalCoinClaimed/${resetAt}-${day}`
+  `couples/${coupleId}/streak/personalCoinClaimed/${sanitizeFirebaseKey(resetAt)}-${day}`
 
 export interface MilestoneRewardResult {
   amount: number
@@ -97,14 +101,21 @@ export async function claimMilestoneReward(
   const isCycleMilestone = day % 28 === 0
   const amount = STREAK_MILESTONE_REWARD + (isCycleMilestone ? STREAK_CYCLE_BONUS : 0)
 
-  const members = await getCoupleMemberUids(coupleId)
-  await Promise.all(members.map((uid) => addCoins(uid, amount, `marco de streak — ${day} dias`)))
+  try {
+    const members = await getCoupleMemberUids(coupleId)
+    await Promise.all(members.map((uid) => addCoins(uid, amount, `marco de streak — ${day} dias`)))
 
-  if (isCycleMilestone) {
-    await Promise.all(members.map((uid) => grantPack(coupleId, uid, 'comum')))
+    if (isCycleMilestone) {
+      await Promise.all(members.map((uid) => grantPack(coupleId, uid, 'comum')))
+    }
+
+    return { amount, gotPack: isCycleMilestone }
+  } catch (err) {
+    // crédito falhou no meio do caminho (ex: permissão) — libera a trava
+    // pra dar pra tentar de novo depois, em vez de "queimar" o marco à toa
+    await set(claimRef, null)
+    throw err
   }
-
-  return { amount, gotPack: isCycleMilestone }
 }
 
 export interface MilestoneChecks {
