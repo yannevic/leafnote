@@ -365,7 +365,7 @@ export async function checkWiltAll(coupleId: string): Promise<void> {
     Object.entries(plants).map(async ([id, plant]) => {
       if (plant.stage >= 5) return
       if (!plant.lastWateredDate) return
-      const last = new Date(plant.lastWateredDate)
+      const last = new Date(`${plant.lastWateredDate}T00:00:00-03:00`)
       const diffHours = (now.getTime() - last.getTime()) / (1000 * 60 * 60)
       if (diffHours >= 48 && !plant.wilted) {
         const newDaysWatered = Math.max(0, plant.daysWatered - 1)
