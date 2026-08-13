@@ -1,4 +1,4 @@
-import { ref, runTransaction } from 'firebase/database'
+import { ref, runTransaction, onValue } from 'firebase/database'
 import { db } from './firebase'
 import { CARDS, CardDefinition } from './cards'
 import { CardRarity } from './rarity'
@@ -75,4 +75,12 @@ export async function drawPackCards(
   }
 
   return { cards: drawnCards, pityTriggered }
+}
+export function subscribePityCount(
+  coupleId: string,
+  uid: string,
+  callback: (count: number) => void
+) {
+  const pityRef = ref(db, `couples/${coupleId}/cards/pity/${uid}`)
+  return onValue(pityRef, (snap) => callback((snap.val() as number) ?? 0))
 }

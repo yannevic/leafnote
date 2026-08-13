@@ -5,6 +5,8 @@ import CardsGuideModal from './CardsGuideModal'
 import { CardDefinition, CARDS, COLLECTIONS } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { PackType, PACK_PRICES } from '../../lib/packs'
+import { PITY_THRESHOLD } from '../../lib/dropRates'
+import { usePityCount } from '../../hooks/usePityCount'
 import { buyPack } from '../../lib/unopenedPacks'
 import { buyFromRotatingShop, SHOP_PRICES } from '../../lib/rotatingShop'
 import folhinhaVerde from '../../assets/cards/folhinha-verde.png'
@@ -58,6 +60,8 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
     ? COLLECTIONS[promoState.current as keyof typeof COLLECTIONS]?.name
     : null
   const { coin } = usePersonalCoin(uid)
+  const pityCount = usePityCount(coupleId, uid)
+  const pityRemaining = Math.max(0, PITY_THRESHOLD - pityCount)
   const CoinIcon = coin ? COIN_ICONS[coin.icon] : Package
   const coinColor = coin?.color ?? '#8b6914'
 
@@ -348,6 +352,21 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
               </div>
             )
           })}
+        </div>
+
+        <div
+          style={{
+            marginTop: 14,
+            textAlign: 'center',
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#8b6914',
+            opacity: 0.8,
+          }}
+        >
+          {pityRemaining === 1
+            ? 'próximo pacote garante rara ou melhor!'
+            : `faltam ${pityRemaining} pacotes até o próximo garantir rara ou melhor`}
         </div>
       </section>
 
