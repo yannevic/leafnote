@@ -1,1 +1,1 @@
-✨ mostrador de pity de contador de pacotes abaixo do mesmo na loja | ✨ corrigido horario de brasilia no tempo de rega |
+🐛 nome dos pacotes de lucifer e lol corrigidos . |

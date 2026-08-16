@@ -8,8 +8,8 @@ import pacoteLol from './pacote-lol.png'
 export const PROMO_PACK_ART: Record<string, string> = {
   'jardim-secreto': pacoteJardimSecreto,
   'dexter-serie': pacoteDexter,
-  'lucifer-serie': pacoteLucifer,
-  'lol-jogo': pacoteLol,
+  'lucifer-fallen-angel': pacoteLucifer,
+  'league-of-legends': pacoteLol,
 }
 
 export const PACK_ART = {
