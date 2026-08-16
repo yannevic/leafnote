@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.67': [
+    "🐛 nome dos pacotes de lucifer e lol corrigidos .",
+  ],
+
   '3.0.66': [
     "✨ mostrador de pity de contador de pacotes abaixo do mesmo na loja",
     "✨ corrigido horario de brasilia no tempo de rega",
