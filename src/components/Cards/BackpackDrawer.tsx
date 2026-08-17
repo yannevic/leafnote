@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Backpack, X, PackageOpen, ZoomIn, Package } from 'lucide-react'
+import { Backpack, X, PackageOpen, ZoomIn, Package, Sparkles, Repeat } from 'lucide-react'
 import { PackType } from '../../lib/packs'
 import { openUnopenedPack } from '../../lib/unopenedPacks'
 import { useUnopenedPacks } from '../../hooks/useUnopenedPacks'
@@ -71,6 +71,12 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
 
   return (
     <>
+      <style>{`
+        .backpack-scroll::-webkit-scrollbar { width: 4px; }
+        .backpack-scroll::-webkit-scrollbar-track { background: transparent; }
+        .backpack-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+        .backpack-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+      `}</style>
       <button
         onClick={() => setOpen((v) => !v)}
         style={{
@@ -119,6 +125,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
 
       {open && (
         <div
+          className="backpack-scroll"
           style={{
             position: 'fixed',
             right: 20,
@@ -173,11 +180,36 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                   const card = CARDS.find((c) => c.id === top.cardId)
                   if (!card) return null
                   const color = RARITY_COLOR[card.rarity]
+                  const isOwned = (inventory[top.collectionId]?.[top.cardId] ?? 0) > 0
                   return (
                     <div
                       key={top.id}
                       style={{ position: 'relative', width: 84, height: 118, flexShrink: 0 }}
                     >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -10,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          zIndex: 5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          whiteSpace: 'nowrap',
+                          fontFamily: 'Baloo 2',
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          color: '#fff',
+                          background: isOwned ? '#8B6914' : '#4A7A4A',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.25)',
+                        }}
+                      >
+                        {isOwned ? <Repeat size={10} /> : <Sparkles size={10} />}
+                        {isOwned ? 'repetida' : 'nova'}
+                      </div>
                       {stackCount > 1 && (
                         <>
                           <div

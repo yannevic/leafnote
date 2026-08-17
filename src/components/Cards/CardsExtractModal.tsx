@@ -22,6 +22,12 @@ export default function CardsExtractModal({ uid, onClose }: CardsExtractModalPro
       }}
       onClick={onClose}
     >
+      <style>{`
+        .cards-extract-scroll::-webkit-scrollbar { width: 4px; }
+        .cards-extract-scroll::-webkit-scrollbar-track { background: transparent; }
+        .cards-extract-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+        .cards-extract-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+      `}</style>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -55,7 +61,7 @@ export default function CardsExtractModal({ uid, onClose }: CardsExtractModalPro
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="cards-extract-scroll" style={{ flex: 1, overflowY: 'auto' }}>
           {loading && (
             <div style={{ textAlign: 'center', padding: 24, color: '#8B6914', fontSize: 13 }}>
               carregando...

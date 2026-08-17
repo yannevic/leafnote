@@ -37,6 +37,12 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
+      <style>{`
+        .cards-content-scroll::-webkit-scrollbar { width: 4px; }
+        .cards-content-scroll::-webkit-scrollbar-track { background: transparent; }
+        .cards-content-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+        .cards-content-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.99); }
+      `}</style>
       <div
         style={{
           display: 'flex',
@@ -153,7 +159,7 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div className="cards-content-scroll" style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'colecao' && (
           <>
             <CollectionGrid coupleId={coupleId} uid={uid} partnerUid={partnerUid || null} />
