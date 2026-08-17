@@ -13,6 +13,7 @@ import {
 import { usePendingActivities } from '../../hooks/usePendingActivities'
 import folhinhaVerde from '../../assets/cards/folhinha-verde.png'
 import SellCardModal from './SellCardModal'
+import TradesPanel from './TradesPanel'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
 
@@ -196,35 +197,72 @@ export default function ExtrasTab({ coupleId, uid, partnerUid }: ExtrasTabProps)
         </div>
       )}
 
-      {/* ── Vender carta repetida (movido da Loja) ── */}
-      <SectionTitle>vender pra Folhinha</SectionTitle>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <img
-          src={folhinhaVerde}
-          alt=""
-          style={{ width: 150, height: 150, objectFit: 'contain', borderRadius: 16 }}
-        />
-        <button
-          onClick={() => setShowSell(true)}
-          className="extras-btn"
+      {/* ── Trocas + vender pra Folhinha ── */}
+      <SectionTitle>trocas & folhinha</SectionTitle>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'stretch',
+          gap: 14,
+          marginBottom: 22,
+          maxWidth: 420,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}
+      >
+        <TradesPanel coupleId={coupleId} uid={uid} partnerUid={partnerUid} onFeedback={showToast} />
+
+        <div
           style={{
-            display: 'inline-flex',
+            width: 130,
+            flexShrink: 0,
+            background: 'rgba(253,242,246,0.7)',
+            border: '1.5px solid rgba(232,160,176,0.3)',
+            borderRadius: 12,
+            padding: '16px 10px',
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            border: 'none',
-            borderRadius: 999,
-            padding: '8px 18px',
-            background: 'rgba(139,105,20,0.12)',
-            color: '#8b6914',
-            fontFamily: 'Baloo 2',
-            fontWeight: 800,
-            fontSize: 12,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
+            gap: 12,
+            boxSizing: 'border-box',
           }}
         >
-          vender cartas repetidas pra o Folhinha
-        </button>
+          <img
+            src={folhinhaVerde}
+            alt=""
+            style={{
+              width: 76,
+              height: 76,
+              objectFit: 'contain',
+              borderRadius: 12,
+            }}
+          />
+
+          <button
+            onClick={() => setShowSell(true)}
+            className="extras-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 12px',
+              background: 'rgba(139,105,20,0.12)',
+              color: '#8b6914',
+              fontFamily: 'Baloo 2',
+              fontWeight: 800,
+              fontSize: 10.5,
+              cursor: 'pointer',
+              textAlign: 'center',
+              lineHeight: 1.3,
+            }}
+          >
+            vender pra Folhinha
+          </button>
+        </div>
       </div>
 
       {showSell && (
