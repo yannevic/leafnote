@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.68': [
+    "🐛 Corrigido bug em que marcos de streak de 4 semanas (28, 56, 84...) sumiam assim que eram checados, antes do dia certo — agora ficam marcados até o ciclo seguinte chegar de verdade",
+    "📖 Guia das cartinhas agora explica moeda pessoal, atividades e a venda de carta repetida pra Folhinha",
+  ],
+
   '3.0.67': [
     "🐛 nome dos pacotes de lucifer e lol corrigidos .",
   ],
