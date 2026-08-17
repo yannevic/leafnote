@@ -26,15 +26,15 @@ import type { StreakData } from '../lib/streak'
 
 const BASE_MILESTONES = [7, 14, 21, 28]
 
-// PARA:
-function buildCurrentMilestones(milestoneChecks: MilestoneChecks): number[] {
+function buildCurrentMilestones(milestoneChecks: MilestoneChecks, days: number): number[] {
   const cycleSize = 28
   let cycle = 0
   while (true) {
     const offset = cycle * cycleSize
     const marcos = BASE_MILESTONES.map((d) => d + offset)
     const lastMarco = marcos[marcos.length - 1]
-    if (!milestoneChecks[lastMarco]) return marcos
+    const nextFirstMarco = lastMarco + BASE_MILESTONES[0] // 1º marco do próximo ciclo
+    if (!milestoneChecks[lastMarco] || days < nextFirstMarco) return marcos
     cycle++
   }
 }
@@ -95,7 +95,7 @@ export function useStreak(coupleId: string, uid?: string, nick?: string, panicMo
     })
   }, [days])
 
-  const currentMilestones = buildCurrentMilestones(milestoneChecks)
+  const currentMilestones = buildCurrentMilestones(milestoneChecks, days)
 
   const handleCheck = useCallback(
     async (day: number) => {

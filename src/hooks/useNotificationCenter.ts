@@ -27,6 +27,7 @@ export interface AppNotification {
     | 'garden-sell'
     | 'calendar-event'
     | 'weekly-sorteo'
+    | 'activity-completed'
   message: string
   boardId?: string
   boardName?: string
@@ -59,6 +60,9 @@ export function useNotificationCenter({
     // persiste no Firebase se for notif de calendário
     if (id.startsWith('calendar-event-')) {
       dbSet(dbRef(db, `users/${uid}/seenCalendarNotifs/${id}`), true)
+    }
+    if (id.startsWith('activity-completed-')) {
+      dbSet(dbRef(db, `users/${uid}/seenActivityNotifs/${id}`), true)
     }
   }
 
@@ -331,7 +335,6 @@ export function useNotificationCenter({
     }
   }, [uid, partnerUid, myNick, partnerNick, play])
 
-  // adiciona antes de: const visible = notifications.filter(...)
   useEffect(() => {
     const unsub = subscribeWeeklyPending(
       coupleId,
@@ -351,6 +354,37 @@ export function useNotificationCenter({
     )
     return unsub
   }, [uid])
+
+  useEffect(() => {
+    if (!uid) return
+    const r = dbRef(db, `couples/${coupleId}/cards/lastActivityCompleted`)
+    const handler = dbOnValue(r, async (snap) => {
+      const data = snap.val() as {
+        id: string
+        name: string
+        completedBy: string
+        completedAt: number
+      } | null
+      if (!data || data.completedBy === uid) {
+        setNotifications((prev) => prev.filter((n) => n.type !== 'activity-completed'))
+        return
+      }
+      const notifId = `activity-completed-${data.id}`
+      const seenSnap = await dbGet(dbRef(db, `users/${uid}/seenActivityNotifs/${notifId}`))
+      if (seenSnap.val() === true) {
+        setNotifications((prev) => prev.filter((n) => n.type !== 'activity-completed'))
+        return
+      }
+      const notif: AppNotification = {
+        id: notifId,
+        type: 'activity-completed',
+        message: `"${data.name}" foi confirmada — vocês ganharam a recompensa!`,
+        dismissible: true,
+      }
+      setNotifications((prev) => [...prev.filter((n) => n.type !== 'activity-completed'), notif])
+    })
+    return () => dbOff(r, 'value', handler)
+  }, [uid, coupleId])
 
   // Filtra lidas
   const visible = notifications.filter((n) => !n.dismissible || !readIds.has(n.id))

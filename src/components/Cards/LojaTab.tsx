@@ -9,7 +9,6 @@ import { PITY_THRESHOLD } from '../../lib/dropRates'
 import { usePityCount } from '../../hooks/usePityCount'
 import { buyPack } from '../../lib/unopenedPacks'
 import { buyFromRotatingShop, SHOP_PRICES } from '../../lib/rotatingShop'
-import folhinhaVerde from '../../assets/cards/folhinha-verde.png'
 
 import { useRotatingShop } from '../../hooks/useRotatingShop'
 import { usePromoCollection } from '../../hooks/usePromoCollection'
@@ -17,7 +16,6 @@ import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
 
 import CardZoomModal from './CardZoomModal'
-import SellCardModal from './SellCardModal'
 import { PACK_ART, getPromoPackArt } from '../../assets/cards/packs'
 
 interface LojaTabProps {
@@ -47,7 +45,6 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
   const [shopRefresh, setShopRefresh] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
   const [hoveredPack, setHoveredPack] = useState<PackType | null>(null)
-  const [showSell, setShowSell] = useState(false)
 
   function showToast(msg: string) {
     setToast(msg)
@@ -518,54 +515,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
             })}
           </div>
         )}
-        <div
-          style={{
-            marginTop: 16,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <img
-            src={folhinhaVerde}
-            alt=""
-            style={{ width: 150, height: 150, objectFit: 'contain', borderRadius: 16 }}
-          />
-          <button
-            onClick={() => setShowSell(true)}
-            className="confirm-btn-anim"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: 'none',
-              borderRadius: 999,
-              padding: '8px 18px',
-              background: 'rgba(139,105,20,0.12)',
-              color: '#8b6914',
-              fontFamily: 'Baloo 2',
-              fontWeight: 800,
-              fontSize: 12,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            vender cartas repetidas pra o Folhinha
-          </button>
-        </div>
       </section>
-
-      {showSell && (
-        <SellCardModal
-          coupleId={coupleId}
-          uid={uid}
-          CoinIcon={CoinIcon}
-          coinColor={coinColor}
-          onClose={() => setShowSell(false)}
-          onSold={showToast}
-        />
-      )}
 
       {confirmPack && (
         <ConfirmPurchaseModal

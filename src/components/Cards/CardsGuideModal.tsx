@@ -1,4 +1,15 @@
-import { X, Package, Sparkles, Backpack, ShoppingBag, Repeat, Info } from 'lucide-react'
+import {
+  X,
+  Package,
+  Sparkles,
+  Backpack,
+  ShoppingBag,
+  Repeat,
+  Info,
+  Coins,
+  ListChecks,
+  Gift,
+} from 'lucide-react'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { PACK_PRICES } from '../../lib/packs'
 import { usePromoCollection } from '../../hooks/usePromoCollection'
@@ -10,6 +21,18 @@ import {
 } from '../../lib/dropRates'
 import { SHOP_PRICES } from '../../lib/rotatingShop'
 import { COLLECTIONS } from '../../lib/cards'
+import {
+  WATER_REWARD,
+  STREAK_MILESTONE_REWARD,
+  STREAK_CYCLE_BONUS,
+  ACTIVITY_REWARD,
+  CARD_SELL_VALUE,
+} from '../../lib/economyConfig'
+import {
+  CARD_SELL_NEGOTIATE_MAX_MULTIPLIER,
+  CARD_SELL_NEGOTIATE_MIN_CHANCE,
+  CARD_SELL_COOLDOWN_MS,
+} from '../../lib/dropRates'
 
 interface Props {
   coupleId: string
@@ -192,6 +215,27 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
           </Section>
 
           <Section
+            icon={<Coins size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="como ganhar moeda pessoal"
+          >
+            cada pessoa tem sua própria moeda, separada da moeda do casal. dá pra ganhar assim:
+            <InfoCard>
+              <Row label="regar a planta" value={`+${WATER_REWARD} por rega válida`} />
+              <Row label="vender semente ou flor" value="varia pela raridade, na loja do jardim" />
+              <Row
+                label="marco de streak (a cada 7 dias)"
+                value={`+${STREAK_MILESTONE_REWARD} por pessoa`}
+              />
+              <Row
+                label="marco de 4 semanas (28 dias)"
+                value={`+${STREAK_MILESTONE_REWARD + STREAK_CYCLE_BONUS} + 1 pacote comum grátis`}
+              />
+              <Row label="atividades" value="ver seção abaixo" />
+              <Row label="vender carta repetida" value="pra Folhinha, ver seção abaixo" />
+            </InfoCard>
+          </Section>
+
+          <Section
             icon={<Backpack size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
             title="mochila"
           >
@@ -252,6 +296,30 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
           </Section>
 
           <Section
+            icon={<ListChecks size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="atividades"
+          >
+            fizeram algo juntos fora do app? registrem como atividade e ganhem recompensa. tem uma
+            lista de sugestões prontas, mas dá pra criar atividades personalizadas também. cada uma
+            tem um peso:
+            <InfoCard>
+              <Row label="leve" value={`+${ACTIVITY_REWARD.leve} moedas pra cada um`} />
+              <Row
+                label="médio"
+                value={`+${ACTIVITY_REWARD.medio} moedas ou 1 pacote comum, pra cada um`}
+              />
+              <Row
+                label="alto"
+                value={`+${ACTIVITY_REWARD.alto} moedas + 1 pacote comum, pra cada um`}
+              />
+            </InfoCard>
+            <div style={{ marginTop: 10, lineHeight: 1.6 }}>
+              qualquer um dos dois pode confirmar que a atividade foi feita — a recompensa vai pros
+              dois ao mesmo tempo, e o parceiro recebe um aviso.
+            </div>
+          </Section>
+
+          <Section
             icon={<ShoppingBag size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
             title="loja rotativa"
           >
@@ -278,6 +346,28 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
             <div style={{ marginTop: 10, lineHeight: 1.6 }}>
               essas 3 cartas vão direto pra sua coleção assim que compradas — não precisam passar
               pela mochila nem por abertura de pacote.
+            </div>
+          </Section>
+
+          <Section
+            icon={<Gift size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="vender pra Folhinha"
+          >
+            cartas repetidas (que você já tem) podem ser vendidas direto na loja pra mascote
+            Folhinha. tem 2 formas:
+            <InfoCard>
+              <Row label="comum" rarity="comum" value={`${CARD_SELL_VALUE.comum} moeda`} />
+              <Row label="incomum" rarity="incomum" value={`${CARD_SELL_VALUE.incomum} moedas`} />
+              <Row label="rara" rarity="rara" value={`${CARD_SELL_VALUE.rara} moedas`} />
+              <Row label="épica" rarity="epica" value={`${CARD_SELL_VALUE.epica} moedas`} />
+            </InfoCard>
+            <div style={{ marginTop: 10, lineHeight: 1.6 }}>
+              a <b>venda direta</b> é sem risco: preço fixo da tabela acima, na hora. já a{' '}
+              <b>negociação</b> deixa você pedir até {CARD_SELL_NEGOTIATE_MAX_MULTIPLIER}x o preço
+              padrão — mas quanto mais você pede, menor a chance da Folhinha aceitar, caindo até{' '}
+              {(CARD_SELL_NEGOTIATE_MIN_CHANCE * 100).toFixed(0)}% no valor máximo. se ela recusar,
+              essa carta específica fica {CARD_SELL_COOLDOWN_MS / 1000 / 60 / 60}h sem poder
+              negociar de novo — mas a venda direta continua disponível normalmente.
             </div>
           </Section>
 

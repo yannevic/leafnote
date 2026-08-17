@@ -1,5 +1,5 @@
 import { useState, ReactNode } from 'react'
-import { X, Sprout, ShoppingBag, Repeat, ArrowLeft, HelpCircle, Receipt } from 'lucide-react'
+import { X, Sprout, ShoppingBag, Sparkles, ArrowLeft, HelpCircle, Receipt } from 'lucide-react'
 import CardsGuideModal from './CardsGuideModal'
 import CardsExtractModal from './CardsExtractModal'
 import CollectionGrid from './CollectionGrid'
@@ -7,6 +7,7 @@ import PersonalCoinSetupModal from './PersonalCoinSetupModal'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
 import LojaTab from './LojaTab'
+import ExtrasTab from './ExtrasTab'
 import BackpackDrawer from './BackpackDrawer'
 
 interface CardsModalProps {
@@ -16,7 +17,7 @@ interface CardsModalProps {
   onClose: () => void
 }
 
-type Tab = 'colecao' | 'loja' | 'trocas'
+type Tab = 'colecao' | 'loja' | 'extras'
 
 export default function CardsModal({ coupleId, uid, partnerUid, onClose }: CardsModalProps) {
   const [tab, setTab] = useState<Tab>('colecao')
@@ -79,10 +80,10 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
             label="loja"
           />
           <TabButton
-            active={tab === 'trocas'}
-            onClick={() => setTab('trocas')}
-            icon={<Repeat size={16} />}
-            label="trocas"
+            active={tab === 'extras'}
+            onClick={() => setTab('extras')}
+            icon={<Sparkles size={16} />}
+            label="extras"
           />
         </div>
 
@@ -160,11 +161,7 @@ export default function CardsModal({ coupleId, uid, partnerUid, onClose }: Cards
           </>
         )}
         {tab === 'loja' && <LojaTab coupleId={coupleId} uid={uid} />}
-        {tab === 'trocas' && (
-          <div style={{ padding: 24, textAlign: 'center', color: '#8B6914' }}>
-            trocas em construção — chega na Fase 5
-          </div>
-        )}
+        {tab === 'extras' && <ExtrasTab coupleId={coupleId} uid={uid} partnerUid={partnerUid} />}
       </div>
       {needsSetup && <PersonalCoinSetupModal uid={uid} onDone={() => {}} />}
       {showGuide && <CardsGuideModal coupleId={coupleId} onClose={() => setShowGuide(false)} />}
