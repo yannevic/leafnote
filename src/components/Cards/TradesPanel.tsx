@@ -212,10 +212,10 @@ function CardStrip({ label, cards }: { label: string; cards: CardRef[] }) {
               alt={card.name}
               title={card.name}
               style={{
-                width: 24,
-                height: 34,
+                width: 38,
+                height: 54,
                 objectFit: 'cover',
-                borderRadius: 4,
+                borderRadius: 6,
               }}
             />
           )

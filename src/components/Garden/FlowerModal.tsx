@@ -80,12 +80,15 @@ export default function FlowerModal({
   const [removeDone, setRemoveDone] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [earnedCoins, setEarnedCoins] = useState<number | null>(null)
+  const [selling, setSelling] = useState(false)
 
   const daysNeeded = DAYS_PER_STAGE[info.rarity]
   const daysInStage = plant.daysWatered % daysNeeded
   const progressPct = (daysInStage / daysNeeded) * 100
 
   const handleSell = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (selling) return
+    setSelling(true)
     const value = await onSellFlower(plant.id, plant.flowerType)
     setEarnedCoins(value)
     setSellDone(true)
@@ -426,7 +429,10 @@ export default function FlowerModal({
               </div>
               <button
                 onClick={handleSell}
+                disabled={selling}
                 style={{
+                  opacity: selling ? 0.6 : 1,
+                  cursor: selling ? 'default' : 'pointer',
                   width: '100%',
                   padding: '10px 0',
                   borderRadius: 12,
@@ -436,7 +442,6 @@ export default function FlowerModal({
                   fontWeight: 800,
                   fontSize: 13,
                   border: `1.5px solid ${T.btnPositiveBorder}`,
-                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

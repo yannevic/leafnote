@@ -1,34 +1,26 @@
-import { ref, push, set, update, get, runTransaction, onValue } from 'firebase/database'
+import { ref, push, set, update, get, remove, runTransaction, onValue } from 'firebase/database'
 import { db } from './firebase'
-import { grantCard, revokeCard } from './cardsInventory'
 
 export type TradeStatus = 'pending_response' | 'countered' | 'accepted' | 'declined' | 'cancelled'
 
 export interface CardRef {
   collectionId: string
   cardId: string
+  instanceId: string // referência à instância em pendingCards/{uid}/{instanceId} de quem está ofertando essa cópia
 }
 
 export interface Trade {
   id: string
-  requesterUid: string // quem criou a proposta original (papel fixo, não muda em contraproposta)
-  partnerUid: string // o outro (papel fixo)
-  cardsFromRequester: CardRef[] // cartas que requesterUid está oferecendo AGORA
-  cardsFromPartner: CardRef[] // cartas que partnerUid está oferecendo AGORA
-  proposedBy: string // uid de quem definiu os termos atuais — o OUTRO é quem responde
+  requesterUid: string
+  partnerUid: string
+  cardsFromRequester: CardRef[]
+  cardsFromPartner: CardRef[]
+  proposedBy: string
   status: TradeStatus
   createdAt: number
   updatedAt: number
 }
 
-function sameCard(a: CardRef, b: CardRef) {
-  return a.collectionId === b.collectionId && a.cardId === b.cardId
-}
-
-/**
- * Cria uma proposta nova. Bloqueia se já existir uma troca ativa entre o casal
- * (pending_response ou countered) — só uma por vez.
- */
 export async function proposeTrade(
   coupleId: string,
   requesterUid: string,
@@ -66,11 +58,6 @@ export async function proposeTrade(
   return newRef.key as string
 }
 
-/**
- * Contraproposta — só quem NÃO fez a última oferta pode contrapropor.
- * byUid pode ajustar qualquer um dos dois lados (cardsFromRequester e/ou
- * cardsFromPartner), independente de qual papel (requester/partner) ele tem.
- */
 export async function counterTrade(
   coupleId: string,
   tradeId: string,
@@ -97,7 +84,6 @@ export async function counterTrade(
   })
 }
 
-/** Recusa — só quem NÃO fez a última oferta recusa (quem propôs cancela, não recusa). */
 export async function declineTrade(coupleId: string, tradeId: string, byUid: string) {
   const tradeRef = ref(db, `couples/${coupleId}/cards/trades/${tradeId}`)
   await runTransaction(tradeRef, (current: Trade | null) => {
@@ -108,7 +94,6 @@ export async function declineTrade(coupleId: string, tradeId: string, byUid: str
   })
 }
 
-/** Cancela — só quem fez a última oferta pode desistir dela antes do outro responder. */
 export async function cancelTrade(coupleId: string, tradeId: string, byUid: string) {
   const tradeRef = ref(db, `couples/${coupleId}/cards/trades/${tradeId}`)
   await runTransaction(tradeRef, (current: Trade | null) => {
@@ -120,10 +105,12 @@ export async function cancelTrade(coupleId: string, tradeId: string, byUid: stri
 }
 
 /**
- * Aceita — só quem NÃO fez a última oferta aceita. Trava o status em
- * 'accepted' via transaction primeiro (evita aceite duplicado), valida posse
- * de TODAS as cartas dos dois lados antes de mexer em qualquer inventário, e
- * só então transfere tudo.
+ * Aceita — trava o status via transaction, valida que cada instância
+ * pendente ofertada ainda existe (não foi vendida/já usada em outro lugar
+ * nesse meio tempo), e só então move: remove da mochila de quem deu,
+ * adiciona como nova pendente na mochila de quem recebe. Nunca toca em
+ * inventory — quem recebe decide depois, arrastando normalmente na
+ * coleção (placePendingCard já trata credita/avisa-duplicata).
  */
 export async function acceptTrade(coupleId: string, tradeId: string, byUid: string) {
   const tradeRef = ref(db, `couples/${coupleId}/cards/trades/${tradeId}`)
@@ -137,68 +124,49 @@ export async function acceptTrade(coupleId: string, tradeId: string, byUid: stri
 
   if (!result.committed || !result.snapshot.exists()) return
   const trade = result.snapshot.val() as Trade
-  if (trade.status !== 'accepted') return // regra bloqueou (não era sua vez, etc.)
+  if (trade.status !== 'accepted') return
 
   try {
-    // 1) valida posse: cada carta que 'requester' vai dar precisa estar com
-    // ele; cada carta que 'partner' vai dar precisa estar com ele.
+    // valida que cada instância ofertada ainda está na mochila de quem prometeu ela
     for (const card of trade.cardsFromRequester) {
       const snap = await get(
-        ref(
-          db,
-          `couples/${coupleId}/cards/inventory/${trade.requesterUid}/${card.collectionId}/${card.cardId}`
-        )
+        ref(db, `couples/${coupleId}/cards/pendingCards/${trade.requesterUid}/${card.instanceId}`)
       )
-      if ((snap.val() ?? 0) < 1) {
+      const data = snap.val()
+      if (!data || data.cardId !== card.cardId || data.collectionId !== card.collectionId) {
         throw new Error('uma das cartas da proposta não está mais disponível')
       }
     }
     for (const card of trade.cardsFromPartner) {
       const snap = await get(
-        ref(
-          db,
-          `couples/${coupleId}/cards/inventory/${trade.partnerUid}/${card.collectionId}/${card.cardId}`
-        )
+        ref(db, `couples/${coupleId}/cards/pendingCards/${trade.partnerUid}/${card.instanceId}`)
       )
-      if ((snap.val() ?? 0) < 1) {
+      const data = snap.val()
+      if (!data || data.cardId !== card.cardId || data.collectionId !== card.collectionId) {
         throw new Error('uma das cartas da proposta não está mais disponível')
       }
     }
 
-    // 2) valida que ninguém vai receber uma carta duplicada (bloqueio de
-    // duplicata vale pra trocas também) — cardsFromRequester vão pro partner,
-    // cardsFromPartner vão pro requester.
+    // transfere: sai da mochila de quem deu, entra como pendente nova na mochila de quem recebe
     for (const card of trade.cardsFromRequester) {
-      const snap = await get(
-        ref(
-          db,
-          `couples/${coupleId}/cards/inventory/${trade.partnerUid}/${card.collectionId}/${card.cardId}`
-        )
+      await remove(
+        ref(db, `couples/${coupleId}/cards/pendingCards/${trade.requesterUid}/${card.instanceId}`)
       )
-      if ((snap.val() ?? 0) > 0) {
-        throw new Error('quem vai receber já tem uma das cartas da proposta agora')
-      }
+      await push(ref(db, `couples/${coupleId}/cards/pendingCards/${trade.partnerUid}`), {
+        cardId: card.cardId,
+        collectionId: card.collectionId,
+        addedAt: Date.now(),
+      })
     }
     for (const card of trade.cardsFromPartner) {
-      const snap = await get(
-        ref(
-          db,
-          `couples/${coupleId}/cards/inventory/${trade.requesterUid}/${card.collectionId}/${card.cardId}`
-        )
+      await remove(
+        ref(db, `couples/${coupleId}/cards/pendingCards/${trade.partnerUid}/${card.instanceId}`)
       )
-      if ((snap.val() ?? 0) > 0) {
-        throw new Error('quem vai receber já tem uma das cartas da proposta agora')
-      }
-    }
-
-    // 3) tudo validado — transfere de fato
-    for (const card of trade.cardsFromRequester) {
-      await revokeCard(coupleId, trade.requesterUid, card.collectionId, card.cardId)
-      await grantCard(coupleId, trade.partnerUid, card.collectionId, card.cardId)
-    }
-    for (const card of trade.cardsFromPartner) {
-      await revokeCard(coupleId, trade.partnerUid, card.collectionId, card.cardId)
-      await grantCard(coupleId, trade.requesterUid, card.collectionId, card.cardId)
+      await push(ref(db, `couples/${coupleId}/cards/pendingCards/${trade.requesterUid}`), {
+        cardId: card.cardId,
+        collectionId: card.collectionId,
+        addedAt: Date.now(),
+      })
     }
   } catch (err) {
     await update(tradeRef, { status: 'declined', updatedAt: Date.now() })
@@ -217,5 +185,3 @@ export function subscribeTrades(coupleId: string, callback: (trades: Trade[]) =>
     callback(list)
   })
 }
-
-export { sameCard }
