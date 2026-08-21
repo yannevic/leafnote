@@ -375,8 +375,24 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
             icon={<Repeat size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
             title="trocas"
           >
-            em breve vocês vão poder trocar cartas repetidas entre si — essa parte ainda está em
-            construção.
+            dá pra trocar cartas repetidas com o parceiro — só cartas que vocês já têm duplicadas
+            entram na troca, a única cópia que completa a coleção nunca sai de lá.
+            <div style={{ marginTop: 10, lineHeight: 1.6 }}>
+              um propõe selecionando quantas cartas quiser de cada lado (suas repetidas + repetidas
+              do parceiro que você quer). o outro pode aceitar do jeito que está, ajustar a proposta
+              (vira uma contraproposta) ou recusar. um selo <b>✦</b> marca as cartas que a outra
+              pessoa ainda não tem — mais chance de interesse.
+            </div>
+            <div style={{ marginTop: 8, lineHeight: 1.6 }}>
+              é permitido topar uma troca desigual — dar uma carta sem receber uma de valor
+              equivalente, só pra ajudar o parceiro a completar a coleção dele. tem um indicador
+              embaixo dos grids mostrando se a troca está equilibrada (verde), meio desigual
+              (amarelo) ou bem desigual (vermelho), baseado na raridade das cartas dos dois lados.
+            </div>
+            <div style={{ marginTop: 8, lineHeight: 1.6 }}>
+              cartas recebidas numa troca vão pra sua mochila, igual carta ganha em pacote — você
+              decide depois se encaixa na coleção.
+            </div>
           </Section>
         </div>
       </div>
