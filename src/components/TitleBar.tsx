@@ -7,12 +7,15 @@ import type { AppNotification } from '../hooks/useNotificationCenter'
 import { PiMoneyWavyLight } from 'react-icons/pi'
 import { usePersonalCoin } from '../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../lib/personalCoinIcons'
+import { ArrowLeftRight } from 'lucide-react'
+import CoinTransferModal from './Cards/CoinTransferModal'
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
 import { AlertTriangle } from 'lucide-react'
 import type { UpdateStatus } from './UpdateNotifier'
 
 interface TitleBarProps {
+  coupleId?: string
   extraBoards: BoardMeta[]
   activeBoardId: string
   onSwitchBoard: (id: string) => void
@@ -32,6 +35,7 @@ interface TitleBarProps {
 }
 
 export default function TitleBar({
+  coupleId,
   extraBoards,
   activeBoardId,
   onSwitchBoard,
@@ -52,6 +56,7 @@ export default function TitleBar({
   const { coin: myCoin } = usePersonalCoin(uid ?? null)
   const { coin: partnerCoin } = usePersonalCoin(partnerUid ?? null)
   const [isMaximized, setIsMaximized] = useState(false)
+  const [showTransfer, setShowTransfer] = useState(false)
   const [version, setVersion] = useState('')
   const [now, setNow] = useState(new Date())
 
@@ -266,10 +271,43 @@ export default function TitleBar({
             )}
           </div>
         )}
+        {coupleId && uid && (
+          <button
+            onClick={() => setShowTransfer(true)}
+            title="transferir moeda"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              background: 'rgba(196,149,106,0.12)',
+              color: 'rgba(196,149,106,0.7)',
+              marginRight: 2,
+              padding: 0,
+            }}
+          >
+            <ArrowLeftRight size={12} />
+          </button>
+        )}
         <NotificationCenter
           notifications={notifications}
           onDismiss={onDismissNotification ?? (() => {})}
         />
+        {showTransfer && coupleId && uid && (
+          <CoinTransferModal
+            coupleId={coupleId}
+            uid={uid}
+            partnerUid={partnerUid ?? ''}
+            personalBalance={myCoin?.balance ?? 0}
+            coupleBalance={coins}
+            onClose={() => setShowTransfer(false)}
+            onDone={() => setShowTransfer(false)}
+          />
+        )}
 
         <UpdateBtn
           status={updateStatus}

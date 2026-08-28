@@ -10,28 +10,29 @@ const INITIAL_PROMO_COLLECTION_ID = 'jardim-secreto'
 // Brasília é UTC-3 fixo (sem horário de verão desde 2019)
 const BRASILIA_OFFSET_MS = 3 * 60 * 60 * 1000
 
+// intervalo de rotação do pacote promocional, em dias
+export const PROMO_ROTATION_DAYS = 3
+
 export interface PromoCollectionState {
   current: string
   nextRotation: number
   featured: string[] // todas as coleções que já entraram em cartaz alguma vez
 }
 
-// calcula o timestamp (em ms, UTC) do próximo domingo à meia-noite no
-// horário de Brasília, a partir de fromMs
-function getNextSundayMidnightBrasilia(fromMs: number): number {
+// calcula o timestamp (em ms, UTC) da próxima meia-noite (horário de
+// Brasília) que fica PROMO_ROTATION_DAYS dias à frente de fromMs — não é
+// mais travado em domingo, cicla a cada N dias a partir de quando a última
+// rotação aconteceu
+function getNextRotationBrasilia(fromMs: number, days: number = PROMO_ROTATION_DAYS): number {
   const localMs = fromMs - BRASILIA_OFFSET_MS
   const localDate = new Date(localMs)
-  const localDay = localDate.getUTCDay() // 0 = domingo
-  // se hoje já é domingo, a rotação de hoje já devia ter acontecido às
-  // 00:00 — a próxima é daqui a 7 dias
-  const daysUntilSunday = localDay === 0 ? 7 : 7 - localDay
   const localMidnightToday = Date.UTC(
     localDate.getUTCFullYear(),
     localDate.getUTCMonth(),
     localDate.getUTCDate()
   )
-  const localNextSunday = localMidnightToday + daysUntilSunday * 24 * 60 * 60 * 1000
-  return localNextSunday + BRASILIA_OFFSET_MS
+  const localNextRotation = localMidnightToday + days * 24 * 60 * 60 * 1000
+  return localNextRotation + BRASILIA_OFFSET_MS
 }
 
 // escolhe a próxima coleção: prioriza qualquer coleção que NUNCA esteve em
@@ -60,10 +61,11 @@ export async function ensurePromoCollectionCurrent(
     }
     if (!current) {
       // primeira inicialização — mantém a coleção que já estava em cartaz
-      // antes deste sistema existir, e agenda a virada pro próximo domingo
+      // antes deste sistema existir, e agenda a virada pra daqui a
+      // PROMO_ROTATION_DAYS dias
       return {
         current: INITIAL_PROMO_COLLECTION_ID,
-        nextRotation: getNextSundayMidnightBrasilia(now),
+        nextRotation: getNextRotationBrasilia(now),
         featured: [INITIAL_PROMO_COLLECTION_ID],
       }
     }
@@ -74,7 +76,7 @@ export async function ensurePromoCollectionCurrent(
       : [...previousFeatured, newCollectionId]
     return {
       current: newCollectionId,
-      nextRotation: getNextSundayMidnightBrasilia(now),
+      nextRotation: getNextRotationBrasilia(now),
       featured: newFeatured,
     }
   })

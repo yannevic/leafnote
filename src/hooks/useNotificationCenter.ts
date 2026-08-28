@@ -28,6 +28,10 @@ export interface AppNotification {
     | 'calendar-event'
     | 'weekly-sorteo'
     | 'activity-completed'
+    | 'card-trade-request'
+    | 'card-trade-countered'
+    | 'card-trade-accepted'
+    | 'card-trade-declined'
   message: string
   boardId?: string
   boardName?: string
@@ -63,6 +67,9 @@ export function useNotificationCenter({
     }
     if (id.startsWith('activity-completed-')) {
       dbSet(dbRef(db, `users/${uid}/seenActivityNotifs/${id}`), true)
+    }
+    if (id.startsWith('card-trade-')) {
+      dbSet(dbRef(db, `users/${uid}/seenTradeNotifs/${id}`), true)
     }
   }
 
@@ -385,6 +392,48 @@ export function useNotificationCenter({
     })
     return () => dbOff(r, 'value', handler)
   }, [uid, coupleId])
+
+  useEffect(() => {
+    if (!uid) return
+    const r = dbRef(db, `couples/${coupleId}/cards/lastTradeEvent`)
+    const handler = dbOnValue(r, async (snap) => {
+      const data = snap.val() as {
+        id: string
+        tradeId: string
+        type: 'request' | 'countered' | 'accepted' | 'declined'
+        actorUid: string
+        createdAt: number
+      } | null
+
+      if (!data || data.actorUid === uid) {
+        setNotifications((prev) => prev.filter((n) => !n.type.startsWith('card-trade-')))
+        return
+      }
+
+      const notifId = `card-trade-${data.id}`
+      const seenSnap = await dbGet(dbRef(db, `users/${uid}/seenTradeNotifs/${notifId}`))
+      if (seenSnap.val() === true) {
+        setNotifications((prev) => prev.filter((n) => !n.type.startsWith('card-trade-')))
+        return
+      }
+
+      const messages: Record<typeof data.type, string> = {
+        request: `${partnerNick} propôs uma troca de cartas`,
+        countered: `${partnerNick} ajustou a proposta de troca`,
+        accepted: `a troca de cartas com ${partnerNick} foi aceita!`,
+        declined: `${partnerNick} recusou a proposta de troca`,
+      }
+
+      const notif: AppNotification = {
+        id: notifId,
+        type: `card-trade-${data.type}` as AppNotification['type'],
+        message: messages[data.type],
+        dismissible: true,
+      }
+      setNotifications((prev) => [...prev.filter((n) => !n.type.startsWith('card-trade-')), notif])
+    })
+    return () => dbOff(r, 'value', handler)
+  }, [uid, coupleId, partnerNick])
 
   // Filtra lidas
   const visible = notifications.filter((n) => !n.dismissible || !readIds.has(n.id))

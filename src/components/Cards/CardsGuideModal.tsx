@@ -265,10 +265,10 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
               <b style={{ color: '#2D4A2D' }}>{currentPromoCollection?.name ?? 'carregando...'}</b>.
               diferente do comum, ele não muda: se você comprar hoje e abrir daqui um mês, mesmo que
               a coleção em cartaz já tenha trocado, o seu pacote continua sorteando só da coleção de
-              quando você comprou. a coleção em cartaz troca sozinha toda semana, aos domingos à
-              meia-noite (horário de Brasília) — sempre priorizando alguma coleção que ainda não
-              entrou em cartaz; quando todas já passaram por lá, intercala entre elas sem repetir a
-              mesma duas vezes seguidas.
+              quando você comprou. a coleção em cartaz troca sozinha a cada 3 dias, à meia-noite
+              (horário de Brasília) — sempre priorizando alguma coleção que ainda não entrou em
+              cartaz; quando todas já passaram por lá, intercala entre elas sem repetir a mesma duas
+              vezes seguidas.
             </div>
           </Section>
 
@@ -344,8 +344,7 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
               />
             </InfoCard>
             <div style={{ marginTop: 10, lineHeight: 1.6 }}>
-              essas 3 cartas vão direto pra sua coleção assim que compradas — não precisam passar
-              pela mochila nem por abertura de pacote.
+              essas 3 cartas caem na sua mochila assim que compradas, igual carta de pacote.
             </div>
           </Section>
 

@@ -1,26 +1,51 @@
-import { ref, push, set, update, get, remove, runTransaction, onValue } from 'firebase/database'
+import { ref, push, set, get, remove, update, runTransaction, onValue } from 'firebase/database'
 import { db } from './firebase'
 
 export type TradeStatus = 'pending_response' | 'countered' | 'accepted' | 'declined' | 'cancelled'
+export type TradeEventType = 'request' | 'countered' | 'accepted' | 'declined'
 
 export interface CardRef {
   collectionId: string
   cardId: string
-  instanceId: string // referência à instância em pendingCards/{uid}/{instanceId} de quem está ofertando essa cópia
+  instanceId: string // referência à cópia específica em pendingCards/{uid}/{instanceId}
 }
 
 export interface Trade {
   id: string
-  requesterUid: string
-  partnerUid: string
-  cardsFromRequester: CardRef[]
-  cardsFromPartner: CardRef[]
-  proposedBy: string
+  requesterUid: string // quem criou a proposta original (papel fixo, não muda em contraproposta)
+  partnerUid: string // o outro (papel fixo)
+  cardsFromRequester: CardRef[] // cartas que requesterUid está oferecendo AGORA
+  cardsFromPartner: CardRef[] // cartas que partnerUid está oferecendo AGORA
+  proposedBy: string // uid de quem definiu os termos atuais — o OUTRO é quem responde
   status: TradeStatus
   createdAt: number
   updatedAt: number
 }
 
+/**
+ * Grava o último evento de troca — useNotificationCenter escuta esse nó
+ * (mesmo padrão do lastActivityCompleted). Sempre que actorUid !== uid de
+ * quem está vendo, aparece uma notificação pro outro parceiro.
+ */
+async function notifyTradeEvent(
+  coupleId: string,
+  tradeId: string,
+  type: TradeEventType,
+  actorUid: string
+) {
+  await set(ref(db, `couples/${coupleId}/cards/lastTradeEvent`), {
+    id: `${tradeId}-${type}-${Date.now()}`,
+    tradeId,
+    type,
+    actorUid,
+    createdAt: Date.now(),
+  })
+}
+
+/**
+ * Cria uma proposta nova. Bloqueia se já existir uma troca ativa entre o casal
+ * (pending_response ou countered) — só uma por vez.
+ */
 export async function proposeTrade(
   coupleId: string,
   requesterUid: string,
@@ -55,9 +80,16 @@ export async function proposeTrade(
     updatedAt: now,
   }
   await set(newRef, trade)
-  return newRef.key as string
+  const tradeId = newRef.key as string
+  await notifyTradeEvent(coupleId, tradeId, 'request', requesterUid)
+  return tradeId
 }
 
+/**
+ * Contraproposta — só quem NÃO fez a última oferta pode contrapropor.
+ * byUid pode ajustar qualquer um dos dois lados (cardsFromRequester e/ou
+ * cardsFromPartner), independente de qual papel (requester/partner) ele tem.
+ */
 export async function counterTrade(
   coupleId: string,
   tradeId: string,
@@ -69,7 +101,7 @@ export async function counterTrade(
     throw new Error('selecione ao menos uma carta pra contrapropor')
   }
   const tradeRef = ref(db, `couples/${coupleId}/cards/trades/${tradeId}`)
-  await runTransaction(tradeRef, (current: Trade | null) => {
+  const result = await runTransaction(tradeRef, (current: Trade | null) => {
     if (!current) return current
     if (current.status !== 'pending_response' && current.status !== 'countered') return current
     if (current.proposedBy === byUid) return current
@@ -82,18 +114,34 @@ export async function counterTrade(
       updatedAt: Date.now(),
     }
   })
+
+  if (result.committed && result.snapshot.exists()) {
+    const updated = result.snapshot.val() as Trade
+    if (updated.status === 'countered' && updated.proposedBy === byUid) {
+      await notifyTradeEvent(coupleId, tradeId, 'countered', byUid)
+    }
+  }
 }
 
+/** Recusa — só quem NÃO fez a última oferta recusa (quem propôs cancela, não recusa). */
 export async function declineTrade(coupleId: string, tradeId: string, byUid: string) {
   const tradeRef = ref(db, `couples/${coupleId}/cards/trades/${tradeId}`)
-  await runTransaction(tradeRef, (current: Trade | null) => {
+  const result = await runTransaction(tradeRef, (current: Trade | null) => {
     if (!current) return current
     if (current.status !== 'pending_response' && current.status !== 'countered') return current
     if (current.proposedBy === byUid) return current
     return { ...current, status: 'declined', updatedAt: Date.now() }
   })
+
+  if (result.committed && result.snapshot.exists()) {
+    const updated = result.snapshot.val() as Trade
+    if (updated.status === 'declined') {
+      await notifyTradeEvent(coupleId, tradeId, 'declined', byUid)
+    }
+  }
 }
 
+/** Cancela — só quem fez a última oferta pode desistir dela antes do outro responder. */
 export async function cancelTrade(coupleId: string, tradeId: string, byUid: string) {
   const tradeRef = ref(db, `couples/${coupleId}/cards/trades/${tradeId}`)
   await runTransaction(tradeRef, (current: Trade | null) => {
@@ -102,15 +150,19 @@ export async function cancelTrade(coupleId: string, tradeId: string, byUid: stri
     if (current.proposedBy !== byUid) return current
     return { ...current, status: 'cancelled', updatedAt: Date.now() }
   })
+  // cancelar a própria oferta não gera notificação pro parceiro — ele nem
+  // tinha aceitado nada ainda.
 }
 
 /**
- * Aceita — trava o status via transaction, valida que cada instância
- * pendente ofertada ainda existe (não foi vendida/já usada em outro lugar
- * nesse meio tempo), e só então move: remove da mochila de quem deu,
- * adiciona como nova pendente na mochila de quem recebe. Nunca toca em
- * inventory — quem recebe decide depois, arrastando normalmente na
- * coleção (placePendingCard já trata credita/avisa-duplicata).
+ * Aceita — só quem NÃO fez a última oferta aceita. Trava o status em
+ * 'accepted' via transaction primeiro (evita aceite duplicado), valida que
+ * CADA instância ofertada ainda existe em pendingCards de quem prometeu ela
+ * (ninguém vendeu pra Folhinha nem usou aquela cópia noutra troca enquanto
+ * essa esperava resposta) e só então transfere: remove a instância pendente
+ * de quem deu, cria uma nova entrada pendente na mochila de quem recebeu —
+ * nunca toca em inventory. Se qualquer instância sumiu, a troca inteira é
+ * marcada declined automaticamente, nada fica pela metade.
  */
 export async function acceptTrade(coupleId: string, tradeId: string, byUid: string) {
   const tradeRef = ref(db, `couples/${coupleId}/cards/trades/${tradeId}`)
@@ -124,16 +176,15 @@ export async function acceptTrade(coupleId: string, tradeId: string, byUid: stri
 
   if (!result.committed || !result.snapshot.exists()) return
   const trade = result.snapshot.val() as Trade
-  if (trade.status !== 'accepted') return
+  if (trade.status !== 'accepted') return // regra bloqueou (não era sua vez, etc.)
 
   try {
-    // valida que cada instância ofertada ainda está na mochila de quem prometeu ela
+    // 1) valida que cada instância ofertada ainda existe na mochila de quem prometeu ela
     for (const card of trade.cardsFromRequester) {
       const snap = await get(
         ref(db, `couples/${coupleId}/cards/pendingCards/${trade.requesterUid}/${card.instanceId}`)
       )
-      const data = snap.val()
-      if (!data || data.cardId !== card.cardId || data.collectionId !== card.collectionId) {
+      if (!snap.exists()) {
         throw new Error('uma das cartas da proposta não está mais disponível')
       }
     }
@@ -141,37 +192,44 @@ export async function acceptTrade(coupleId: string, tradeId: string, byUid: stri
       const snap = await get(
         ref(db, `couples/${coupleId}/cards/pendingCards/${trade.partnerUid}/${card.instanceId}`)
       )
-      const data = snap.val()
-      if (!data || data.cardId !== card.cardId || data.collectionId !== card.collectionId) {
+      if (!snap.exists()) {
         throw new Error('uma das cartas da proposta não está mais disponível')
       }
     }
 
-    // transfere: sai da mochila de quem deu, entra como pendente nova na mochila de quem recebe
+    // 2) tudo validado — transfere de fato: remove instância pendente de quem
+    // deu, cria uma nova entrada pendente (mesmo formato de addPendingCards)
+    // na mochila de quem recebeu.
+    const now = Date.now()
+
     for (const card of trade.cardsFromRequester) {
       await remove(
         ref(db, `couples/${coupleId}/cards/pendingCards/${trade.requesterUid}/${card.instanceId}`)
       )
-      await push(ref(db, `couples/${coupleId}/cards/pendingCards/${trade.partnerUid}`), {
+      const newRef = push(ref(db, `couples/${coupleId}/cards/pendingCards/${trade.partnerUid}`))
+      await set(newRef, {
         cardId: card.cardId,
         collectionId: card.collectionId,
-        addedAt: Date.now(),
+        addedAt: now,
       })
     }
     for (const card of trade.cardsFromPartner) {
       await remove(
         ref(db, `couples/${coupleId}/cards/pendingCards/${trade.partnerUid}/${card.instanceId}`)
       )
-      await push(ref(db, `couples/${coupleId}/cards/pendingCards/${trade.requesterUid}`), {
+      const newRef = push(ref(db, `couples/${coupleId}/cards/pendingCards/${trade.requesterUid}`))
+      await set(newRef, {
         cardId: card.cardId,
         collectionId: card.collectionId,
-        addedAt: Date.now(),
+        addedAt: now,
       })
     }
   } catch (err) {
     await update(tradeRef, { status: 'declined', updatedAt: Date.now() })
     throw err
   }
+
+  await notifyTradeEvent(coupleId, tradeId, 'accepted', byUid)
 }
 
 export function subscribeTrades(coupleId: string, callback: (trades: Trade[]) => void) {

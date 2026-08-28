@@ -4,6 +4,8 @@ import { CardDefinition } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
 import versoCard from '../../assets/cards/jardim-secreto/verso-card.png'
 
+const EPIC_GLOW_SHADOW = '0 0 20px 4px #ff9ecb, 0 0 34px 10px #9ecbff, 0 0 46px 14px #fff29e'
+
 interface PackOpenModalProps {
   cards: CardDefinition[]
   ownedBefore: Record<string, number> // cardId -> quantidade que já tinha ANTES desse pacote
@@ -43,6 +45,12 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
         @keyframes glowPulse {
           0%, 100% { opacity: 0.55; }
           50% { opacity: 1; }
+        }
+        @keyframes epicGlowPulse {
+          0% { border-color: #ff9ecb; box-shadow: 0 0 16px 4px #ff9ecb; }
+          33% { border-color: #9ecbff; box-shadow: 0 0 16px 4px #9ecbff; }
+          66% { border-color: #fff29e; box-shadow: 0 0 16px 4px #fff29e; }
+          100% { border-color: #ff9ecb; box-shadow: 0 0 16px 4px #ff9ecb; }
         }
         @keyframes shineSweep {
           0% { transform: translateX(-120%) rotate(20deg); opacity: 0; }
@@ -111,7 +119,11 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                     overflow: 'hidden',
                     border: '2px solid rgba(255,255,255,0.15)',
                     boxShadow:
-                      !isRevealed && isHovered ? `0 0 ${isHigh ? 28 : 14}px 4px ${color}` : 'none',
+                      !isRevealed && isHovered
+                        ? card.rarity === 'epica'
+                          ? EPIC_GLOW_SHADOW
+                          : `0 0 ${isHigh ? 28 : 14}px 4px ${color}`
+                        : 'none',
                   }}
                 >
                   <img
@@ -125,8 +137,11 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                         position: 'absolute',
                         inset: -4,
                         borderRadius: 16,
-                        border: `2px solid ${color}`,
-                        animation: 'glowPulse 1.1s ease-in-out infinite',
+                        border: `2px solid ${card.rarity === 'epica' ? '#ff9ecb' : color}`,
+                        animation:
+                          card.rarity === 'epica'
+                            ? 'epicGlowPulse 1.4s ease-in-out infinite'
+                            : 'glowPulse 1.1s ease-in-out infinite',
                         pointerEvents: 'none',
                       }}
                     />
@@ -144,7 +159,12 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                     overflow: 'hidden',
                     border: `2px solid ${color}`,
                     background: '#fff',
-                    boxShadow: isRevealed && isHigh ? `0 0 20px 2px ${color}88` : 'none',
+                    boxShadow:
+                      isRevealed && isHigh
+                        ? card.rarity === 'epica'
+                          ? '0 0 20px 3px #ff9ecb, 0 0 30px 8px #9ecbff'
+                          : `0 0 20px 2px ${color}88`
+                        : 'none',
                   }}
                 >
                   <img

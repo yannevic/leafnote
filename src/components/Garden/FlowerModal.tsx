@@ -8,7 +8,7 @@ import {
   DAYS_PER_STAGE,
 } from '../../lib/garden'
 import { getFlowerImage } from '../../assets/garden'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { TbPlant2 } from 'react-icons/tb'
 import { triggerCoinPopupFromEvent } from '../../lib/coinPopupBus'
 import { WATER_REWARD } from '../../lib/economyConfig'
@@ -81,13 +81,17 @@ export default function FlowerModal({
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [earnedCoins, setEarnedCoins] = useState<number | null>(null)
   const [selling, setSelling] = useState(false)
+  const sellingRef = useRef(false)
+  const wateringRef = useRef(false)
+  const [wateringLocked, setWateringLocked] = useState(false)
 
   const daysNeeded = DAYS_PER_STAGE[info.rarity]
   const daysInStage = plant.daysWatered % daysNeeded
   const progressPct = (daysInStage / daysNeeded) * 100
 
   const handleSell = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (selling) return
+    if (sellingRef.current) return
+    sellingRef.current = true
     setSelling(true)
     const value = await onSellFlower(plant.id, plant.flowerType)
     setEarnedCoins(value)
@@ -374,9 +378,12 @@ export default function FlowerModal({
           )}
 
           {/* Botão regar */}
-          {!isFullyGrown && !alreadyWatered && (
+          {!isFullyGrown && !alreadyWatered && !wateringLocked && (
             <button
               onClick={(e) => {
+                if (wateringRef.current) return
+                wateringRef.current = true
+                setWateringLocked(true)
                 onWater()
                 triggerCoinPopupFromEvent(e, WATER_REWARD, 'moedas', '#4A7A4A')
               }}

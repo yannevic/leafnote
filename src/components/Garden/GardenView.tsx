@@ -523,6 +523,7 @@ export default function GardenView({
       {/* Modal de detalhes da planta */}
       {selectedPlant && (
         <FlowerModal
+          key={selectedPlant.id}
           plant={selectedPlant}
           uid={uid}
           partnerUid={partnerUid}

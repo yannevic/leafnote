@@ -13,6 +13,7 @@ import { buyFromRotatingShop, SHOP_PRICES } from '../../lib/rotatingShop'
 import { useRotatingShop } from '../../hooks/useRotatingShop'
 import { usePromoCollection } from '../../hooks/usePromoCollection'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
+import { useCardInventory } from '../../hooks/useCardInventory'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
 
 import CardZoomModal from './CardZoomModal'
@@ -57,6 +58,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
     ? COLLECTIONS[promoState.current as keyof typeof COLLECTIONS]?.name
     : null
   const { coin } = usePersonalCoin(uid)
+  const { inventory } = useCardInventory(coupleId, uid)
   const pityCount = usePityCount(coupleId, uid)
   const pityRemaining = Math.max(0, PITY_THRESHOLD - pityCount)
   const CoinIcon = coin ? COIN_ICONS[coin.icon] : Package
@@ -94,7 +96,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
       return
     }
     setShopRefresh((v) => v + 1)
-    showToast(`${card.name} adicionada à coleção!`)
+    showToast(`${card.name} caiu na sua mochila!`)
   }
 
   const shopCards = (shopData?.cardIds ?? [])
@@ -407,12 +409,14 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
           >
             {shopCards.map((card) => {
               const color = RARITY_COLOR[card.rarity]
+              const alreadyOwned = (inventory[card.collectionId]?.[card.id] ?? 0) >= 1
               return (
                 <div
                   key={card.id}
                   className="shop-card"
                   style={
                     {
+                      position: 'relative',
                       flex: '1 1 180px',
                       maxWidth: 220,
                       borderRadius: 16,
@@ -424,6 +428,27 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
                     } as React.CSSProperties
                   }
                 >
+                  {alreadyOwned && (
+                    <div
+                      title="você já tem essa carta na coleção"
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        zIndex: 5,
+                        background: 'rgba(44,20,8,0.82)',
+                        color: '#fff',
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        fontFamily: 'Baloo 2',
+                        padding: '3px 8px',
+                        borderRadius: 999,
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      já tem
+                    </div>
+                  )}
                   <div
                     onClick={() => setZoomCard(card)}
                     style={{ position: 'relative', cursor: 'pointer' }}
@@ -617,6 +642,7 @@ function ConfirmPurchaseModal({
   onConfirm: () => void
   onCancel: () => void
 }) {
+  const mouseDownOnBackdrop = useRef(false)
   return (
     <div
       style={{
@@ -630,7 +656,12 @@ function ConfirmPurchaseModal({
         justifyContent: 'center',
         animation: 'modalBackdropIn 0.2s ease-out',
       }}
-      onClick={onCancel}
+      onMouseDown={(e) => {
+        mouseDownOnBackdrop.current = e.target === e.currentTarget
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && mouseDownOnBackdrop.current) onCancel()
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}

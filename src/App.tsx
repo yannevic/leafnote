@@ -82,6 +82,7 @@ function AppInner({ user, coupleId }: { user: User; coupleId: string }) {
         onCheckUpdate={() => window.api.checkForUpdates()}
         notifications={notifications}
         onDismissNotification={dismiss}
+        coupleId={coupleId}
         coins={coins}
         uid={user.uid}
         partnerUid={partnerUid}

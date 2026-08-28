@@ -1,12 +1,10 @@
-import { ref, get, set } from 'firebase/database'
+import { ref, get, set, push } from 'firebase/database'
 import { db } from './firebase'
 import { CARDS, CardDefinition } from './cards'
-import { grantCard } from './cardsInventory'
 import { spendCoins } from './personalCoin'
 import { ROTATING_SHOP_WEIGHTS, ROTATING_SHOP_ROTATION_DAYS } from './dropRates'
 
 const SLOTS = 3
-
 type ShopRarity = 'incomum' | 'rara' | 'epica'
 
 import { SHOP_PRICES } from './economyConfig'
@@ -49,11 +47,9 @@ export async function getRotatingShop(coupleId: string): Promise<RotatingShopDat
   const snap = await get(shopRef)
   const now = Date.now()
   const existing = snap.val() as RotatingShopData | null
-
   if (existing && existing.nextRotation > now) {
     return existing
   }
-
   const data: RotatingShopData = {
     cardIds: pickRandomCardIds(),
     nextRotation: now + ROTATING_SHOP_ROTATION_DAYS * 24 * 60 * 60 * 1000,
@@ -70,6 +66,12 @@ export async function buyFromRotatingShop(
   const price = SHOP_PRICES[card.rarity as ShopRarity]
   const paid = await spendCoins(uid, price, `carta do dia: ${card.name}`)
   if (!paid) return false
-  await grantCard(coupleId, uid, card.collectionId, card.id, 1)
+
+  const newRef = push(ref(db, `couples/${coupleId}/cards/pendingCards/${uid}`))
+  await set(newRef, {
+    cardId: card.id,
+    collectionId: card.collectionId,
+    addedAt: Date.now(),
+  })
   return true
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ArrowLeftRight, CheckCircle2, XCircle, Ban } from 'lucide-react'
+import { ArrowLeftRight, CheckCircle2, XCircle, Ban, History } from 'lucide-react'
+import TradeHistoryModal from './TradeHistoryModal'
 import { CARDS } from '../../lib/cards'
 import { useTrades } from '../../hooks/useTrades'
 import { acceptTrade, declineTrade, cancelTrade, CardRef } from '../../lib/trades'
@@ -16,6 +17,7 @@ export default function TradesPanel({ coupleId, uid, partnerUid, onFeedback }: P
   const { trades, loading } = useTrades(coupleId)
   const [composerMode, setComposerMode] = useState<'propose' | 'counter' | null>(null)
   const [busy, setBusy] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   const activeTrade = trades.find(
     (t) => t.status === 'pending_response' || t.status === 'countered'
@@ -39,7 +41,7 @@ export default function TradesPanel({ coupleId, uid, partnerUid, onFeedback }: P
     setBusy(true)
     try {
       await acceptTrade(coupleId, activeTrade.id, uid)
-      onFeedback('troca aceita — cartas transferidas!')
+      onFeedback('troca aceita — as cartas caíram na mochila de vocês!')
     } catch (err) {
       onFeedback(err instanceof Error ? err.message : 'não foi possível aceitar')
     } finally {
@@ -86,10 +88,26 @@ export default function TradesPanel({ coupleId, uid, partnerUid, onFeedback }: P
           letterSpacing: '0.8px',
           display: 'flex',
           alignItems: 'center',
-          gap: 5,
+          justifyContent: 'space-between',
         }}
       >
-        <ArrowLeftRight size={11} /> trocas
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <ArrowLeftRight size={11} /> trocas
+        </span>
+        <button
+          onClick={() => setShowHistory(true)}
+          title="histórico de trocas"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 2,
+            display: 'flex',
+            color: 'rgba(122,48,64,0.45)',
+          }}
+        >
+          <History size={12} />
+        </button>
       </div>
 
       <div
@@ -188,6 +206,10 @@ export default function TradesPanel({ coupleId, uid, partnerUid, onFeedback }: P
           onDone={onFeedback}
         />
       )}
+
+      {showHistory && (
+        <TradeHistoryModal coupleId={coupleId} uid={uid} onClose={() => setShowHistory(false)} />
+      )}
     </div>
   )
 }
@@ -207,7 +229,7 @@ function CardStrip({ label, cards }: { label: string; cards: CardRef[] }) {
 
           return (
             <img
-              key={`${ref.collectionId}-${ref.cardId}`}
+              key={ref.instanceId}
               src={card.image}
               alt={card.name}
               title={card.name}

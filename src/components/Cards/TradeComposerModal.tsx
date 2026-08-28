@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, ArrowLeftRight, Check, Sparkles } from 'lucide-react'
 import { CARDS, CardDefinition } from '../../lib/cards'
 import { RARITY_COLOR } from '../../lib/rarity'
@@ -90,6 +90,7 @@ export default function TradeComposerModal({
   const [fromPartner, setFromPartner] = useState<CardRef[]>(initialCardsFromPartner)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const mouseDownOnBackdrop = useRef(false)
 
   const viewerIsRequester = viewerUid === requesterUid
   const loading = loadingRequesterInv || loadingPartnerInv
@@ -161,7 +162,12 @@ export default function TradeComposerModal({
         justifyContent: 'center',
         zIndex: 999999,
       }}
-      onClick={onClose}
+      onMouseDown={(e) => {
+        mouseDownOnBackdrop.current = e.target === e.currentTarget
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && mouseDownOnBackdrop.current) onClose()
+      }}
     >
       <style>{`
         .trade-scroll::-webkit-scrollbar { width: 4px; }
