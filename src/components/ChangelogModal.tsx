@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.73': [
+    "🐛 bug no rega corrigido e adiciona indexOn em widget/log",
+    "🐛 tempo para troca de pacote promocional modificado",
+    "🐛 cartas rotativas compradas agora vao para mochila nao direto para coleçao",
+    "✨ transferencia de moedas entre moeda pessoal/moeda do casal adicionada",
+    "✨ histórico de trocas adicionado",
+  ],
+
   '3.0.72': [
     "🐛 trocas corrigidas e aprimoradas e guia das cartas atualizado",
   ],
