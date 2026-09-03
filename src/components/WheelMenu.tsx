@@ -49,10 +49,14 @@ interface WheelMenuProps {
   centerBorder: string
   centerShadow: string
   totalNotif?: number
-  bottom: number
+  bottom?: number
+  top?: number
+  center?: boolean
   right: number
   radius?: number
-  size?: number
+  startAngle?: number
+  endAngle?: number
+  zIndex?: number
 }
 
 export default function WheelMenu({
@@ -64,54 +68,76 @@ export default function WheelMenu({
   centerShadow,
   totalNotif = 0,
   bottom,
+  top,
+  center,
   right,
-  radius = 75,
-  size = 220,
+  radius = 90,
+  startAngle = 90,
+  endAngle = 270,
+  zIndex = 48,
 }: WheelMenuProps) {
   const [expanded, setExpanded] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const angleStep = 360 / items.length
+  const angleStep = items.length > 1 ? (endAngle - startAngle) / (items.length - 1) : 0
 
   function open() {
     if (closeTimer.current) clearTimeout(closeTimer.current)
     setExpanded(true)
   }
-
   function scheduleClose() {
     closeTimer.current = setTimeout(() => setExpanded(false), 400)
   }
+
+  // caixa que engloba o leque inteiro — generosa de propósito, pra nunca cortar
+  // item nem "soltar" o hover no meio do caminho
+  const containerW = radius + 80
+  const containerH = radius * 2 + 80
+
+  // o botão central e TODOS os itens usam exatamente essa mesma âncora —
+  // é o que garante que o leque sempre nasce de onde o botão realmente está
+  const anchorStyle: React.CSSProperties = center
+    ? { position: 'absolute', top: '50%', right: 0 }
+    : top !== undefined
+      ? { position: 'absolute', top: 0, right: 0 }
+      : { position: 'absolute', bottom: 0, right: 0 }
+
+  const collapsedTransform = 'scale(0.3)'
 
   return (
     <div
       style={{
         position: 'fixed',
         right,
-        bottom,
-        zIndex: 48,
-        width: size,
-        height: size,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        zIndex,
+        width: containerW,
+        height: containerH,
+        pointerEvents: 'none',
+        ...(center
+          ? { top: '50%', transform: 'translateY(-50%)' }
+          : top !== undefined
+            ? { top }
+            : { bottom }),
       }}
       onMouseEnter={open}
       onMouseLeave={scheduleClose}
     >
       {items.map((item, i) => {
-        const angleDeg = -90 + i * angleStep
+        const angleDeg = startAngle + i * angleStep
         const rad = (angleDeg * Math.PI) / 180
-        const x = Math.round(Math.cos(rad) * radius)
-        const y = Math.round(Math.sin(rad) * radius)
+        const dx = Math.round(Math.cos(rad) * radius)
+        const dy = Math.round(Math.sin(rad) * radius)
         const delay = 0.02 + i * 0.02
+        const expandedTransform = `translate(${dx}px, ${dy}px)`
         return (
           <div
             key={item.id}
             onClick={item.onClick}
             title={item.label}
             style={{
-              position: 'absolute',
+              ...anchorStyle,
               width: 48,
               height: 48,
+              marginTop: center ? -24 : undefined,
               borderRadius: '50%',
               background: item.bg,
               border: `1.5px solid ${item.border}`,
@@ -125,13 +151,9 @@ export default function WheelMenu({
               backdropFilter: 'blur(6px)',
               WebkitBackdropFilter: 'blur(6px)',
               transition: `transform 0.3s cubic-bezier(.34,1.4,.64,1) ${delay}s, opacity 0.2s ${delay}s`,
-              transform: expanded
-                ? `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1)`
-                : 'translate(-50%, -50%) scale(0.3)',
+              transform: expanded ? expandedTransform : collapsedTransform,
               opacity: expanded ? 1 : 0,
               pointerEvents: expanded ? 'auto' : 'none',
-              top: '50%',
-              left: '50%',
             }}
           >
             <NotifBadge count={item.notifCount ?? 0} color={item.notifColor} />
@@ -155,7 +177,9 @@ export default function WheelMenu({
 
       <div
         style={{
-          position: 'relative',
+          ...anchorStyle,
+          marginTop: center ? -24 : undefined,
+          transform: center ? 'translateY(0)' : undefined,
           zIndex: 3,
           width: 48,
           height: 48,
@@ -166,6 +190,7 @@ export default function WheelMenu({
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
+          pointerEvents: 'auto',
           boxShadow: expanded ? centerShadow : '0 2px 8px rgba(0,0,0,0.1)',
           transition: 'all 0.2s',
           color: 'rgba(61,36,8,0.82)',

@@ -23,6 +23,8 @@ import {
   StickyNote,
   Pencil,
   CheckCheck,
+  UserCircle2,
+  Store,
   Tag as Tag2,
 } from 'lucide-react'
 
@@ -104,6 +106,7 @@ import GameModal from '../components/Games/GameModal'
 import { subscribeLobby } from '../lib/games'
 import type { GameMode, GameLobby } from '../lib/games'
 import CardsModal from '../components/Cards/CardsModal'
+import PersonalProfile from './PersonalProfile'
 import AchievementsModal from '../components/AchievementsModal'
 import AchievementToast from '../components/AchievementToast'
 import { subscribeFlowerHistory } from '../lib/achievements'
@@ -237,6 +240,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showFinance, setShowFinance] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
   const [showCards, setShowCards] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const [panicMode, setPanicModeLocal] = useState(false)
   useEffect(() => {
     const unsub = subscribePanicMode(cid, setPanicModeLocal)
@@ -1132,12 +1136,62 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           </div>
         )}
 
-        {/* ── Roda: essenciais (direita, embaixo) ── */}
+        {/* ── Roda 1 (embaixo, mais perto da borda): jardim/cartinhas/perfil/conquistas ── */}
         <WheelMenu
-          bottom={9}
+          bottom={70}
           right={9}
-          radius={58}
-          size={180}
+          radius={64}
+          startAngle={90}
+          endAngle={270}
+          totalNotif={notifCountBySection.garden}
+          centerIcon={<Heart size={20} strokeWidth={1.8} />}
+          centerBg="rgba(232,160,176,0.42)"
+          centerBgActive="rgba(232,140,160,0.55)"
+          centerBorder="rgba(255,255,255,0.55)"
+          centerShadow="0 4px 16px rgba(200,112,144,0.25)"
+          items={[
+            {
+              id: 'jardim',
+              icon: <Sprout size={20} strokeWidth={1.8} />,
+              label: 'jardim',
+              onClick: () => setShowGarden(true),
+              bg: 'rgba(160,220,170,0.48)',
+              border: 'rgba(140,200,150,0.65)',
+              notifCount: notifCountBySection.garden,
+              notifColor: '#7FB87F',
+            },
+            {
+              id: 'cartinhas',
+              icon: <Gem size={17} strokeWidth={1.8} />,
+              label: 'coleção de cartas',
+              onClick: () => setShowCards(true),
+              bg: 'rgba(200,112,144,0.35)',
+              border: 'rgba(200,112,144,0.55)',
+            },
+            {
+              id: 'perfil',
+              icon: <UserCircle2 size={17} strokeWidth={1.8} />,
+              label: 'perfil',
+              onClick: () => setShowProfile(true),
+              bg: 'rgba(235,185,220,0.48)',
+              border: 'rgba(205,145,190,0.65)',
+            },
+            {
+              id: 'conquistas',
+              icon: <Trophy size={17} strokeWidth={1.8} />,
+              label: 'conquistas',
+              onClick: () => setShowAchievements(true),
+              bg: 'rgba(196,149,106,0.48)',
+              border: 'rgba(175,120,70,0.65)',
+            },
+          ]}
+        />
+
+        {/* ── Roda 2 (meio): agenda/carta/widgets/filmes ── */}
+        <WheelMenu
+          center
+          right={9}
+          radius={64}
           totalNotif={notifCountBySection.agenda + notifCountBySection.carta}
           centerIcon={<Sparkles size={20} strokeWidth={1.8} />}
           centerBg="rgba(210,185,245,0.42)"
@@ -1174,14 +1228,6 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               border: 'rgba(170,140,225,0.65)',
             },
             {
-              id: 'financas',
-              icon: <Wallet size={17} strokeWidth={1.8} />,
-              label: 'finanças',
-              onClick: () => setShowFinance(true),
-              bg: 'rgba(196,149,106,0.48)',
-              border: 'rgba(175,120,70,0.65)',
-            },
-            {
               id: 'filmes',
               icon: <Film size={17} strokeWidth={1.8} />,
               label: 'filmes',
@@ -1192,29 +1238,21 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           ]}
         />
 
-        {/* ── Roda: nosso cantinho (direita, empilhada acima, reta com a de baixo) ── */}
+        {/* ── Roda 3 (em cima): casa/roupa/loja/finanças ── */}
         <WheelMenu
-          bottom={195}
+          top={110}
+          zIndex={300}
           right={9}
-          radius={58}
-          size={180}
-          totalNotif={notifCountBySection.garden}
-          centerIcon={<Heart size={20} strokeWidth={1.8} />}
-          centerBg="rgba(232,160,176,0.42)"
-          centerBgActive="rgba(232,140,160,0.55)"
+          radius={64}
+          startAngle={90}
+          endAngle={270}
+          totalNotif={0}
+          centerIcon={<Store size={20} strokeWidth={1.8} />}
+          centerBg="rgba(196,149,106,0.42)"
+          centerBgActive="rgba(196,149,106,0.55)"
           centerBorder="rgba(255,255,255,0.55)"
-          centerShadow="0 4px 16px rgba(200,112,144,0.25)"
+          centerShadow="0 4px 16px rgba(175,120,70,0.25)"
           items={[
-            {
-              id: 'jardim',
-              icon: <Sprout size={20} strokeWidth={1.8} />,
-              label: 'jardim',
-              onClick: () => setShowGarden(true),
-              bg: 'rgba(160,220,170,0.48)',
-              border: 'rgba(140,200,150,0.65)',
-              notifCount: notifCountBySection.garden,
-              notifColor: '#7FB87F',
-            },
             {
               id: 'casa',
               icon: <House size={17} strokeWidth={1.8} />,
@@ -1240,18 +1278,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               border: 'rgba(220,175,110,0.65)',
             },
             {
-              id: 'cartinhas',
-              icon: <Gem size={17} strokeWidth={1.8} />,
-              label: 'coleção de cartas',
-              onClick: () => setShowCards(true),
-              bg: 'rgba(200,112,144,0.35)',
-              border: 'rgba(200,112,144,0.55)',
-            },
-            {
-              id: 'conquistas',
-              icon: <Trophy size={17} strokeWidth={1.8} />,
-              label: 'conquistas',
-              onClick: () => setShowAchievements(true),
+              id: 'financas',
+              icon: <Wallet size={17} strokeWidth={1.8} />,
+              label: 'finanças',
+              onClick: () => setShowFinance(true),
               bg: 'rgba(196,149,106,0.48)',
               border: 'rgba(175,120,70,0.65)',
             },
@@ -2346,6 +2376,16 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           uid={uid}
           partnerUid={partnerUid ?? ''}
           onClose={() => setShowCards(false)}
+        />
+      )}
+
+      {showProfile && (
+        <PersonalProfile
+          uid={uid}
+          displayName={displayName}
+          partnerUid={partnerUid ?? ''}
+          partnerName={otherName}
+          onClose={() => setShowProfile(false)}
         />
       )}
 
