@@ -28,6 +28,8 @@ interface CharacterDollProps {
   onPositionChange?: (pos: { x: number; y: number }) => void
   pinned?: boolean
   onPinnedChange?: (v: boolean) => void
+  initialFlipped?: boolean
+  onFlippedChange?: (v: boolean) => void
 }
 
 export default function CharacterDoll({
@@ -39,10 +41,12 @@ export default function CharacterDoll({
   onPositionChange,
   pinned = false,
   onPinnedChange,
+  initialFlipped = false,
+  onFlippedChange,
 }: CharacterDollProps) {
   const [pos, setPos] = useState(initialPosition)
   const [showPin, setShowPin] = useState(false)
-  const [flipped, setFlipped] = useState(false)
+  const [flipped, setFlipped] = useState(initialFlipped)
   const dragging = useRef(false)
   const lastMouse = useRef({ x: 0, y: 0 })
   const pinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -230,7 +234,11 @@ export default function CharacterDoll({
           onTouchStart={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation()
-            setFlipped((v) => !v)
+            setFlipped((v) => {
+              const next = !v
+              onFlippedChange?.(next)
+              return next
+            })
             schedulePinHide()
           }}
           onMouseEnter={() => {

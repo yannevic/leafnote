@@ -5,6 +5,13 @@ import { useCharacter } from '../hooks/useCharacter'
 import { useProfileComments } from '../hooks/useProfileComments'
 import { addProfileComment, deleteProfileComment, MAX_COMMENT_LENGTH } from '../lib/profileComments'
 import CharacterDoll from '../components/CharacterDoll'
+import {
+  subscribeDollLayout,
+  saveDollLayout,
+  subscribePanelLayout,
+  savePanelLayout,
+  type DollLayout,
+} from '../lib/profileLayout'
 
 const T = {
   bg: 'linear-gradient(160deg, rgba(253,246,240,0.97) 0%, rgba(252,232,238,0.97) 100%)',
@@ -44,6 +51,17 @@ export default function PersonalProfile({
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
 
+  const [dollLayout, setDollLayout] = useState<DollLayout | null>(null)
+
+  useEffect(() => {
+    setDollLayout(null)
+    return subscribeDollLayout(viewedUid, setDollLayout)
+  }, [viewedUid])
+
+  useEffect(() => {
+    return subscribePanelLayout(viewedUid, setMuralPos)
+  }, [viewedUid])
+
   const corpoRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const dragOffset = useRef({ offsetX: 0, offsetY: 0 })
@@ -51,6 +69,7 @@ export default function PersonalProfile({
   const [dragging, setDragging] = useState(false)
 
   const handleDragStart = (e: React.MouseEvent) => {
+    if (!isOwnProfile) return
     if (!corpoRef.current || !panelRef.current) return
     e.preventDefault()
     const corpoRect = corpoRef.current.getBoundingClientRect()
@@ -77,7 +96,13 @@ export default function PersonalProfile({
         y: Math.min(Math.max(0, e.clientY - corpoRect.top - dragOffset.current.offsetY), maxY),
       })
     }
-    const handleUp = () => setDragging(false)
+    const handleUp = () => {
+      setDragging(false)
+      setMuralPos((p) => {
+        if (p) savePanelLayout(uid, p)
+        return p
+      })
+    }
     window.addEventListener('mousemove', handleMove)
     window.addEventListener('mouseup', handleUp)
     return () => {
@@ -211,13 +236,22 @@ export default function PersonalProfile({
       <div ref={corpoRef} style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {/* boneco — ocupa a área toda */}
         <div style={{ position: 'absolute', inset: 0 }}>
-          <CharacterDoll
-            config={characterConfig}
-            colorVariants={characterConfig?.colorVariants ?? {}}
-            width={200}
-            pinned
-            initialPosition={{ x: 200, y: 160 }}
-          />
+          {dollLayout && (
+            <CharacterDoll
+              key={viewedUid}
+              config={characterConfig}
+              colorVariants={characterConfig?.colorVariants ?? {}}
+              width={200}
+              initialPosition={{ x: dollLayout.x, y: dollLayout.y }}
+              pinned={!isOwnProfile || dollLayout.pinned}
+              onPinnedChange={isOwnProfile ? (v) => saveDollLayout(uid, { pinned: v }) : undefined}
+              onPositionChange={isOwnProfile ? (pos) => saveDollLayout(uid, pos) : undefined}
+              initialFlipped={dollLayout.flipped}
+              onFlippedChange={
+                isOwnProfile ? (v) => saveDollLayout(uid, { flipped: v }) : undefined
+              }
+            />
+          )}
           <div
             style={{
               position: 'absolute',
