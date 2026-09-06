@@ -1,6 +1,15 @@
 // src/pages/PersonalProfile.tsx
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, Sparkles, Users, Send, Trash2, GripVertical, Sticker } from 'lucide-react'
+import {
+  ChevronLeft,
+  Sparkles,
+  Users,
+  Send,
+  Trash2,
+  GripVertical,
+  Sticker,
+  Medal,
+} from 'lucide-react'
 import { useCharacter } from '../hooks/useCharacter'
 import { useProfileComments } from '../hooks/useProfileComments'
 import { addProfileComment, deleteProfileComment, MAX_COMMENT_LENGTH } from '../lib/profileComments'
@@ -15,8 +24,33 @@ import {
 } from '../lib/profileLayout'
 
 import BoardSticker from '../components/BoardSticker'
-import StickerPickerModal from '../components/StickerPickerModal'
+import ProfileStickerPickerModal from '../components/ProfileStickerPickerModal'
 import { ShopModal } from '../components/ShopModal'
+
+import {
+  subscribeProfileBadges,
+  type ProfileBadges as ProfileBadgesState,
+} from '../lib/profileBadges'
+import ProfileBadgeHolder from '../components/ProfileBadgeHolder'
+import BadgeHolderInventoryModal from '../components/BadgeHolderInventoryModal'
+import {
+  subscribeBadgeHolderInventory,
+  subscribeBadgeHolderPlacements,
+  addBadgeHolderPlacement,
+  updateBadgeHolderPlacement,
+  removeBadgeHolderPlacement,
+  BADGE_HOLDER_MODELS,
+  type BadgeHolderInventory,
+  type BadgeHolderPlacement,
+} from '../lib/profileBadgeHolders'
+import DecorCategoryModal from '../components/DecorCategoryModal'
+import BadgeHolderShopModal from '../components/BadgeHolderShopModal'
+import ProfileBackgroundModal from '../components/ProfileBackgroundModal'
+import {
+  subscribeProfileBackground,
+  setProfileBackground,
+  PROFILE_BACKGROUNDS,
+} from '../lib/profileBackground'
 import {
   subscribeProfileStickers,
   addProfileSticker,
@@ -82,6 +116,37 @@ export default function PersonalProfile({
   useEffect(() => {
     setStickers([])
     return subscribeProfileStickers(viewedUid, setStickers)
+  }, [viewedUid])
+
+  const [badges, setBadges] = useState<ProfileBadgesState>({})
+
+  useEffect(() => {
+    setBadges({})
+    return subscribeProfileBadges(viewedUid, setBadges)
+  }, [viewedUid])
+
+  const [holderInventory, setHolderInventory] = useState<BadgeHolderInventory>({})
+  const [holderPlacements, setHolderPlacements] = useState<BadgeHolderPlacement[]>([])
+  const [showHolderInventory, setShowHolderInventory] = useState(false)
+
+  useEffect(() => {
+    setHolderInventory({})
+    return subscribeBadgeHolderInventory(uid, setHolderInventory)
+  }, [uid])
+
+  useEffect(() => {
+    setHolderPlacements([])
+    return subscribeBadgeHolderPlacements(viewedUid, setHolderPlacements)
+  }, [viewedUid])
+
+  const [showDecorCategory, setShowDecorCategory] = useState(false)
+  const [showBadgeHolderShop, setShowBadgeHolderShop] = useState(false)
+  const [showBackgroundModal, setShowBackgroundModal] = useState(false)
+  const [backgroundId, setBackgroundId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setBackgroundId(null)
+    return subscribeProfileBackground(viewedUid, setBackgroundId)
   }, [viewedUid])
 
   const corpoRef = useRef<HTMLDivElement>(null)
@@ -165,7 +230,9 @@ export default function PersonalProfile({
           inset: 0,
           top: 32,
           zIndex: 200,
-          background: T.bg,
+          background:
+            PROFILE_BACKGROUNDS.find((b) => b.id === (backgroundId ?? 'default'))?.background ??
+            T.bg,
           display: 'flex',
           flexDirection: 'column',
           fontFamily: 'Baloo 2, sans-serif',
@@ -279,7 +346,7 @@ export default function PersonalProfile({
             )}
             {isOwnProfile && (
               <button
-                onClick={() => setShowStickerPicker(true)}
+                onClick={() => setShowDecorCategory(true)}
                 style={{
                   position: 'absolute',
                   bottom: 24,
@@ -341,6 +408,55 @@ export default function PersonalProfile({
               </div>
             ))}
           </div>
+
+          {/* molduras de badge — arrastáveis; dono compra/coloca/tira, visitante só vê */}
+          {holderPlacements.map((placement) => (
+            <ProfileBadgeHolder
+              key={placement.id}
+              placement={placement}
+              model={BADGE_HOLDER_MODELS.find((m) => m.id === placement.modelId)}
+              unlockedBadges={badges}
+              editable={isOwnProfile}
+              onMove={(x, y) => updateBadgeHolderPlacement(uid, placement.id, { x, y })}
+              onAddBadge={(collectionId) =>
+                updateBadgeHolderPlacement(uid, placement.id, {
+                  badgeIds: [...placement.badgeIds, collectionId],
+                })
+              }
+              onRemoveBadge={(collectionId) =>
+                updateBadgeHolderPlacement(uid, placement.id, {
+                  badgeIds: placement.badgeIds.filter((id) => id !== collectionId),
+                })
+              }
+              onClose={() => removeBadgeHolderPlacement(uid, placement.id)}
+            />
+          ))}
+
+          {/* bolinha de inventário — só o dono vê */}
+          {isOwnProfile && (
+            <button
+              onClick={() => setShowHolderInventory(true)}
+              title="meu inventário"
+              style={{
+                position: 'absolute',
+                bottom: 24,
+                right: 24,
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                border: `1.5px solid ${T.border}`,
+                background: T.card,
+                boxShadow: '0 3px 10px rgba(122,48,64,0.18)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 60,
+              }}
+            >
+              <Medal size={18} color="rgba(200,120,140,0.8)" strokeWidth={2} />
+            </button>
+          )}
 
           {/* muralzinho de recados — painel solto, arrastável */}
           <div
@@ -542,18 +658,72 @@ export default function PersonalProfile({
         </div>
       </div>
       {showStickerPicker && (
-        <StickerPickerModal
+        <ProfileStickerPickerModal
           uid={uid}
           onSelect={async (stickerKey) => {
             await addProfileSticker(uid, stickerKey, stickers)
             setShowStickerPicker(false)
           }}
-          onClose={() => setShowStickerPicker(false)}
           onOpenShop={(packId) => {
             setShopInitialPackId(packId)
             setShowStickerPicker(false)
             setShowShop(true)
           }}
+          onBack={() => {
+            setShowStickerPicker(false)
+            setShowDecorCategory(true)
+          }}
+          onClose={() => setShowStickerPicker(false)}
+        />
+      )}
+      {showHolderInventory && (
+        <BadgeHolderInventoryModal
+          owned={holderInventory}
+          hasPlacement={holderPlacements.length > 0}
+          onPlace={async (modelId) => {
+            await addBadgeHolderPlacement(uid, modelId)
+            setShowHolderInventory(false)
+          }}
+          onClose={() => setShowHolderInventory(false)}
+        />
+      )}
+      {showDecorCategory && (
+        <DecorCategoryModal
+          onSelectStickers={() => {
+            setShowDecorCategory(false)
+            setShowStickerPicker(true)
+          }}
+          onSelectBadgeHolders={() => {
+            setShowDecorCategory(false)
+            setShowBadgeHolderShop(true)
+          }}
+          onSelectBackground={() => {
+            setShowDecorCategory(false)
+            setShowBackgroundModal(true)
+          }}
+          onClose={() => setShowDecorCategory(false)}
+        />
+      )}
+      {showBadgeHolderShop && (
+        <BadgeHolderShopModal
+          uid={uid}
+          onBack={() => {
+            setShowBadgeHolderShop(false)
+            setShowDecorCategory(true)
+          }}
+          onClose={() => setShowBadgeHolderShop(false)}
+        />
+      )}
+      {showBackgroundModal && (
+        <ProfileBackgroundModal
+          uid={uid}
+          currentId={backgroundId}
+          onSelect={(id) => setProfileBackground(uid, id)}
+          onBack={() => {
+            setShowBackgroundModal(false)
+            setShowDecorCategory(true)
+          }}
+          onClose={() => setShowBackgroundModal(false)}
         />
       )}
       {showShop && (
