@@ -52,17 +52,19 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
           66% { border-color: #fff29e; box-shadow: 0 0 16px 4px #fff29e; }
           100% { border-color: #ff9ecb; box-shadow: 0 0 16px 4px #ff9ecb; }
         }
-        @keyframes shineSweep {
-          0% { transform: translateX(-120%) rotate(20deg); opacity: 0; }
-          15% { opacity: 1; }
-          60% { opacity: 1; }
-          100% { transform: translateX(120%) rotate(20deg); opacity: 0; }
-        }
+       @keyframes shineSweep {
+         0% { transform: translateX(-120%) rotate(20deg); opacity: 0; }
+         8% { opacity: 1; }
+         30% { opacity: 1; }
+         38% { transform: translateX(120%) rotate(20deg); opacity: 0; }
+         100% { transform: translateX(120%) rotate(20deg); opacity: 0; }
+       }
         @keyframes newBadgePop {
           0% { transform: scale(0); opacity: 0; }
           70% { transform: scale(1.15); opacity: 1; }
           100% { transform: scale(1); opacity: 1; }
         }
+          
       `}</style>
 
       <div
@@ -174,6 +176,7 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                   />
                   {isRevealed && isHigh && (
                     <div
+                      key={`shine-${i}`}
                       style={{
                         position: 'absolute',
                         top: 0,
@@ -182,7 +185,7 @@ export default function PackOpenModal({ cards, ownedBefore, onClose }: PackOpenM
                         height: '100%',
                         background:
                           'linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.85) 50%, transparent 100%)',
-                        animation: 'shineSweep 1.2s ease-out',
+                        animation: 'shineSweep 2.6s ease-out infinite',
                         pointerEvents: 'none',
                       }}
                     />

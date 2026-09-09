@@ -371,6 +371,12 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
               essa carta específica fica {CARD_SELL_COOLDOWN_MS / 1000 / 60 / 60}h sem poder
               negociar de novo — mas a venda direta continua disponível normalmente.
             </div>
+            <div style={{ marginTop: 8, lineHeight: 1.6 }}>
+              dá pra vender ou negociar várias cartas diferentes de uma vez, desde que sejam da
+              mesma raridade — é só ativar "vender várias" na lista. na negociação em lote, cada
+              cópia é testada individualmente com a Folhinha: pode sair uma mistura de aceitas e
+              recusadas no mesmo lote.
+            </div>
           </Section>
 
           <Section
