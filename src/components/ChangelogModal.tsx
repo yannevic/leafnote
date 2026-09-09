@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.75': [
+    "💫 Corrigido o drag and drop para fechar mochila enquanto arrasta para melhor visualização",
+    "💫 Agora conseguimos comprar pacotes em quantidade",
+  ],
+
   '3.0.74': [
     "🎭 Novo menu de páginas, mais organizado e fácil de navegar",
     "👤 Perfil Pessoal chegou! Cada um agora tem sua própria telinha",
