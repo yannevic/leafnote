@@ -102,3 +102,53 @@ export async function sellSpecialCardInstant(
   await addCoins(uid, CARD_SELL_VALUE_SPECIAL, 'venda de carta especial repetida')
   return true
 }
+
+// ─── Venda em lote (várias cópias da mesma carta de uma vez) ──────
+// Venda direta em lote: sem risco, sempre aceita — só repete a venda
+// individual N vezes.
+export async function sellCardInstantBatch(
+  coupleId: string,
+  uid: string,
+  instanceIds: string[],
+  rarity: CardRarity
+): Promise<void> {
+  for (const instanceId of instanceIds) {
+    await sellCardInstant(coupleId, uid, instanceId, rarity)
+  }
+}
+
+export interface NegotiateBatchOutcome {
+  accepted: number
+  refused: number
+  total: number
+}
+
+// Negociação em lote: cada cópia é testada INDIVIDUALMENTE — não é um
+// sorteio único pro lote inteiro. Se qualquer uma for recusada, o
+// cooldown do cardId é ativado normalmente (mesma regra de
+// negotiateSellCard) — as que já foram aceitas antes da recusa
+// continuam vendidas.
+export async function negotiateSellCardBatch(
+  coupleId: string,
+  uid: string,
+  instanceIds: string[],
+  cardId: string,
+  rarity: CardRarity,
+  requestedAmount: number
+): Promise<NegotiateBatchOutcome> {
+  let accepted = 0
+  let refused = 0
+  for (const instanceId of instanceIds) {
+    const result = await negotiateSellCard(
+      coupleId,
+      uid,
+      instanceId,
+      cardId,
+      rarity,
+      requestedAmount
+    )
+    if (result === 'accepted') accepted++
+    else refused++
+  }
+  return { accepted, refused, total: instanceIds.length }
+}
