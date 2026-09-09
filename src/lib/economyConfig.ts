@@ -56,6 +56,10 @@ export const CARD_SELL_VALUE: Record<CardRarity, number> = {
   epica: 25,
 }
 
+// Recompensa de coleção completa (seção 25 do Plano de Cartinhas)
+export const COLLECTION_COMPLETE_COINS = 70
+export const CARD_SELL_VALUE_SPECIAL = 30
+
 // ─── Moeda conjunta do casal (jardim) ───────────
 export const SLOT_PRICES = [80, 250, 500, 900]
 

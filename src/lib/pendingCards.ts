@@ -1,6 +1,7 @@
 import { ref, push, remove, onValue, off, runTransaction } from 'firebase/database'
 import { db } from './firebase'
 import { CardDefinition } from './cards'
+import { unlockCollectionRewardIfComplete } from './collectionRewards'
 
 export interface PendingCardInstance {
   id: string
@@ -49,9 +50,16 @@ export async function placePendingCard(
   if (!result.committed || wasAlreadyOwned) {
     return 'already_owned'
   }
-
   const pendingRef = ref(db, `couples/${coupleId}/cards/pendingCards/${uid}/${instanceId}`)
   await remove(pendingRef)
+
+  // detecta e libera a lista de recompensas de coleção completa (seção 25 do
+  // Plano de Cartinhas) — só cria o registro pendente com os 4 itens; o
+  // resgate de cada um acontece à parte, via CollectionRewardsModal.tsx
+  unlockCollectionRewardIfComplete(coupleId, uid, collectionId).catch((err) =>
+    console.error('erro ao checar recompensa de coleção completa', err)
+  )
+
   return 'placed'
 }
 

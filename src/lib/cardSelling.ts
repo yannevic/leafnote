@@ -2,7 +2,7 @@ import { ref, get, set, remove } from 'firebase/database'
 import { db } from './firebase'
 import { CardRarity } from './rarity'
 import { addCoins } from './personalCoin'
-import { CARD_SELL_VALUE } from './economyConfig'
+import { CARD_SELL_VALUE, CARD_SELL_VALUE_SPECIAL } from './economyConfig'
 import {
   CARD_SELL_NEGOTIATE_MAX_MULTIPLIER,
   CARD_SELL_NEGOTIATE_MIN_CHANCE,
@@ -83,4 +83,22 @@ export async function negotiateSellCard(
   const cdRef = ref(db, `couples/${coupleId}/cards/sellCooldown/${uid}/${cardId}`)
   await set(cdRef, Date.now() + CARD_SELL_COOLDOWN_MS)
   return 'refused'
+}
+
+// ─── Cartas especiais (seção 25.6 do plano) ───────────────
+// Sem negociação (o plano só define venda). Sem instanceId — o inventário
+// de carta especial é só uma quantidade por specialCardId, então vender
+// apenas decrementa 1, nunca remove uma "instância" específica.
+export async function sellSpecialCardInstant(
+  coupleId: string,
+  uid: string,
+  specialCardId: string
+): Promise<boolean> {
+  const invRef = ref(db, `couples/${coupleId}/cards/specialCards/inventory/${uid}/${specialCardId}`)
+  const snap = await get(invRef)
+  const entry = snap.val() as { quantity: number; lastAcquiredAt: number } | null
+  if (!entry || entry.quantity < 1) return false
+  await set(invRef, { quantity: entry.quantity - 1, lastAcquiredAt: entry.lastAcquiredAt })
+  await addCoins(uid, CARD_SELL_VALUE_SPECIAL, 'venda de carta especial repetida')
+  return true
 }

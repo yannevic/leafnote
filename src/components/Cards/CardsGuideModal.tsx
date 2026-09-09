@@ -9,6 +9,7 @@ import {
   Coins,
   ListChecks,
   Gift,
+  Award,
 } from 'lucide-react'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { PACK_PRICES } from '../../lib/packs'
@@ -27,6 +28,8 @@ import {
   STREAK_CYCLE_BONUS,
   ACTIVITY_REWARD,
   CARD_SELL_VALUE,
+  CARD_SELL_VALUE_SPECIAL,
+  COLLECTION_COMPLETE_COINS,
 } from '../../lib/economyConfig'
 import {
   CARD_SELL_NEGOTIATE_MAX_MULTIPLIER,
@@ -391,6 +394,31 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
             <div style={{ marginTop: 8, lineHeight: 1.6 }}>
               cartas recebidas numa troca vão pra sua mochila, igual carta ganha em pacote — você
               decide depois se encaixa na coleção.
+            </div>
+          </Section>
+
+          <Section
+            icon={<Award size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="coleção de cartas especial"
+          >
+            ao completar 100% de qualquer uma das 4 coleções normais (a carta secreta do Dexter não
+            entra nessa conta), você libera uma lista de recompensas — resgate cada uma na hora que
+            quiser, em qualquer ordem:
+            <InfoCard>
+              <Row label="insígnia" value="pra colocar no seu perfil" />
+              <Row label="moedas" value={`+${COLLECTION_COMPLETE_COINS}`} />
+              <Row label="mini-pacote" value="3 cartas de uma coleção à sua escolha" />
+              <Row label="carta especial" value="sorteada, tema Clima e Fenômenos" />
+            </InfoCard>
+            <div style={{ marginTop: 10, lineHeight: 1.6 }}>
+              a carta especial é sorteada entre um conjunto próprio, separado das 4 coleções — pode
+              vir repetida, e cada cópia repetida pode ser vendida direto pra Folhinha por{' '}
+              {CARD_SELL_VALUE_SPECIAL} moedas (sem negociação). cartas especiais não entram em
+              trocas com o parceiro.
+            </div>
+            <div style={{ marginTop: 8, lineHeight: 1.6 }}>
+              completar a mesma coleção de novo não gera uma nova lista de prêmios — é um evento
+              único por coleção.
             </div>
           </Section>
         </div>

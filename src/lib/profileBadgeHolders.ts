@@ -173,7 +173,10 @@ export function subscribeBadgeHolderPlacements(
   const r = ref(db, placementPath(uid))
   const handler = onValue(r, (snap) => {
     const val = (snap.val() as Record<string, BadgeHolderPlacement>) ?? {}
-    queueMicrotask(() => callback(Object.values(val)))
+    // Firebase não guarda array vazio — um placement recém-criado
+    // (badgeIds: []) volta sem esse campo. Normaliza aqui na origem.
+    const placements = Object.values(val).map((p) => ({ ...p, badgeIds: p.badgeIds ?? [] }))
+    queueMicrotask(() => callback(placements))
   })
   return () => off(r, 'value', handler)
 }

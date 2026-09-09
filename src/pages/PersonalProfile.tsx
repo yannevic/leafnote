@@ -420,12 +420,12 @@ export default function PersonalProfile({
               onMove={(x, y) => updateBadgeHolderPlacement(uid, placement.id, { x, y })}
               onAddBadge={(collectionId) =>
                 updateBadgeHolderPlacement(uid, placement.id, {
-                  badgeIds: [...placement.badgeIds, collectionId],
+                  badgeIds: [...(placement.badgeIds ?? []), collectionId],
                 })
               }
               onRemoveBadge={(collectionId) =>
                 updateBadgeHolderPlacement(uid, placement.id, {
-                  badgeIds: placement.badgeIds.filter((id) => id !== collectionId),
+                  badgeIds: (placement.badgeIds ?? []).filter((id) => id !== collectionId),
                 })
               }
               onClose={() => removeBadgeHolderPlacement(uid, placement.id)}

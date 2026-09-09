@@ -1,10 +1,11 @@
 // src/components/ProfileBadgeHolder.tsx
 import { useRef, useState, useCallback } from 'react'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, Lock, Trash2 } from 'lucide-react'
 import { COLLECTIONS } from '../lib/cards'
 import { MAX_BADGES_PER_HOLDER } from '../lib/profileBadgeHolders'
 import type { BadgeHolderPlacement, BadgeHolderModel } from '../lib/profileBadgeHolders'
 import type { ProfileBadges as ProfileBadgesState } from '../lib/profileBadges'
+import { BADGE_IMAGES } from '../assets/badges'
 
 interface Props {
   placement: BadgeHolderPlacement
@@ -19,6 +20,16 @@ interface Props {
 
 const CIRCLE = 44
 
+// null = fechado · 'add' = escolhendo pra vaga vazia · string = trocando a badge daquele collectionId
+type PickerMode = null | 'add' | string
+
+const SCROLLBAR_CSS = `
+  .badge-picker-scroll::-webkit-scrollbar { width: 5px; }
+  .badge-picker-scroll::-webkit-scrollbar-track { background: transparent; }
+  .badge-picker-scroll::-webkit-scrollbar-thumb { background: rgba(232,160,176,0.55); border-radius: 99px; }
+  .badge-picker-scroll::-webkit-scrollbar-thumb:hover { background: rgba(232,160,176,0.85); }
+`
+
 export default function ProfileBadgeHolder({
   placement,
   model,
@@ -29,7 +40,7 @@ export default function ProfileBadgeHolder({
   onRemoveBadge,
   onClose,
 }: Props) {
-  const [showPicker, setShowPicker] = useState(false)
+  const [picker, setPicker] = useState<PickerMode>(null)
   const dragRef = useRef({ dragging: false, sx: 0, sy: 0, px: 0, py: 0 })
 
   const onMouseDown = useCallback(
@@ -61,9 +72,25 @@ export default function ProfileBadgeHolder({
     [editable, placement.x, placement.y, onMove]
   )
 
-  const availableToAdd = Object.values(COLLECTIONS).filter(
-    (c) => unlockedBadges[c.id] && !placement.badgeIds.includes(c.id)
-  )
+  // fallback defensivo, além do fix na origem (subscribeBadgeHolderPlacements)
+  const badgeIds = placement.badgeIds ?? []
+  const isSwapMode = typeof picker === 'string'
+  const swapTargetId = isSwapMode ? (picker as string) : null
+
+  const allCollections = Object.values(COLLECTIONS)
+
+  const handlePick = (collectionId: string) => {
+    if (isSwapMode && swapTargetId) {
+      onRemoveBadge(swapTargetId)
+    }
+    onAddBadge(collectionId)
+    setPicker(null)
+  }
+
+  const handleRemoveCurrent = () => {
+    if (swapTargetId) onRemoveBadge(swapTargetId)
+    setPicker(null)
+  }
 
   return (
     <div
@@ -111,15 +138,15 @@ export default function ProfileBadgeHolder({
         </button>
       )}
 
-      {placement.badgeIds.map((collectionId) => {
+      {badgeIds.map((collectionId) => {
         const col = COLLECTIONS[collectionId as keyof typeof COLLECTIONS]
         if (!col) return null
         return (
           <div
             key={collectionId}
             onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => editable && onRemoveBadge(collectionId)}
-            title={editable ? `${col.name} — clique pra remover` : col.name}
+            onClick={() => editable && setPicker(collectionId)}
+            title={editable ? `${col.name} — clique pra trocar ou remover` : col.name}
             style={{
               width: CIRCLE,
               height: CIRCLE,
@@ -132,7 +159,7 @@ export default function ProfileBadgeHolder({
             }}
           >
             <img
-              src={`./badges/${col.id}.png`}
+              src={BADGE_IMAGES[col.id]}
               alt={col.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
@@ -140,75 +167,203 @@ export default function ProfileBadgeHolder({
         )
       })}
 
-      {editable &&
-        placement.badgeIds.length < MAX_BADGES_PER_HOLDER &&
-        availableToAdd.length > 0 && (
-          <div style={{ position: 'relative' }}>
-            <button
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={() => setShowPicker((v) => !v)}
+      {editable && badgeIds.length < MAX_BADGES_PER_HOLDER && (
+        <button
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={() => setPicker('add')}
+          style={{
+            width: CIRCLE,
+            height: CIRCLE,
+            borderRadius: '50%',
+            border: '2px dashed rgba(122,48,64,0.4)',
+            background: 'rgba(255,255,255,0.35)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Plus size={18} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
+        </button>
+      )}
+
+      {picker && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={() => setPicker(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999999,
+            background: 'rgba(61,26,16,0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <style>{SCROLLBAR_CSS}</style>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 300,
+              maxHeight: 420,
+              display: 'flex',
+              flexDirection: 'column',
+              background:
+                'linear-gradient(160deg, rgba(253,246,240,0.98) 0%, rgba(252,232,238,0.98) 100%)',
+              border: '1.5px solid rgba(232,160,176,0.4)',
+              borderRadius: 18,
+              padding: 16,
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+          >
+            <div
               style={{
-                width: CIRCLE,
-                height: CIRCLE,
-                borderRadius: '50%',
-                border: '2px dashed rgba(122,48,64,0.4)',
-                background: 'rgba(255,255,255,0.35)',
-                cursor: 'pointer',
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                justifyContent: 'center',
+                marginBottom: 10,
                 flexShrink: 0,
               }}
             >
-              <Plus size={18} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
-            </button>
-
-            {showPicker && (
-              <div
-                onMouseDown={(e) => e.stopPropagation()}
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#3d1a10' }}>
+                {isSwapMode ? 'trocar insígnia' : 'escolher insígnia'}
+              </span>
+              <button
+                onClick={() => setPicker(null)}
                 style={{
-                  position: 'absolute',
-                  top: CIRCLE + 8,
-                  left: 0,
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(200,120,140,0.18)',
+                  cursor: 'pointer',
                   display: 'flex',
-                  gap: 6,
-                  padding: 8,
-                  borderRadius: 14,
-                  background: 'rgba(253,246,240,0.98)',
-                  border: '1.5px solid rgba(232,160,176,0.4)',
-                  boxShadow: '0 6px 20px rgba(122,48,64,0.2)',
-                  zIndex: 999999,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {availableToAdd.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => {
-                      onAddBadge(c.id)
-                      setShowPicker(false)
-                    }}
-                    title={c.name}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: '50%',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <img
-                      src={`./badges/${c.id}.png`}
-                      alt={c.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </button>
-                ))}
+                <X size={11} color="rgba(122,48,64,0.7)" />
+              </button>
+            </div>
+
+            <div
+              className="badge-picker-scroll"
+              style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                {allCollections.map((c) => {
+                  const isCurrent = isSwapMode && c.id === swapTargetId
+                  const isPlacedElsewhere = badgeIds.includes(c.id) && !isCurrent
+                  const isUnlocked = !!unlockedBadges[c.id]
+                  const clickable = isUnlocked && !isPlacedElsewhere && !isCurrent
+
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => clickable && handlePick(c.id)}
+                      style={{
+                        border: isCurrent
+                          ? '1.5px solid rgba(232,160,176,0.9)'
+                          : '1.5px solid rgba(232,160,176,0.35)',
+                        borderRadius: 12,
+                        padding: 10,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 6,
+                        cursor: clickable ? 'pointer' : 'default',
+                        opacity: isPlacedElsewhere ? 0.5 : 1,
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'relative',
+                          width: 56,
+                          height: 56,
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          border: '2px solid rgba(255,255,255,0.6)',
+                          filter: isUnlocked ? 'none' : 'grayscale(1)',
+                          opacity: isUnlocked ? 1 : 0.5,
+                        }}
+                      >
+                        <img
+                          src={BADGE_IMAGES[c.id]}
+                          alt={c.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        {!isUnlocked && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: 'rgba(0,0,0,0.25)',
+                            }}
+                          >
+                            <Lock size={16} color="#fff" />
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: '#3d1a10',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {c.name}
+                      </span>
+                      {isCurrent && (
+                        <span
+                          style={{ fontSize: 9, fontWeight: 800, color: 'rgba(122,48,64,0.6)' }}
+                        >
+                          atual
+                        </span>
+                      )}
+                      {isPlacedElsewhere && (
+                        <span style={{ fontSize: 9, color: 'rgba(61,26,16,0.4)' }}>
+                          já colocada
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
+            </div>
+
+            {isSwapMode && (
+              <button
+                onClick={handleRemoveCurrent}
+                style={{
+                  marginTop: 12,
+                  flexShrink: 0,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  padding: '6px 12px',
+                  borderRadius: 20,
+                  border: 'none',
+                  background: 'rgba(232,96,122,0.15)',
+                  color: 'rgba(150,50,60,0.85)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 5,
+                }}
+              >
+                <Trash2 size={12} /> remover sem trocar
+              </button>
             )}
           </div>
-        )}
+        </div>
+      )}
     </div>
   )
 }

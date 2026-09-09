@@ -1,9 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X, HandCoins, Coins, Clock } from 'lucide-react'
+import { X, HandCoins, Coins, Clock, Sparkles } from 'lucide-react'
 import { CARDS, CardDefinition } from '../../lib/cards'
+import { SPECIAL_CARDS } from '../../lib/specialCards'
+import { CARD_SELL_VALUE_SPECIAL } from '../../lib/economyConfig'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { useCardInventory } from '../../hooks/useCardInventory'
 import { subscribePendingCards, PendingCardInstance } from '../../lib/pendingCards'
+import {
+  subscribeSpecialCardsInventory,
+  SpecialCardInventoryEntry,
+} from '../../lib/collectionRewards'
 import {
   getDefaultSellPrice,
   getNegotiateMaxPrice,
@@ -11,6 +17,7 @@ import {
   getSellCooldown,
   sellCardInstant,
   negotiateSellCard,
+  sellSpecialCardInstant,
 } from '../../lib/cardSelling'
 import { useCountdown, formatCountdown } from '../../hooks/useCountdown'
 
@@ -45,6 +52,27 @@ export default function SellCardModal({
   const [busy, setBusy] = useState(false)
 
   useEffect(() => subscribePendingCards(coupleId, uid, setPending), [coupleId, uid])
+
+  const [specialInventory, setSpecialInventory] = useState<
+    Record<string, SpecialCardInventoryEntry>
+  >({})
+  const [sellingSpecialId, setSellingSpecialId] = useState<string | null>(null)
+  useEffect(
+    () => subscribeSpecialCardsInventory(coupleId, uid, setSpecialInventory),
+    [coupleId, uid]
+  )
+
+  const ownedSpecialCards = SPECIAL_CARDS.filter((c) => (specialInventory[c.id]?.quantity ?? 0) > 0)
+
+  async function handleSellSpecial(specialCardId: string) {
+    if (busy) return
+    setBusy(true)
+    const ok = await sellSpecialCardInstant(coupleId, uid, specialCardId)
+    setBusy(false)
+    if (ok) {
+      onSold?.(`vendida por ${CARD_SELL_VALUE_SPECIAL} moedas!`)
+    }
+  }
 
   // só cartas pendentes que já são duplicata (o jogador já tem 1 cópia creditada)
   const groups: DuplicateGroup[] = useMemo(() => {
@@ -179,7 +207,7 @@ export default function SellCardModal({
 
         {!selectedGroup && (
           <>
-            {groups.length === 0 ? (
+            {groups.length === 0 && ownedSpecialCards.length === 0 ? (
               <div
                 style={{
                   fontSize: 12,
@@ -244,6 +272,98 @@ export default function SellCardModal({
                         </div>
                       )}
                     </button>
+                  )
+                })}
+
+                {ownedSpecialCards.map((card) => {
+                  const qty = specialInventory[card.id]?.quantity ?? 0
+                  const isSellingThis = sellingSpecialId === card.id
+                  return (
+                    <div key={card.id} style={{ position: 'relative' }}>
+                      <div
+                        style={{
+                          border: '2px solid #ffd97e',
+                          borderRadius: 12,
+                          overflow: 'hidden',
+                          background: '#fff',
+                          position: 'relative',
+                        }}
+                      >
+                        {card.image ? (
+                          <img
+                            src={card.image}
+                            alt={card.name}
+                            style={{
+                              width: '100%',
+                              aspectRatio: '5 / 7',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: '100%',
+                              aspectRatio: '5 / 7',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: 8,
+                              textAlign: 'center',
+                              fontSize: 11,
+                              fontWeight: 800,
+                              color: '#8b6914',
+                            }}
+                          >
+                            {card.name}
+                          </div>
+                        )}
+                        {qty > 1 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: 6,
+                              right: 6,
+                              background: '#ffd97e',
+                              color: '#3d1a10',
+                              fontSize: 10,
+                              fontWeight: 800,
+                              borderRadius: 999,
+                              padding: '2px 7px',
+                            }}
+                          >
+                            {qty}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSellingSpecialId(card.id)
+                          handleSellSpecial(card.id).finally(() => setSellingSpecialId(null))
+                        }}
+                        disabled={busy}
+                        style={{
+                          marginTop: 6,
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 4,
+                          border: 'none',
+                          borderRadius: 999,
+                          padding: '6px 0',
+                          background: '#4A7A4A',
+                          color: '#fff',
+                          fontWeight: 800,
+                          fontSize: 10.5,
+                          cursor: busy ? 'default' : 'pointer',
+                          fontFamily: 'Baloo 2',
+                        }}
+                      >
+                        <Sparkles size={11} />
+                        {isSellingThis ? '...' : `vender por ${CARD_SELL_VALUE_SPECIAL}`}
+                      </button>
+                    </div>
                   )
                 })}
               </div>

@@ -1,5 +1,6 @@
 import { X, Receipt, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 import { useCoinLedger } from '../../hooks/useCoinLedger'
+import { formatLedgerReason } from '../../lib/ledgerFormat'
 
 interface CardsExtractModalProps {
   uid: string
@@ -99,7 +100,7 @@ export default function CardsExtractModal({ uid, onClose }: CardsExtractModalPro
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#2D4A2D' }}>
-                    {entry.reason.charAt(0).toUpperCase() + entry.reason.slice(1)}
+                    {formatLedgerReason(entry.reason)}
                   </div>
                   <div style={{ fontSize: 10.5, color: '#8B6914', opacity: 0.7 }}>{dateStr}</div>
                 </div>
