@@ -139,9 +139,12 @@ export default function TradesPanel({ coupleId, uid, partnerUid, onFeedback }: P
             propor troca
           </button>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <CardStrip label="você dá" cards={myGiving} />
-            <CardStrip label="você recebe" cards={myReceiving} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CardStrip label="você dá" cards={myGiving} />
+              <ArrowLeftRight size={13} color="rgba(122,48,64,0.4)" style={{ flexShrink: 0 }} />
+              <CardStrip label="você recebe" cards={myReceiving} />
+            </div>
 
             <div
               style={{
@@ -155,7 +158,7 @@ export default function TradesPanel({ coupleId, uid, partnerUid, onFeedback }: P
             </div>
 
             {isMyTurn ? (
-              <div style={{ display: 'flex', gap: 5 }}>
+              <div style={{ display: 'flex', gap: 5, width: '100%' }}>
                 <MiniBtn
                   onClick={handleAccept}
                   icon={<CheckCircle2 size={11} />}
@@ -178,13 +181,15 @@ export default function TradesPanel({ coupleId, uid, partnerUid, onFeedback }: P
                 />
               </div>
             ) : (
-              <MiniBtn
-                onClick={handleCancel}
-                icon={<Ban size={11} />}
-                label="cancelar proposta"
-                muted
-                disabled={busy}
-              />
+              <div style={{ display: 'flex', width: '100%' }}>
+                <MiniBtn
+                  onClick={handleCancel}
+                  icon={<Ban size={11} />}
+                  label="cancelar proposta"
+                  muted
+                  disabled={busy}
+                />
+              </div>
             )}
           </div>
         )}
@@ -218,10 +223,10 @@ function CardStrip({ label, cards }: { label: string; cards: CardRef[] }) {
   if (cards.length === 0) return null
 
   return (
-    <div>
-      <div style={{ fontSize: 9, fontWeight: 700, color: '#8b6914', marginBottom: 3 }}>{label}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: '#8b6914' }}>{label}</div>
 
-      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
         {cards.map((ref) => {
           const card = CARDS.find((c) => c.collectionId === ref.collectionId && c.id === ref.cardId)
 
@@ -234,10 +239,11 @@ function CardStrip({ label, cards }: { label: string; cards: CardRef[] }) {
               alt={card.name}
               title={card.name}
               style={{
-                width: 38,
-                height: 54,
+                width: 48,
+                height: 68,
                 objectFit: 'cover',
-                borderRadius: 6,
+                borderRadius: 7,
+                border: '1.5px solid rgba(232,160,176,0.4)',
               }}
             />
           )
