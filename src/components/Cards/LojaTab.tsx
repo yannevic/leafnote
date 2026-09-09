@@ -46,10 +46,18 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
   const [shopRefresh, setShopRefresh] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
   const [hoveredPack, setHoveredPack] = useState<PackType | null>(null)
+  const [packQty, setPackQty] = useState<Record<PackType, number>>({ comum: 1, promocional: 1 })
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 2500)
+  }
+
+  function adjustQty(type: PackType, delta: number) {
+    setPackQty((prev) => ({
+      ...prev,
+      [type]: Math.max(1, Math.min(10, prev[type] + delta)),
+    }))
   }
   const { data: shopData, loading: shopLoading } = useRotatingShop(coupleId, shopRefresh)
   const { state: promoState } = usePromoCollection(coupleId)
@@ -75,15 +83,17 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
   async function handleConfirmPurchase() {
     if (!confirmPack) return
     const type = confirmPack
+    const qty = packQty[type]
     setConfirmPack(null)
     setOpening(type)
-    const ok = await buyPack(coupleId, uid, type)
+    const ok = await buyPack(coupleId, uid, type, qty)
     setOpening(null)
     if (!ok) {
       showToast('saldo insuficiente')
       return
     }
-    showToast('pacote guardado na mochila!')
+    setPackQty((prev) => ({ ...prev, [type]: 1 }))
+    showToast(qty > 1 ? `${qty} pacotes guardados na mochila!` : 'pacote guardado na mochila!')
   }
 
   async function handleConfirmShopPurchase() {
@@ -344,10 +354,68 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
                         borderRadius: 999,
                       }}
                     >
-                      <CoinIcon size={14} /> {PACK_PRICES[type]}
+                      <CoinIcon size={14} /> {PACK_PRICES[type] * packQty[type]}
                     </div>
                   </div>
                 </button>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    marginTop: 8,
+                  }}
+                >
+                  <button
+                    onClick={() => adjustQty(type, -1)}
+                    disabled={opening !== null}
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: 'rgba(74,122,74,0.15)',
+                      color: '#2D4A2D',
+                      fontWeight: 800,
+                      fontSize: 14,
+                      cursor: opening ? 'default' : 'pointer',
+                      fontFamily: 'Baloo 2',
+                    }}
+                  >
+                    −
+                  </button>
+                  <span
+                    style={{
+                      minWidth: 20,
+                      textAlign: 'center',
+                      fontWeight: 800,
+                      fontSize: 13,
+                      color: '#3d1a10',
+                      fontFamily: 'Baloo 2',
+                    }}
+                  >
+                    {packQty[type]}x
+                  </span>
+                  <button
+                    onClick={() => adjustQty(type, 1)}
+                    disabled={opening !== null}
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: 'rgba(74,122,74,0.15)',
+                      color: '#2D4A2D',
+                      fontWeight: 800,
+                      fontSize: 14,
+                      cursor: opening ? 'default' : 'pointer',
+                      fontFamily: 'Baloo 2',
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             )
           })}
@@ -544,8 +612,12 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
 
       {confirmPack && (
         <ConfirmPurchaseModal
-          label={PACK_THEME[confirmPack].label}
-          price={PACK_PRICES[confirmPack]}
+          label={
+            packQty[confirmPack] > 1
+              ? `${packQty[confirmPack]}x ${PACK_THEME[confirmPack].label}`
+              : PACK_THEME[confirmPack].label
+          }
+          price={PACK_PRICES[confirmPack] * packQty[confirmPack]}
           image={packImageFor(confirmPack) ?? ''}
           imageAspect="5 / 8"
           CoinIcon={CoinIcon}

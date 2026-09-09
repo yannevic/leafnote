@@ -13,9 +13,18 @@ export interface UnopenedPack {
 }
 
 // compra: paga e guarda o pacote fechado na mochila (não sorteia ainda)
-export async function buyPack(coupleId: string, uid: string, packType: PackType): Promise<boolean> {
-  const price = PACK_PRICES[packType]
-  const paid = await spendCoins(uid, price, `pacote ${packType}`)
+export async function buyPack(
+  coupleId: string,
+  uid: string,
+  packType: PackType,
+  quantity: number = 1
+): Promise<boolean> {
+  const price = PACK_PRICES[packType] * quantity
+  const paid = await spendCoins(
+    uid,
+    price,
+    `pacote ${packType}${quantity > 1 ? ` x${quantity}` : ''}`
+  )
   if (!paid) return false
 
   // pro promocional, trava a coleção que está em cartaz AGORA (garante
@@ -29,11 +38,13 @@ export async function buyPack(coupleId: string, uid: string, packType: PackType)
   }
 
   const packsRef = ref(db, `couples/${coupleId}/cards/unopenedPacks/${uid}`)
-  await push(packsRef, {
-    type: packType,
-    boughtAt: Date.now(),
-    ...(collectionId && { collectionId }),
-  })
+  for (let i = 0; i < quantity; i++) {
+    await push(packsRef, {
+      type: packType,
+      boughtAt: Date.now(),
+      ...(collectionId && { collectionId }),
+    })
+  }
   return true
 }
 

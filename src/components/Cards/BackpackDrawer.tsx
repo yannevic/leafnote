@@ -23,6 +23,7 @@ const PACK_LABEL: Record<PackType, string> = {
 
 export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
   const [open, setOpen] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [openingId, setOpeningId] = useState<string | null>(null)
   const [result, setResult] = useState<CardDefinition[] | null>(null)
@@ -45,8 +46,18 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
       }
       map.get(p.cardId)!.push(p)
     }
-    return order.map((cardId) => map.get(cardId)!)
-  }, [pending])
+    // cartas novas (ainda não possuídas na coleção) aparecem primeiro,
+    // repetidas depois — mantém a ordem relativa dentro de cada grupo
+    const sortedOrder = [...order].sort((a, b) => {
+      const groupA = map.get(a)!
+      const groupB = map.get(b)!
+      const ownedA = (inventory[groupA[0].collectionId]?.[a] ?? 0) > 0
+      const ownedB = (inventory[groupB[0].collectionId]?.[b] ?? 0) > 0
+      if (ownedA === ownedB) return 0
+      return ownedA ? 1 : -1
+    })
+    return sortedOrder.map((cardId) => map.get(cardId)!)
+  }, [pending, inventory])
 
   const totalItems = packs.length + pending.length
 
@@ -123,7 +134,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
         )}
       </button>
 
-      {open && (
+      {(open || isDragging) && (
         <div
           className="backpack-scroll"
           style={{
@@ -140,6 +151,9 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
             padding: 14,
             fontFamily: 'Baloo 2, sans-serif',
             boxShadow: '0 10px 30px rgba(122,48,64,0.2)',
+            opacity: isDragging ? 0 : 1,
+            pointerEvents: isDragging ? 'none' : 'auto',
+            transition: 'opacity 0.15s ease',
           }}
         >
           <div
@@ -249,7 +263,9 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                               collectionId: top.collectionId,
                             })
                           )
+                          setTimeout(() => setIsDragging(true), 0)
                         }}
+                        onDragEnd={() => setIsDragging(false)}
                         title={stackCount > 1 ? `${card.name} (${stackCount})` : card.name}
                         style={{
                           position: 'absolute',
