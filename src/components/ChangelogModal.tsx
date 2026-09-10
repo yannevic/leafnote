@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.76': [
+    "🐺 Nova coleção de cartinhas: Grimm: Histórias de Terror! 20 cartas novas pra colecionar",
+  ],
+
   '3.0.75': [
     "💫 Corrigido o drag and drop para fechar mochila enquanto arrasta para melhor visualização",
     "💫 Agora conseguimos comprar pacotes em quantidade",
