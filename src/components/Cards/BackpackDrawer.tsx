@@ -173,8 +173,101 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
             </button>
           </div>
 
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: 'rgba(61,26,16,0.5)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: 6,
+            }}
+          >
+            pacotes guardados
+          </div>
+
+          {(loadingPacks || loadingPending) && (
+            <div style={{ fontSize: 12, color: '#8b6914', textAlign: 'center' }}>carregando...</div>
+          )}
+
+          {!loadingPacks && packs.length === 0 && (
+            <div style={{ fontSize: 12, color: '#8b6914', textAlign: 'center', padding: '12px 0' }}>
+              nenhum pacote guardado ainda
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {packs.map((pack) => {
+              const isSelected = selectedId === pack.id
+              const isOpening = openingId === pack.id
+              return (
+                <div
+                  key={pack.id}
+                  style={{
+                    border: isSelected ? '2px solid #4A7A4A' : '1.5px solid rgba(212,160,176,0.4)',
+                    borderRadius: 12,
+                    padding: 8,
+                    background: '#fff',
+                  }}
+                >
+                  <div
+                    onClick={() => setSelectedId(isSelected ? null : pack.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                  >
+                    {(() => {
+                      const art =
+                        pack.type === 'comum'
+                          ? PACK_ART.comum
+                          : pack.collectionId
+                            ? getPromoPackArt(pack.collectionId)
+                            : undefined
+                      return art ? (
+                        <img
+                          src={art}
+                          alt={PACK_LABEL[pack.type]}
+                          style={{ width: 32, height: 32, objectFit: 'contain' }}
+                        />
+                      ) : (
+                        <Package size={26} color="#8b6914" />
+                      )
+                    })()}
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#3d1a10' }}>
+                      {PACK_LABEL[pack.type]}
+                    </span>
+                  </div>
+
+                  {isSelected && (
+                    <button
+                      onClick={() => handleOpenPack(pack.id, pack.type, pack.collectionId)}
+                      disabled={isOpening}
+                      style={{
+                        marginTop: 8,
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        padding: '8px 0',
+                        borderRadius: 999,
+                        border: 'none',
+                        background: '#4A7A4A',
+                        color: '#fff',
+                        fontWeight: 800,
+                        fontSize: 12,
+                        cursor: isOpening ? 'default' : 'pointer',
+                        fontFamily: 'Baloo 2',
+                      }}
+                    >
+                      <PackageOpen size={14} />
+                      {isOpening ? 'abrindo...' : 'abrir'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
           {pending.length > 0 && (
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginTop: 14 }}>
               <div
                 style={{
                   fontSize: 10,
@@ -182,7 +275,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                   color: 'rgba(61,26,16,0.5)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
-                  marginBottom: 6,
+                  marginBottom: 14,
                 }}
               >
                 cartas soltas — arraste até a coleção
@@ -352,100 +445,6 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
               </div>
             </div>
           )}
-
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 800,
-              color: 'rgba(61,26,16,0.5)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              marginBottom: 6,
-            }}
-          >
-            pacotes guardados
-          </div>
-
-          {(loadingPacks || loadingPending) && (
-            <div style={{ fontSize: 12, color: '#8b6914', textAlign: 'center' }}>carregando...</div>
-          )}
-
-          {!loadingPacks && packs.length === 0 && (
-            <div style={{ fontSize: 12, color: '#8b6914', textAlign: 'center', padding: '12px 0' }}>
-              nenhum pacote guardado ainda
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {packs.map((pack) => {
-              const isSelected = selectedId === pack.id
-              const isOpening = openingId === pack.id
-              return (
-                <div
-                  key={pack.id}
-                  style={{
-                    border: isSelected ? '2px solid #4A7A4A' : '1.5px solid rgba(212,160,176,0.4)',
-                    borderRadius: 12,
-                    padding: 8,
-                    background: '#fff',
-                  }}
-                >
-                  <div
-                    onClick={() => setSelectedId(isSelected ? null : pack.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-                  >
-                    {(() => {
-                      const art =
-                        pack.type === 'comum'
-                          ? PACK_ART.comum
-                          : pack.collectionId
-                            ? getPromoPackArt(pack.collectionId)
-                            : undefined
-                      return art ? (
-                        <img
-                          src={art}
-                          alt={PACK_LABEL[pack.type]}
-                          style={{ width: 32, height: 32, objectFit: 'contain' }}
-                        />
-                      ) : (
-                        <Package size={26} color="#8b6914" />
-                      )
-                    })()}
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#3d1a10' }}>
-                      {PACK_LABEL[pack.type]}
-                    </span>
-                  </div>
-
-                  {isSelected && (
-                    <button
-                      onClick={() => handleOpenPack(pack.id, pack.type, pack.collectionId)}
-                      disabled={isOpening}
-                      style={{
-                        marginTop: 8,
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6,
-                        padding: '8px 0',
-                        borderRadius: 999,
-                        border: 'none',
-                        background: '#4A7A4A',
-                        color: '#fff',
-                        fontWeight: 800,
-                        fontSize: 12,
-                        cursor: isOpening ? 'default' : 'pointer',
-                        fontFamily: 'Baloo 2',
-                      }}
-                    >
-                      <PackageOpen size={14} />
-                      {isOpening ? 'abrindo...' : 'abrir'}
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
         </div>
       )}
 

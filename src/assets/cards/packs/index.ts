@@ -3,6 +3,7 @@ import pacoteJardimSecreto from './pacote-jardimsecreto.png'
 import pacoteDexter from './pacote-dexter.png'
 import pacoteLucifer from './pacote-lucifer.png'
 import pacoteLol from './pacote-lol.png'
+import pacoteGrimm from './pacote-grimm.png'
 // arte do pacote promocional, uma por coleção. Sempre que uma coleção nova
 // for cadastrada em lib/cards.ts, adicionar a arte dela aqui também.
 export const PROMO_PACK_ART: Record<string, string> = {
@@ -10,6 +11,7 @@ export const PROMO_PACK_ART: Record<string, string> = {
   'dexter-serie': pacoteDexter,
   'lucifer-fallen-angel': pacoteLucifer,
   'league-of-legends': pacoteLol,
+  grimm: pacoteGrimm,
 }
 
 export const PACK_ART = {
