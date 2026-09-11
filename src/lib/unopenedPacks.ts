@@ -4,12 +4,14 @@ import { spendCoins } from './personalCoin'
 import { PackType, PACK_PRICES, drawPackCards, PackResult } from './packs'
 import { ensurePromoCollectionCurrent } from './promoCollection'
 import { addPendingCards } from './pendingCards'
+import { CardRarity } from './rarity'
 
 export interface UnopenedPack {
   id: string
   type: PackType
   boughtAt: number
   collectionId?: string // travado no momento da compra (só relevante pra promocional)
+  redeemRarity?: CardRarity // travado no resgate (só relevante pro tipo 'rarity-redeem')
 }
 
 // compra: paga e guarda o pacote fechado na mochila (não sorteia ainda)
@@ -64,9 +66,10 @@ export async function openUnopenedPack(
   uid: string,
   packInstanceId: string,
   packType: PackType,
-  collectionId?: string
+  collectionId?: string,
+  redeemRarity?: CardRarity
 ): Promise<PackResult> {
-  const result = await drawPackCards(coupleId, uid, packType, collectionId)
+  const result = await drawPackCards(coupleId, uid, packType, collectionId, redeemRarity)
   // cartas vão pra mochila como soltas, não pro inventário direto — só
   // entram na coleção quando arrastadas pro slot certo (CollectionGrid)
   await addPendingCards(coupleId, uid, result.cards)
@@ -84,8 +87,19 @@ export function subscribeUnopenedPacks(
   const listener = onValue(packsRef, (snap) => {
     const val = snap.val() ?? {}
     const list: UnopenedPack[] = Object.entries(val).map(([id, v]) => {
-      const data = v as { type: PackType; boughtAt: number; collectionId?: string }
-      return { id, type: data.type, boughtAt: data.boughtAt, collectionId: data.collectionId }
+      const data = v as {
+        type: PackType
+        boughtAt: number
+        collectionId?: string
+        redeemRarity?: CardRarity
+      }
+      return {
+        id,
+        type: data.type,
+        boughtAt: data.boughtAt,
+        collectionId: data.collectionId,
+        redeemRarity: data.redeemRarity,
+      }
     })
     list.sort((a, b) => a.boughtAt - b.boughtAt)
     callback(list)

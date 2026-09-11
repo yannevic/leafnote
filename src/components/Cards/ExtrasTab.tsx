@@ -1,5 +1,15 @@
 import { useState } from 'react'
-import { Sparkles, Plus, CheckCircle2, XCircle, Trash2, Coins, Package, X } from 'lucide-react'
+import {
+  Sparkles,
+  Plus,
+  CheckCircle2,
+  XCircle,
+  Trash2,
+  Coins,
+  Package,
+  X,
+  Recycle,
+} from 'lucide-react'
 import {
   FIXED_ACTIVITIES,
   FixedActivity,
@@ -13,6 +23,7 @@ import {
 import { usePendingActivities } from '../../hooks/usePendingActivities'
 import folhinhaVerde from '../../assets/cards/folhinha-verde.png'
 import SellCardModal from './SellCardModal'
+import RarityRedeemModal from './RarityRedeemModal'
 import TradesPanel from './TradesPanel'
 import { usePersonalCoin } from '../../hooks/usePersonalCoin'
 import { COIN_ICONS } from '../../lib/personalCoinIcons'
@@ -42,6 +53,7 @@ export default function ExtrasTab({ coupleId, uid, partnerUid }: ExtrasTabProps)
   const [showCustomForm, setShowCustomForm] = useState(false)
   const [mediumChoiceFor, setMediumChoiceFor] = useState<FixedActivity | null>(null)
   const [showSell, setShowSell] = useState(false)
+  const [showRedeem, setShowRedeem] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const { coin } = usePersonalCoin(uid)
   const CoinIcon = coin ? COIN_ICONS[coin.icon] : Coins
@@ -206,7 +218,7 @@ export default function ExtrasTab({ coupleId, uid, partnerUid }: ExtrasTabProps)
           alignItems: 'stretch',
           gap: 14,
           marginBottom: 22,
-          maxWidth: 420,
+          maxWidth: 600,
           marginLeft: 'auto',
           marginRight: 'auto',
         }}
@@ -263,6 +275,60 @@ export default function ExtrasTab({ coupleId, uid, partnerUid }: ExtrasTabProps)
             vender pra Folhinha
           </button>
         </div>
+
+        <div
+          style={{
+            width: 158,
+            flexShrink: 0,
+            background: 'rgba(232,245,232,0.5)',
+            border: '1.5px solid rgba(74,122,74,0.25)',
+            borderRadius: 12,
+            padding: '16px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            boxSizing: 'border-box',
+          }}
+        >
+          <div
+            style={{
+              width: 76,
+              height: 76,
+              borderRadius: 12,
+              background: 'rgba(74,122,74,0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Recycle size={34} color="#4A7A4A" strokeWidth={1.8} />
+          </div>
+
+          <button
+            onClick={() => setShowRedeem(true)}
+            className="extras-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 12px',
+              background: 'rgba(74,122,74,0.15)',
+              color: '#2D4A2D',
+              fontFamily: 'Baloo 2',
+              fontWeight: 800,
+              fontSize: 10.5,
+              cursor: 'pointer',
+              textAlign: 'center',
+              lineHeight: 1.3,
+            }}
+          >
+            resgate por raridade
+          </button>
+        </div>
       </div>
 
       {showSell && (
@@ -273,6 +339,15 @@ export default function ExtrasTab({ coupleId, uid, partnerUid }: ExtrasTabProps)
           coinColor={coinColor}
           onClose={() => setShowSell(false)}
           onSold={showToast}
+        />
+      )}
+
+      {showRedeem && (
+        <RarityRedeemModal
+          coupleId={coupleId}
+          uid={uid}
+          onClose={() => setShowRedeem(false)}
+          onRedeemed={showToast}
         />
       )}
 

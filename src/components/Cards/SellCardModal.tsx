@@ -150,6 +150,19 @@ export default function SellCardModal({
   const availableGroups = groups.filter((g) => !cooldownExpiries[g.cardId])
   const cooldownGroups = groups.filter((g) => !!cooldownExpiries[g.cardId])
 
+  // raridades que têm pelo menos 1 carta disponível pra vender agora —
+  // usado pra montar os botões "selecionar todas — {raridade}"
+  const availableRarities = useMemo(
+    () => Array.from(new Set(availableGroups.map((g) => g.card.rarity))),
+    [availableGroups]
+  )
+
+  function selectAllOfRarity(rarity: keyof typeof RARITY_COLOR) {
+    const ids = availableGroups.filter((g) => g.card.rarity === rarity).map((g) => g.cardId)
+    setMultiSelectedIds(new Set(ids))
+    setMultiResult(null)
+  }
+
   const multiSelectedGroups = useMemo(
     () => availableGroups.filter((g) => multiSelectedIds.has(g.cardId)),
     [availableGroups, multiSelectedIds]
@@ -449,6 +462,34 @@ export default function SellCardModal({
                         {multiSelectMode ? 'cancelar seleção' : 'vender várias'}
                       </button>
                     </div>
+                    {multiSelectMode && multiSelectedIds.size === 0 && (
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                        {availableRarities.map((r) => (
+                          <button
+                            key={r}
+                            onClick={() => selectAllOfRarity(r)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              border: `1.5px solid ${RARITY_COLOR[r]}`,
+                              background: `${RARITY_COLOR[r]}18`,
+                              color: RARITY_COLOR[r],
+                              fontFamily: 'Baloo 2',
+                              fontWeight: 800,
+                              fontSize: 10.5,
+                              borderRadius: 999,
+                              padding: '5px 10px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Check size={11} />
+                            selecionar todas — {r}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <div
                       style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}
                     >
@@ -545,24 +586,42 @@ export default function SellCardModal({
                             selecionada
                             {multiInstanceCount > 1 ? 's' : ''} ({multiRarity})
                           </span>
-                          <button
-                            onClick={() => {
-                              setMultiSelectedIds(new Set())
-                              setShowMultiNegotiate(false)
-                              setMultiResult(null)
-                            }}
-                            style={{
-                              border: 'none',
-                              background: 'transparent',
-                              color: 'rgba(61,26,16,0.5)',
-                              fontFamily: 'Baloo 2',
-                              fontWeight: 700,
-                              fontSize: 10.5,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            limpar
-                          </button>
+                          <div style={{ display: 'flex', gap: 10 }}>
+                            {multiRarity && (
+                              <button
+                                onClick={() => selectAllOfRarity(multiRarity)}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: 'rgba(74,122,74,0.85)',
+                                  fontFamily: 'Baloo 2',
+                                  fontWeight: 700,
+                                  fontSize: 10.5,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                selecionar todas
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                setMultiSelectedIds(new Set())
+                                setShowMultiNegotiate(false)
+                                setMultiResult(null)
+                              }}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: 'rgba(61,26,16,0.5)',
+                                fontFamily: 'Baloo 2',
+                                fontWeight: 700,
+                                fontSize: 10.5,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              limpar
+                            </button>
+                          </div>
                         </div>
 
                         <button

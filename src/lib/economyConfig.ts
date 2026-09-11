@@ -25,11 +25,11 @@ export const FLOWER_SELL_VALUE: Record<FlowerRarity, number> = {
   epica: 180,
 }
 
-// Marco de streak (Fase 4 — ainda não implementado)
+// Marco de streak
 export const STREAK_MILESTONE_REWARD = 15
 export const STREAK_CYCLE_BONUS = 50
 
-// Atividades (Fase 4 — ainda não implementado)
+// Atividades
 export const ACTIVITY_REWARD = {
   leve: 10,
   medio: 20, // ou 1 pacote básico
@@ -48,7 +48,7 @@ export const SHOP_PRICES: Record<'incomum' | 'rara' | 'epica', number> = {
   epica: 130,
 }
 
-// Venda de carta repetida (seção 6 do plano — ainda sem UI)
+// Venda de carta repetida (seção 6 do plano)
 export const CARD_SELL_VALUE: Record<CardRarity, number> = {
   comum: 1,
   incomum: 3,
@@ -59,6 +59,11 @@ export const CARD_SELL_VALUE: Record<CardRarity, number> = {
 // Recompensa de coleção completa (seção 25 do Plano de Cartinhas)
 export const COLLECTION_COMPLETE_COINS = 70
 export const CARD_SELL_VALUE_SPECIAL = 30
+
+// Resgate de duplicata por raridade (ExtrasTab, ao lado de "vender pra
+// Folhinha") — custo = CARD_SELL_VALUE[raridade alvo] * este multiplicador,
+// pago misturando duplicatas de qualquer raridade/coleção normal
+export const RARITY_REDEEM_COST_MULTIPLIER = 5
 
 // ─── Moeda conjunta do casal (jardim) ───────────
 export const SLOT_PRICES = [80, 250, 500, 900]

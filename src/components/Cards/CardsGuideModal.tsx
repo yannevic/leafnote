@@ -10,6 +10,7 @@ import {
   ListChecks,
   Gift,
   Award,
+  Recycle,
 } from 'lucide-react'
 import { RARITY_COLOR } from '../../lib/rarity'
 import { PACK_PRICES } from '../../lib/packs'
@@ -30,6 +31,7 @@ import {
   CARD_SELL_VALUE,
   CARD_SELL_VALUE_SPECIAL,
   COLLECTION_COMPLETE_COINS,
+  RARITY_REDEEM_COST_MULTIPLIER,
 } from '../../lib/economyConfig'
 import {
   CARD_SELL_NEGOTIATE_MAX_MULTIPLIER,
@@ -425,6 +427,50 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
             <div style={{ marginTop: 8, lineHeight: 1.6 }}>
               completar a mesma coleção de novo não gera uma nova lista de prêmios — é um evento
               único por coleção.
+            </div>
+          </Section>
+
+          <Section
+            icon={<Recycle size={14} color="rgba(122,48,64,0.6)" strokeWidth={2} />}
+            title="resgate por raridade"
+          >
+            cartas repetidas também podem virar direto uma carta que falta — sem depender da sorte
+            de abrir mais pacotes. escolha uma raridade e pague com pontos de duplicata (mesma
+            tabela de valores da venda pra Folhinha, só que multiplicada):
+            <InfoCard>
+              <Row
+                label="comum"
+                rarity="comum"
+                value={`${CARD_SELL_VALUE.comum * RARITY_REDEEM_COST_MULTIPLIER} pontos`}
+              />
+              <Row
+                label="incomum"
+                rarity="incomum"
+                value={`${CARD_SELL_VALUE.incomum * RARITY_REDEEM_COST_MULTIPLIER} pontos`}
+              />
+              <Row
+                label="rara"
+                rarity="rara"
+                value={`${CARD_SELL_VALUE.rara * RARITY_REDEEM_COST_MULTIPLIER} pontos`}
+              />
+              <Row
+                label="épica"
+                rarity="epica"
+                value={`${CARD_SELL_VALUE.epica * RARITY_REDEEM_COST_MULTIPLIER} pontos`}
+              />
+            </InfoCard>
+            <div style={{ marginTop: 10, lineHeight: 1.6 }}>
+              dá pra misturar duplicatas de qualquer raridade e coleção pra bater o total em pontos
+              — e um botão "selecionar todas" já marca de cara todas as duplicatas daquela raridade,
+              deixando só você desmarcar as que não quer usar. o resgate vira um pacotinho de 1
+              carta só na sua mochila — a carta em si só é sorteada quando você abre, entre as
+              cartas daquela raridade que você ainda não tem (somando todas as coleções normais
+              juntas, nunca a Especial). esse pacote não conta pro contador de {PITY_THRESHOLD}{' '}
+              pacotes.
+            </div>
+            <div style={{ marginTop: 8, lineHeight: 1.6 }}>
+              se você já tiver todas as cartas de uma raridade, o resgate dela fica desabilitado —
+              não sobra nenhuma carta pra sortear.
             </div>
           </Section>
         </div>

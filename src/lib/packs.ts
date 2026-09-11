@@ -5,10 +5,11 @@ import { CardRarity } from './rarity'
 
 const PACK_SIZE = 5
 
-export type PackType = 'comum' | 'promocional'
+export type PackType = 'comum' | 'promocional' | 'rarity-redeem'
 
 import { PACK_PRICES } from './economyConfig'
 import { PACK_ODDS, PITY_THRESHOLD } from './dropRates'
+import { getMissingCardsByRarity } from './rarityRedeem'
 export { PACK_PRICES }
 
 // fallback de segurança — só usado se por algum motivo drawPackCards for
@@ -56,8 +57,26 @@ export async function drawPackCards(
   coupleId: string,
   uid: string,
   packType: PackType,
-  promoCollectionId?: string
+  promoCollectionId?: string,
+  redeemRarity?: CardRarity
 ): Promise<PackResult> {
+  // resgate por raridade: 1 carta só, sorteada AGORA (não no resgate),
+  // entre as que a pessoa ainda não tem daquela raridade — nunca toca
+  // no pity, porque esse branch termina aqui, antes da transação de pity
+  if (packType === 'rarity-redeem') {
+    if (!redeemRarity) {
+      throw new Error('redeemRarity é obrigatório pro tipo rarity-redeem')
+    }
+    const missing = await getMissingCardsByRarity(coupleId, uid, redeemRarity)
+    // fallback defensivo: se por acaso já tiver tudo daquela raridade
+    // (não deveria acontecer, o botão já vem desabilitado nesse caso),
+    // sorteia entre todas as cartas daquela raridade mesmo repetindo
+    const pool =
+      missing.length > 0 ? missing : CARDS.filter((c) => c.rarity === redeemRarity && !c.secret)
+    const card = pool[Math.floor(Math.random() * pool.length)]
+    return { cards: [card], pityTriggered: false }
+  }
+
   const pityRef = ref(db, `couples/${coupleId}/cards/pity/${uid}`)
   const pityResult = await runTransaction(pityRef, (current) => (current ?? 0) + 1)
   const pityCount = (pityResult.snapshot.val() as number) ?? 1
