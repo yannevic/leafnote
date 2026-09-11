@@ -375,7 +375,8 @@ export default function CardsGuideModal({ coupleId, onClose }: Props) {
             </div>
             <div style={{ marginTop: 8, lineHeight: 1.6 }}>
               dá pra vender ou negociar várias cartas diferentes de uma vez, desde que sejam da
-              mesma raridade — é só ativar "vender várias" na lista. na negociação em lote, cada
+              mesma raridade — é só ativar "vender várias" na lista, ou usar "selecionar todas" pra
+              já marcar de cara todas as duplicatas daquela raridade. na negociação em lote, cada
               cópia é testada individualmente com a Folhinha: pode sair uma mistura de aceitas e
               recusadas no mesmo lote.
             </div>

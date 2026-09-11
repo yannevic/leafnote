@@ -4,4 +4,4 @@
    acontece na hora de abrir, igual os outros pacotes|
 ✅ Botão "selecionar todas" nas telas de seleção de cartas — tanto no
    resgate por raridade quanto na venda em lote pra Folhinha|
-📖 Guia das cartinhas atualizado explicando como funciona o resgate
+📖 Guia das cartinhas atualizado explicando como funciona o resgate 

@@ -18,7 +18,7 @@ export interface UnopenedPack {
 export async function buyPack(
   coupleId: string,
   uid: string,
-  packType: PackType,
+  packType: Exclude<PackType, 'rarity-redeem'>,
   quantity: number = 1
 ): Promise<boolean> {
   const price = PACK_PRICES[packType] * quantity

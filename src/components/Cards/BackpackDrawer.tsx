@@ -6,7 +6,7 @@ import { useUnopenedPacks } from '../../hooks/useUnopenedPacks'
 import { usePendingCards } from '../../hooks/usePendingCards'
 import { useCardInventory } from '../../hooks/useCardInventory'
 import { CardDefinition, CARDS } from '../../lib/cards'
-import { RARITY_COLOR } from '../../lib/rarity'
+import { RARITY_COLOR, CardRarity } from '../../lib/rarity'
 import { PACK_ART, getPromoPackArt } from '../../assets/cards/packs'
 import PackOpenModal from './PackOpenModal'
 import CardZoomModal from './CardZoomModal'
@@ -19,6 +19,7 @@ interface BackpackDrawerProps {
 const PACK_LABEL: Record<PackType, string> = {
   comum: 'pacote comum',
   promocional: 'pacote promocional',
+  'rarity-redeem': 'pacote de resgate',
 }
 
 export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
@@ -61,7 +62,12 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
 
   const totalItems = packs.length + pending.length
 
-  async function handleOpenPack(packId: string, type: PackType, collectionId?: string) {
+  async function handleOpenPack(
+    packId: string,
+    type: PackType,
+    collectionId?: string,
+    redeemRarity?: CardRarity
+  ) {
     setOpeningId(packId)
     setOpen(false) // fecha o painel da mochila já aqui, pra evitar ver as
     // cartas soltas (pendingCards atualiza em tempo real assim que o
@@ -73,7 +79,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
     for (const collectionInventory of Object.values(inventory)) {
       Object.assign(snapshotBefore, collectionInventory)
     }
-    const res = await openUnopenedPack(coupleId, uid, packId, type, collectionId)
+    const res = await openUnopenedPack(coupleId, uid, packId, type, collectionId, redeemRarity)
     setOpeningId(null)
     setSelectedId(null)
     setResult(res.cards)
@@ -238,7 +244,9 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
 
                   {isSelected && (
                     <button
-                      onClick={() => handleOpenPack(pack.id, pack.type, pack.collectionId)}
+                      onClick={() =>
+                        handleOpenPack(pack.id, pack.type, pack.collectionId, pack.redeemRarity)
+                      }
                       disabled={isOpening}
                       style={{
                         marginTop: 8,

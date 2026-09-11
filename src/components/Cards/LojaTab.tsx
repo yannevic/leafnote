@@ -24,36 +24,42 @@ interface LojaTabProps {
   uid: string
 }
 
-const PACK_THEME: Record<PackType, { label: string; gradient: string; accent: string }> = {
-  comum: {
-    label: 'pacote comum',
-    gradient: 'linear-gradient(160deg, #7FB87F 0%, #4A7A4A 100%)',
-    accent: '#2D4A2D',
-  },
-  promocional: {
-    label: 'pacote promocional',
-    gradient: 'linear-gradient(160deg, #F5D5DC 0%, #c87090 100%)',
-    accent: '#7a3040',
-  },
-}
+type PurchasablePackType = Exclude<PackType, 'rarity-redeem'>
+
+const PACK_THEME: Record<PurchasablePackType, { label: string; gradient: string; accent: string }> =
+  {
+    comum: {
+      label: 'pacote comum',
+      gradient: 'linear-gradient(160deg, #7FB87F 0%, #4A7A4A 100%)',
+      accent: '#2D4A2D',
+    },
+    promocional: {
+      label: 'pacote promocional',
+      gradient: 'linear-gradient(160deg, #F5D5DC 0%, #c87090 100%)',
+      accent: '#7a3040',
+    },
+  }
 
 export default function LojaTab({ coupleId, uid }: LojaTabProps) {
-  const [opening, setOpening] = useState<PackType | null>(null)
-  const [confirmPack, setConfirmPack] = useState<PackType | null>(null)
+  const [opening, setOpening] = useState<PurchasablePackType | null>(null)
+  const [confirmPack, setConfirmPack] = useState<PurchasablePackType | null>(null)
   const [confirmShopCard, setConfirmShopCard] = useState<CardDefinition | null>(null)
   const [zoomCard, setZoomCard] = useState<CardDefinition | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [shopRefresh, setShopRefresh] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
   const [hoveredPack, setHoveredPack] = useState<PackType | null>(null)
-  const [packQty, setPackQty] = useState<Record<PackType, number>>({ comum: 1, promocional: 1 })
+  const [packQty, setPackQty] = useState<Record<PurchasablePackType, number>>({
+    comum: 1,
+    promocional: 1,
+  })
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 2500)
   }
 
-  function adjustQty(type: PackType, delta: number) {
+  function adjustQty(type: PurchasablePackType, delta: number) {
     setPackQty((prev) => ({
       ...prev,
       [type]: Math.max(1, Math.min(10, prev[type] + delta)),
@@ -232,7 +238,7 @@ export default function LojaTab({ coupleId, uid }: LojaTabProps) {
             flexWrap: 'wrap',
           }}
         >
-          {(['comum', 'promocional'] as PackType[]).map((type) => {
+          {(['comum', 'promocional'] as PurchasablePackType[]).map((type) => {
             const theme = PACK_THEME[type]
             const tooltipText =
               type === 'comum'

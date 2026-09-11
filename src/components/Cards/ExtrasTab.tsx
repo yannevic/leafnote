@@ -209,7 +209,7 @@ export default function ExtrasTab({ coupleId, uid, partnerUid }: ExtrasTabProps)
         </div>
       )}
 
-      {/* ── Trocas + vender pra Folhinha ── */}
+      {/* ── Trocas + vender pra Folhinha + resgate por raridade ── */}
       <SectionTitle>trocas & folhinha</SectionTitle>
 
       <div

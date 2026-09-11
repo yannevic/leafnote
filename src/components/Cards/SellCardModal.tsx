@@ -462,6 +462,7 @@ export default function SellCardModal({
                         {multiSelectMode ? 'cancelar seleção' : 'vender várias'}
                       </button>
                     </div>
+
                     {multiSelectMode && multiSelectedIds.size === 0 && (
                       <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
                         {availableRarities.map((r) => (
