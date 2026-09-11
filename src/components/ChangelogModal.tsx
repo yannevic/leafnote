@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.78': [
+    "✨ Novo: resgate de cartas repetidas por raridade! escolha uma raridade e\r\n   troque suas duplicatas por uma carta sorteada que ainda está faltando",
+    "🎁 O resgate vira um pacotinho de 1 carta guardado na mochila — a sorte só\r\n   acontece na hora de abrir, igual os outros pacotes",
+    "✅ Botão \"selecionar todas\" nas telas de seleção de cartas — tanto no\r\n   resgate por raridade quanto na venda em lote pra Folhinha",
+    "📖 Guia das cartinhas atualizado explicando como funciona o resgate",
+  ],
+
   '3.0.77': [
     "🐺 Badge de Grimm adicionada",
   ],
