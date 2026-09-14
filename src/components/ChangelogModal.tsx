@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.81': [
+    "✅ Ajustes no resgate das recompensas ao completar coleção e nas imagens",
+  ],
+
   '3.0.80': [
     "✅ Ajustes no resgate das recompensas ao completar coleção e nas imagens",
   ],
