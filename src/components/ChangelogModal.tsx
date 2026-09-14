@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.82': [
+    "✅ muralzinho de recados agora mostra o nome de quem escreveu cada recado acima do texto",
+    "✅ moldura de badge/insígnia aumentada",
+  ],
+
   '3.0.81': [
     "✅ Ajustes no resgate das recompensas ao completar coleção e nas imagens",
   ],
