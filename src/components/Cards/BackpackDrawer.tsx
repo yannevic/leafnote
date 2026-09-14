@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Backpack, X, PackageOpen, ZoomIn, Package, Sparkles, Repeat } from 'lucide-react'
+import { Backpack, X, PackageOpen, ZoomIn, Package, Sparkles } from 'lucide-react'
 import { PackType } from '../../lib/packs'
 import { openUnopenedPack } from '../../lib/unopenedPacks'
 import {
