@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.80': [
+    "✅ Ajustes no resgate das recompensas ao completar coleção e nas imagens",
+  ],
+
   '3.0.79': [
     "✨ Novo: resgate de cartas repetidas por raridade! escolha uma raridade e\r\n   troque suas duplicatas por uma carta sorteada que ainda está faltando",
     "🎁 O resgate vira um pacotinho de 1 carta guardado na mochila — a sorte só\r\n   acontece na hora de abrir, igual os outros pacotes",
