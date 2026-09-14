@@ -1,7 +1,1 @@
-✨ Novo: resgate de cartas repetidas por raridade! escolha uma raridade e
-   troque suas duplicatas por uma carta sorteada que ainda está faltando |
-🎁 O resgate vira um pacotinho de 1 carta guardado na mochila — a sorte só
-   acontece na hora de abrir, igual os outros pacotes|
-✅ Botão "selecionar todas" nas telas de seleção de cartas — tanto no
-   resgate por raridade quanto na venda em lote pra Folhinha|
-📖 Guia das cartinhas atualizado explicando como funciona o resgate 
+✅ Ajustes no resgate das recompensas ao completar coleção e nas imagens |

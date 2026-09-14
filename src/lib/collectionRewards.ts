@@ -5,14 +5,14 @@
 // lista de 4 prêmios resgatáveis individualmente (badge/moedas/pacote/
 // carta especial), e executa o resgate de cada um separadamente.
 
-import { ref, get, set, runTransaction, onValue, off } from 'firebase/database'
+import { ref, get, set, push, remove, runTransaction, onValue, off } from 'firebase/database'
 import { db } from './firebase'
 import { CARDS, COLLECTIONS, CardDefinition } from './cards'
 import { CardRarity } from './rarity'
 import { PACK_ODDS } from './dropRates'
 import { unlockBadge } from './profileBadges'
 import { addCoins } from './personalCoin'
-import { addPendingCards } from './pendingCards'
+import { addPendingCards, addPendingSpecialCard } from './pendingCards'
 import { drawRandomSpecialCard, SpecialCardDefinition } from './specialCards'
 import { COLLECTION_COMPLETE_COINS } from './economyConfig'
 
@@ -40,10 +40,6 @@ function rewardRef(coupleId: string, uid: string, collectionId: string) {
   return ref(db, `couples/${coupleId}/cards/specialCards/pendingRewards/${uid}/${collectionId}`)
 }
 
-function specialInventoryRef(coupleId: string, uid: string, specialCardId: string) {
-  return ref(db, `couples/${coupleId}/cards/specialCards/inventory/${uid}/${specialCardId}`)
-}
-
 // contagem por uid, excluindo secret:true — mesma regra já usada no
 // desbloqueio de badge do Perfil Pessoal
 async function isCollectionComplete(
@@ -65,7 +61,8 @@ async function isCollectionComplete(
 // com os 4 itens por resgatar — não credita nada ainda. Idempotente: não
 // faz nada se a coleção já tinha sido completada antes (evita reabrir a
 // lista de prêmios toda vez que uma carta nova entra depois da coleção
-// já fechada).
+// já fechada). ⚠️ Este node NUNCA é apagado depois de criado — é também a
+// fonte do indicativo permanente "coleção completa" no CollectionGrid.tsx.
 export async function unlockCollectionRewardIfComplete(
   coupleId: string,
   uid: string,
@@ -150,8 +147,11 @@ function drawMiniPackCards(chosenCollectionId: string): CardDefinition[] {
 }
 
 // chosenCollectionId = coleção normal escolhida pela pessoa no momento do
-// resgate (dropdown na UI) — mesmas odds/raridade de um pacote normal,
-// cai direto em pendingCards (mochila, "cartas soltas"), igual ao plano.
+// resgate (dropdown na UI) — mesmas odds/raridade de um pacote normal.
+// Continua revelando IMEDIATAMENTE no momento do resgate (PackOpenModal,
+// disparado pelo CollectionRewardsModal.tsx) — cai direto em pendingCards
+// já revelado, esperando drag até a coleção. Só a carta especial (abaixo)
+// virou pacote fechado.
 export async function claimPackReward(
   coupleId: string,
   uid: string,
@@ -164,19 +164,60 @@ export async function claimPackReward(
   return cards
 }
 
+// ─── Carta especial: agora vira um PACOTE FECHADO na mochila ──────────
+// (antes creditava direto em specialCards/inventory). A pessoa abre quando
+// quiser — só então sorteia, e a carta cai solta na mochila, esperando ser
+// arrastada até o slot certo na vitrine (placeSpecialPendingCard credita de
+// verdade, permitindo repetida sem bloqueio).
+
+export interface SpecialUnopenedPack {
+  id: string
+  boughtAt: number
+}
+
+function specialUnopenedPacksRef(coupleId: string, uid: string) {
+  return ref(db, `couples/${coupleId}/cards/specialCards/unopenedPacks/${uid}`)
+}
+
 export async function claimSpecialCardReward(
   coupleId: string,
   uid: string,
   rewardCollectionId: string
+): Promise<void> {
+  await push(specialUnopenedPacksRef(coupleId, uid), { boughtAt: Date.now() })
+  await markClaimed(coupleId, uid, rewardCollectionId, 'card')
+}
+
+export function subscribeSpecialUnopenedPacks(
+  coupleId: string,
+  uid: string,
+  callback: (packs: SpecialUnopenedPack[]) => void
+) {
+  const r = specialUnopenedPacksRef(coupleId, uid)
+  const listener = onValue(r, (snap) => {
+    const val = snap.val() ?? {}
+    const list: SpecialUnopenedPack[] = Object.entries(val).map(([id, v]) => ({
+      id,
+      boughtAt: (v as { boughtAt: number }).boughtAt,
+    }))
+    list.sort((a, b) => a.boughtAt - b.boughtAt)
+    callback(list)
+  })
+  return () => off(r, 'value', listener)
+}
+
+// abertura: sorteia AGORA (nunca no resgate) e joga a carta solta na
+// mochila — nunca credita direto
+export async function openSpecialRewardPack(
+  coupleId: string,
+  uid: string,
+  packInstanceId: string
 ): Promise<SpecialCardDefinition> {
   const card = drawRandomSpecialCard()
-  // guarda quantidade + timestamp da conquista mais recente — usado pra
-  // ordenar a carta recém-ganha no topo da galeria (mais nova primeiro)
-  await runTransaction(specialInventoryRef(coupleId, uid, card.id), (current) => {
-    const entry = (current as SpecialCardInventoryEntry) ?? { quantity: 0, lastAcquiredAt: 0 }
-    return { quantity: entry.quantity + 1, lastAcquiredAt: Date.now() }
-  })
-  await markClaimed(coupleId, uid, rewardCollectionId, 'card')
+  await addPendingSpecialCard(coupleId, uid, card)
+  await remove(
+    ref(db, `couples/${coupleId}/cards/specialCards/unopenedPacks/${uid}/${packInstanceId}`)
+  )
   return card
 }
 

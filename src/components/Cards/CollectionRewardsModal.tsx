@@ -10,9 +10,7 @@ import {
   claimPackReward,
   claimSpecialCardReward,
 } from '../../lib/collectionRewards'
-import type { SpecialCardDefinition } from '../../lib/specialCards'
 import PackOpenModal from './PackOpenModal'
-import SpecialCardRevealModal from './SpecialCardRevealModal'
 
 interface Props {
   coupleId: string
@@ -34,7 +32,6 @@ export default function CollectionRewardsModal({
     Object.keys(COLLECTIONS).find((id) => id !== collectionId) ?? collectionId
   )
   const [packResult, setPackResult] = useState<CardDefinition[] | null>(null)
-  const [specialCardResult, setSpecialCardResult] = useState<SpecialCardDefinition | null>(null)
 
   const collectionName = COLLECTIONS[collectionId as keyof typeof COLLECTIONS]?.name ?? collectionId
   const allClaimed = Object.values(reward.claimed).every(Boolean)
@@ -60,9 +57,8 @@ export default function CollectionRewardsModal({
 
   async function handleClaimCard() {
     setClaiming('card')
-    const card = await claimSpecialCardReward(coupleId, uid, collectionId)
+    await claimSpecialCardReward(coupleId, uid, collectionId)
     setClaiming(null)
-    setSpecialCardResult(card)
   }
 
   return (
@@ -218,7 +214,7 @@ export default function CollectionRewardsModal({
           <RewardRow
             icon={<Sparkles size={18} />}
             label="carta especial"
-            description="sorteada da Coleção de Cartas Especial"
+            description="vira um pacote na sua mochila — abra quando quiser"
             claimed={reward.claimed.card}
             loading={claiming === 'card'}
             onClaim={handleClaimCard}
@@ -242,12 +238,6 @@ export default function CollectionRewardsModal({
 
       {packResult && (
         <PackOpenModal cards={packResult} ownedBefore={{}} onClose={() => setPackResult(null)} />
-      )}
-      {specialCardResult && (
-        <SpecialCardRevealModal
-          card={specialCardResult}
-          onClose={() => setSpecialCardResult(null)}
-        />
       )}
     </div>
   )

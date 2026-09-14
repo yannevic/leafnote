@@ -1,14 +1,21 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Backpack, X, PackageOpen, ZoomIn, Package, Sparkles, Repeat } from 'lucide-react'
 import { PackType } from '../../lib/packs'
 import { openUnopenedPack } from '../../lib/unopenedPacks'
+import {
+  subscribeSpecialUnopenedPacks,
+  openSpecialRewardPack,
+  SpecialUnopenedPack,
+} from '../../lib/collectionRewards'
 import { useUnopenedPacks } from '../../hooks/useUnopenedPacks'
 import { usePendingCards } from '../../hooks/usePendingCards'
 import { useCardInventory } from '../../hooks/useCardInventory'
 import { CardDefinition, CARDS } from '../../lib/cards'
+import { SPECIAL_CARDS, SpecialCardDefinition } from '../../lib/specialCards'
 import { RARITY_COLOR, CardRarity } from '../../lib/rarity'
 import { PACK_ART, getPromoPackArt } from '../../assets/cards/packs'
 import PackOpenModal from './PackOpenModal'
+import SpecialCardRevealModal from './SpecialCardRevealModal'
 import CardZoomModal from './CardZoomModal'
 
 interface BackpackDrawerProps {
@@ -22,6 +29,8 @@ const PACK_LABEL: Record<PackType, string> = {
   'rarity-redeem': 'pacote de resgate',
 }
 
+const SPECIAL_GOLD = '#c9962e'
+
 export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
   const [open, setOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -30,10 +39,14 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
   const [result, setResult] = useState<CardDefinition[] | null>(null)
   const [ownedBefore, setOwnedBefore] = useState<Record<string, number>>({})
   const [zoomCard, setZoomCard] = useState<CardDefinition | null>(null)
+  const [specialRevealCard, setSpecialRevealCard] = useState<SpecialCardDefinition | null>(null)
 
   const { packs, loading: loadingPacks } = useUnopenedPacks(coupleId, uid)
   const { pending, loading: loadingPending } = usePendingCards(coupleId, uid)
   const { inventory } = useCardInventory(coupleId, uid)
+
+  const [specialPacks, setSpecialPacks] = useState<SpecialUnopenedPack[]>([])
+  useEffect(() => subscribeSpecialUnopenedPacks(coupleId, uid, setSpecialPacks), [coupleId, uid])
 
   // agrupa as pendentes iguais (mesmo cardId) só pra exibição empilhada —
   // cada instância continua existindo separada no Firebase, isso é só visual
@@ -48,19 +61,21 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
       map.get(p.cardId)!.push(p)
     }
     // cartas novas (ainda não possuídas na coleção) aparecem primeiro,
-    // repetidas depois — mantém a ordem relativa dentro de cada grupo
+    // repetidas depois — mantém a ordem relativa dentro de cada grupo.
+    // Carta especial nunca conta como "já possuída" pra fins de ordenação
+    // (permite repetida sem bloqueio), sempre entra no grupo das novas.
     const sortedOrder = [...order].sort((a, b) => {
       const groupA = map.get(a)!
       const groupB = map.get(b)!
-      const ownedA = (inventory[groupA[0].collectionId]?.[a] ?? 0) > 0
-      const ownedB = (inventory[groupB[0].collectionId]?.[b] ?? 0) > 0
+      const ownedA = groupA[0].special ? false : (inventory[groupA[0].collectionId]?.[a] ?? 0) > 0
+      const ownedB = groupB[0].special ? false : (inventory[groupB[0].collectionId]?.[b] ?? 0) > 0
       if (ownedA === ownedB) return 0
       return ownedA ? 1 : -1
     })
     return sortedOrder.map((cardId) => map.get(cardId)!)
   }, [pending, inventory])
 
-  const totalItems = packs.length + pending.length
+  const totalItems = packs.length + specialPacks.length + pending.length
 
   async function handleOpenPack(
     packId: string,
@@ -84,6 +99,15 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
     setSelectedId(null)
     setResult(res.cards)
     setOwnedBefore(snapshotBefore)
+  }
+
+  async function handleOpenSpecialPack(packId: string) {
+    setOpeningId(packId)
+    setOpen(false)
+    const card = await openSpecialRewardPack(coupleId, uid, packId)
+    setOpeningId(null)
+    setSelectedId(null)
+    setSpecialRevealCard(card)
   }
 
   return (
@@ -196,7 +220,7 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
             <div style={{ fontSize: 12, color: '#8b6914', textAlign: 'center' }}>carregando...</div>
           )}
 
-          {!loadingPacks && packs.length === 0 && (
+          {!loadingPacks && packs.length === 0 && specialPacks.length === 0 && (
             <div style={{ fontSize: 12, color: '#8b6914', textAlign: 'center', padding: '12px 0' }}>
               nenhum pacote guardado ainda
             </div>
@@ -226,7 +250,9 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                           ? PACK_ART.comum
                           : pack.collectionId
                             ? getPromoPackArt(pack.collectionId)
-                            : undefined
+                            : pack.type === 'rarity-redeem'
+                              ? PACK_ART.comum
+                              : undefined
                       return art ? (
                         <img
                           src={art}
@@ -273,6 +299,65 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                 </div>
               )
             })}
+
+            {specialPacks.map((pack) => {
+              const isSelected = selectedId === pack.id
+              const isOpening = openingId === pack.id
+              return (
+                <div
+                  key={pack.id}
+                  style={{
+                    border: isSelected
+                      ? `2px solid ${SPECIAL_GOLD}`
+                      : `1.5px solid ${SPECIAL_GOLD}55`,
+                    borderRadius: 12,
+                    padding: 8,
+                    background: '#fff',
+                  }}
+                >
+                  <div
+                    onClick={() => setSelectedId(isSelected ? null : pack.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                  >
+                    <img
+                      src={PACK_ART.comum}
+                      alt="pacote especial"
+                      style={{ width: 32, height: 32, objectFit: 'contain' }}
+                    />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#3d1a10' }}>
+                      pacote especial
+                    </span>
+                  </div>
+
+                  {isSelected && (
+                    <button
+                      onClick={() => handleOpenSpecialPack(pack.id)}
+                      disabled={isOpening}
+                      style={{
+                        marginTop: 8,
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        padding: '8px 0',
+                        borderRadius: 999,
+                        border: 'none',
+                        background: SPECIAL_GOLD,
+                        color: '#fff',
+                        fontWeight: 800,
+                        fontSize: 12,
+                        cursor: isOpening ? 'default' : 'pointer',
+                        fontFamily: 'Baloo 2',
+                      }}
+                    >
+                      <PackageOpen size={14} />
+                      {isOpening ? 'abrindo...' : 'abrir'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
           {pending.length > 0 && (
             <div style={{ marginTop: 14 }}>
@@ -292,10 +377,19 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                 {groupedPending.map((group) => {
                   const top = group[0]
                   const stackCount = group.length
-                  const card = CARDS.find((c) => c.id === top.cardId)
-                  if (!card) return null
-                  const color = RARITY_COLOR[card.rarity]
-                  const isOwned = (inventory[top.collectionId]?.[top.cardId] ?? 0) > 0
+                  const isSpecial = !!top.special
+                  const normalCard = !isSpecial ? CARDS.find((c) => c.id === top.cardId) : null
+                  const specialCard = isSpecial
+                    ? SPECIAL_CARDS.find((c) => c.id === top.cardId)
+                    : null
+                  if (!isSpecial && !normalCard) return null
+                  if (isSpecial && !specialCard) return null
+                  const displayName = isSpecial ? specialCard!.name : normalCard!.name
+                  const displayImage = isSpecial ? specialCard!.image : normalCard!.image
+                  const color = isSpecial ? SPECIAL_GOLD : RARITY_COLOR[normalCard!.rarity]
+                  const isOwned = isSpecial
+                    ? false
+                    : (inventory[top.collectionId]?.[top.cardId] ?? 0) > 0
                   return (
                     <div
                       key={top.id}
@@ -318,12 +412,12 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                           fontSize: 9.5,
                           fontWeight: 800,
                           color: '#fff',
-                          background: isOwned ? '#8B6914' : '#4A7A4A',
+                          background: isSpecial ? SPECIAL_GOLD : isOwned ? '#8B6914' : '#4A7A4A',
                           boxShadow: '0 2px 5px rgba(0,0,0,0.25)',
                         }}
                       >
-                        {isOwned ? <Repeat size={10} /> : <Sparkles size={10} />}
-                        {isOwned ? 'repetida' : 'nova'}
+                        <Sparkles size={10} />
+                        {isSpecial ? 'especial' : isOwned ? 'repetida' : 'nova'}
                       </div>
                       {stackCount > 1 && (
                         <>
@@ -362,12 +456,13 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                               instanceId: top.id,
                               cardId: top.cardId,
                               collectionId: top.collectionId,
+                              special: isSpecial,
                             })
                           )
                           setTimeout(() => setIsDragging(true), 0)
                         }}
                         onDragEnd={() => setIsDragging(false)}
-                        title={stackCount > 1 ? `${card.name} (${stackCount})` : card.name}
+                        title={stackCount > 1 ? `${displayName} (${stackCount})` : displayName}
                         style={{
                           position: 'absolute',
                           top: 0,
@@ -382,38 +477,40 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
                         }}
                       >
                         <img
-                          src={card.image}
-                          alt={card.name}
+                          src={displayImage}
+                          alt={displayName}
                           style={{
                             width: '100%',
                             height: '100%',
-                            objectFit: 'cover',
+                            objectFit: isSpecial ? 'contain' : 'cover',
                             display: 'block',
                           }}
                         />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setZoomCard(card)
-                          }}
-                          style={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            width: 22,
-                            height: 22,
-                            borderRadius: '50%',
-                            border: 'none',
-                            background: 'rgba(0,0,0,0.5)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            padding: 0,
-                          }}
-                        >
-                          <ZoomIn size={12} color="#fff" strokeWidth={2.5} />
-                        </button>
+                        {!isSpecial && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setZoomCard(normalCard!)
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 4,
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              border: 'none',
+                              background: 'rgba(0,0,0,0.5)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              padding: 0,
+                            }}
+                          >
+                            <ZoomIn size={12} color="#fff" strokeWidth={2.5} />
+                          </button>
+                        )}
                       </div>
                       {stackCount > 1 && (
                         <div
@@ -458,6 +555,12 @@ export default function BackpackDrawer({ coupleId, uid }: BackpackDrawerProps) {
 
       {result && (
         <PackOpenModal cards={result} ownedBefore={ownedBefore} onClose={() => setResult(null)} />
+      )}
+      {specialRevealCard && (
+        <SpecialCardRevealModal
+          card={specialRevealCard}
+          onClose={() => setSpecialRevealCard(null)}
+        />
       )}
       {zoomCard && <CardZoomModal card={zoomCard} onClose={() => setZoomCard(null)} />}
     </>

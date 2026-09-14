@@ -1,9 +1,14 @@
 import { useState, useEffect, DragEvent } from 'react'
-import { Users, User, ChevronDown, ChevronRight, Award, Sparkles } from 'lucide-react'
+import { Users, User, ChevronDown, ChevronRight, Award, Sparkles, CheckCircle2 } from 'lucide-react'
 import { CARDS, COLLECTIONS, CardDefinition } from '../../lib/cards'
-import { SPECIAL_CARDS, SPECIAL_COLLECTION_NAME } from '../../lib/specialCards'
+import {
+  SPECIAL_CARDS,
+  SPECIAL_COLLECTION_NAME,
+  SPECIAL_COLLECTION_ID,
+  SpecialCardDefinition,
+} from '../../lib/specialCards'
 import { useCardInventory } from '../../hooks/useCardInventory'
-import { placePendingCard, PlaceResult } from '../../lib/pendingCards'
+import { placePendingCard, placeSpecialPendingCard, PlaceResult } from '../../lib/pendingCards'
 import {
   subscribeCollectionReward,
   subscribeSpecialCardsInventory,
@@ -38,7 +43,7 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
   // resgate é sempre isOwnProfile-like, não faz sentido ver do parceiro)
   useEffect(() => {
     if (viewingUid !== uid) return
-    const unsubscribers = COLLECTION_IDS.filter((id) => id !== 'especiais-clima').map(
+    const unsubscribers = COLLECTION_IDS.filter((id) => id !== SPECIAL_COLLECTION_ID).map(
       (collectionId) =>
         subscribeCollectionReward(coupleId, uid, collectionId, (reward) => {
           setRewards((prev) => ({ ...prev, [collectionId]: reward }))
@@ -61,19 +66,6 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
     (c) => (specialInventory[c.id]?.quantity ?? 0) > 0
   ).length
 
-  // mais recentes primeiro; as ainda não descobertas ficam no fim, na
-  // ordem do catálogo (lib/specialCards.ts)
-  const specialCardsSorted = [...SPECIAL_CARDS].sort((a, b) => {
-    const aEntry = specialInventory[a.id]
-    const bEntry = specialInventory[b.id]
-    const aOwned = (aEntry?.quantity ?? 0) > 0
-    const bOwned = (bEntry?.quantity ?? 0) > 0
-    if (aOwned && bOwned) return (bEntry!.lastAcquiredAt ?? 0) - (aEntry!.lastAcquiredAt ?? 0)
-    if (aOwned) return -1
-    if (bOwned) return 1
-    return 0
-  })
-
   function toggleExpanded(collectionId: string) {
     setExpanded((prev) => {
       const next = new Set(prev)
@@ -91,7 +83,13 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
     if (viewingUid !== uid) return // não dá pra encaixar carta na coleção do parceiro
     const raw = e.dataTransfer.getData('application/json')
     if (!raw) return
-    const data = JSON.parse(raw) as { instanceId: string; cardId: string; collectionId: string }
+    const data = JSON.parse(raw) as {
+      instanceId: string
+      cardId: string
+      collectionId: string
+      special?: boolean
+    }
+    if (data.special) return // carta especial não encaixa nas coleções normais
     const result: PlaceResult = await placePendingCard(
       coupleId,
       uid,
@@ -106,6 +104,33 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
     } else if (result === 'already_owned') {
       setAlreadyOwnedCardId(card.id)
       setTimeout(() => setAlreadyOwnedCardId(null), 1800)
+    }
+  }
+
+  // equivalente ao handleDrop, mas pra vitrine da Coleção Especial — nunca
+  // mostra "você já tem essa carta" (repetida é sempre bem-vinda ali)
+  async function handleSpecialDrop(e: DragEvent<HTMLDivElement>, card: SpecialCardDefinition) {
+    e.preventDefault()
+    if (viewingUid !== uid) return
+    const raw = e.dataTransfer.getData('application/json')
+    if (!raw) return
+    const data = JSON.parse(raw) as {
+      instanceId: string
+      cardId: string
+      collectionId: string
+      special?: boolean
+    }
+    if (!data.special) return // só carta especial encaixa aqui
+    const result: PlaceResult = await placeSpecialPendingCard(
+      coupleId,
+      uid,
+      data.instanceId,
+      data.cardId,
+      card.id
+    )
+    if (result === 'wrong_slot') {
+      setRejectedCardId(card.id)
+      setTimeout(() => setRejectedCardId(null), 500)
     }
   }
 
@@ -164,6 +189,11 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
             const isExpanded = expanded.has(collectionId)
             const reward = rewards[collectionId]
             const hasUnclaimedReward = reward && !Object.values(reward.claimed).every(Boolean)
+            // indicativo PERMANENTE: fica pra sempre depois que a coleção foi
+            // completada E todos os 4 prêmios já foram resgatados — não some
+            // nunca, mesmo fechando e abrindo o app de novo (o node de
+            // recompensa nunca é apagado, ver collectionRewards.ts)
+            const isFullyDone = reward && Object.values(reward.claimed).every(Boolean)
 
             return (
               <div
@@ -197,6 +227,24 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
                   <span style={{ fontWeight: 800, color: '#2D4A2D', fontSize: 14 }}>
                     {collection.name}
                   </span>
+                  {isFullyDone && (
+                    <span
+                      title="coleção completa — todas as recompensas resgatadas"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 3,
+                        background: 'rgba(201,150,46,0.15)',
+                        color: '#c9962e',
+                        fontSize: 10,
+                        fontWeight: 800,
+                        borderRadius: 999,
+                        padding: '2px 8px',
+                      }}
+                    >
+                      <CheckCircle2 size={11} /> completa
+                    </span>
+                  )}
                   <span
                     style={{ marginLeft: 'auto', fontWeight: 700, color: '#8B6914', fontSize: 13 }}
                   >
@@ -288,7 +336,7 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
             )
           })}
 
-          {/* ─── Coleção de Cartas Especial — extra, sem meta/recompensa ─── */}
+          {/* ─── Coleção de Cartas Especial — agora um grid com slot certo, igual as normais ─── */}
           <div
             style={{
               background:
@@ -336,12 +384,23 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
                   padding: '0 18px 20px',
                 }}
               >
-                {specialCardsSorted.map((card) => (
-                  <SpecialCollectibleCard
+                {SPECIAL_CARDS.map((card) => (
+                  <div
                     key={card.id}
-                    card={card}
-                    quantity={specialInventory[card.id]?.quantity ?? 0}
-                  />
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => handleSpecialDrop(e, card)}
+                    style={{
+                      position: 'relative',
+                      borderRadius: 12,
+                      boxShadow: rejectedCardId === card.id ? '0 0 0 3px #c0392b' : 'none',
+                      transition: 'box-shadow 0.15s',
+                    }}
+                  >
+                    <SpecialCollectibleCard
+                      card={card}
+                      quantity={specialInventory[card.id]?.quantity ?? 0}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -354,7 +413,8 @@ export default function CollectionGrid({ coupleId, uid, partnerUid }: Collection
                 lineHeight: 1.5,
               }}
             >
-              ganhas ao completar qualquer uma das coleções acima — não dá pra comprar ou trocar
+              ganhas ao completar qualquer uma das coleções acima — arraste da mochila até o
+              quadradinho certo pra encaixar, igual as coleções normais (repetida é permitida)
             </div>
           </div>
         </div>
