@@ -543,6 +543,19 @@ export default function PersonalProfile({
                     position: 'relative',
                   }}
                 >
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: 'rgba(200,120,140,0.9)',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      marginBottom: 2,
+                      paddingRight: c.authorUid === uid ? 20 : 0,
+                    }}
+                  >
+                    {c.authorUid === uid ? displayName : partnerName}
+                  </span>
                   <p
                     style={{
                       fontSize: 12,

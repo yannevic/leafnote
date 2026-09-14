@@ -18,7 +18,7 @@ interface Props {
   onClose: () => void
 }
 
-const CIRCLE = 44
+const CIRCLE = 54
 
 // null = fechado · 'add' = escolhendo pra vaga vazia · string = trocando a badge daquele collectionId
 type PickerMode = null | 'add' | string
@@ -184,7 +184,7 @@ export default function ProfileBadgeHolder({
             flexShrink: 0,
           }}
         >
-          <Plus size={18} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
+          <Plus size={22} color="rgba(122,48,64,0.6)" strokeWidth={2.5} />
         </button>
       )}
 
