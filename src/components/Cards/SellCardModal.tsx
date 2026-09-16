@@ -86,7 +86,7 @@ export default function SellCardModal({
     [coupleId, uid]
   )
 
-  const ownedSpecialCards = SPECIAL_CARDS.filter((c) => (specialInventory[c.id]?.quantity ?? 0) > 0)
+  const ownedSpecialCards = SPECIAL_CARDS.filter((c) => (specialInventory[c.id]?.quantity ?? 0) > 1)
 
   async function handleSellSpecial(specialCardId: string) {
     if (busy) return

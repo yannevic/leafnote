@@ -97,7 +97,9 @@ export async function sellSpecialCardInstant(
   const invRef = ref(db, `couples/${coupleId}/cards/specialCards/inventory/${uid}/${specialCardId}`)
   const snap = await get(invRef)
   const entry = snap.val() as { quantity: number; lastAcquiredAt: number } | null
-  if (!entry || entry.quantity < 1) return false
+  // precisa ser REPETIDA pra vender — quantity=1 é a única cópia, que
+  // continua ocupando o slot na vitrine, nunca pode ser vendida
+  if (!entry || entry.quantity <= 1) return false
   await set(invRef, { quantity: entry.quantity - 1, lastAcquiredAt: entry.lastAcquiredAt })
   await addCoins(uid, CARD_SELL_VALUE_SPECIAL, 'venda de carta especial repetida')
   return true
