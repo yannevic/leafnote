@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '3.0.83': [
+    "✅ Cartas especiais só podem ser vendidas se você tiver mais de uma cópia.",
+  ],
+
   '3.0.82': [
     "✅ muralzinho de recados agora mostra o nome de quem escreveu cada recado acima do texto",
     "✅ moldura de badge/insígnia aumentada",
